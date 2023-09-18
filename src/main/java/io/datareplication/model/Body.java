@@ -4,14 +4,26 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
-public interface Body {
+public interface Body extends ToHttpHeaders {
     InputStream newInputStream();
 
     int contentLength();
 
     // TODO: here?
     ContentType contentType();
+
+    @Override
+    default HttpHeaders toHttpHeaders() {
+        ArrayList<Header> headers = new ArrayList<>();
+        headers.add(Header.contentType(contentType()));
+        int contentLength = contentLength();
+        if (contentLength > 0) {
+            headers.add(Header.contentLength(contentLength));
+        }
+        return HttpHeaders.of(headers);
+    }
 
     default String toUtf8() {
         throw new RuntimeException("not implemented");

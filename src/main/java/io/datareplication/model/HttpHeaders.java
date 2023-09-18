@@ -35,17 +35,6 @@ public class HttpHeaders implements Iterable<Header>, ToHttpHeaders {
         return update(new HashMap<>(this.headers), headers);
     }
 
-    public HttpHeaders update(Body body) {
-        HttpHeaders updated = update(Header.contentType(body.contentType()));
-        int contentLength = body.contentLength();
-        if (contentLength > 0) {
-            updated = updated.update(Header.contentLength(contentLength));
-        } else {
-            updated = updated.remove(Header.CONTENT_LENGTH);
-        }
-        return updated;
-    }
-
     private static HttpHeaders update(HashMap<String, Header> headerMap, Iterable<Header> headers) {
         for (Header header : headers) {
             headerMap.put(header.name(), header);
