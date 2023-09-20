@@ -5,15 +5,17 @@ import lombok.Value;
 import java.util.Collections;
 import java.util.List;
 
-@Value(staticConstructor = "of")
-public class Page<Header extends HttpHeaders, Entity> {
-    Header header;
-    List<Entity> entities;
+@Value
+public class Page<PageHeader extends HttpHeaders, EntityHeader extends HttpHeaders> {
+    PageHeader header;
+    List<Entity<EntityHeader>> entities;
 
-    private Page(Header header, List<Entity> entities) {
+    private Page(PageHeader header, List<Entity<EntityHeader>> entities) {
         this.header = header;
         this.entities = Collections.unmodifiableList(entities);
     }
 
-
+    public Body toMultipartBody() {
+        throw new RuntimeException("not implemented");
+    }
 }

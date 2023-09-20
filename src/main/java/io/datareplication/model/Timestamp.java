@@ -2,7 +2,9 @@ package io.datareplication.model;
 
 import lombok.Value;
 
+import java.time.Instant;
+
 @Value(staticConstructor = "of")
-public class Url {
-    String value;
+public class Timestamp {
+    Instant value;
 }

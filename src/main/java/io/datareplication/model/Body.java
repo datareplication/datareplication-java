@@ -16,11 +16,11 @@ public interface Body extends ToHttpHeaders {
 
     @Override
     default HttpHeaders toHttpHeaders() {
-        ArrayList<Header> headers = new ArrayList<>();
-        headers.add(Header.contentType(contentType()));
+        ArrayList<HttpHeader> headers = new ArrayList<>();
+        headers.add(HttpHeader.contentType(contentType()));
         int contentLength = contentLength();
         if (contentLength > 0) {
-            headers.add(Header.contentLength(contentLength));
+            headers.add(HttpHeader.contentLength(contentLength));
         }
         return HttpHeaders.of(headers);
     }

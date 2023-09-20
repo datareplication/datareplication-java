@@ -1,20 +1,19 @@
 package io.datareplication.model.snapshot;
 
-import io.datareplication.model.Header;
+import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
+import io.datareplication.model.Timestamp;
 import io.datareplication.model.ToHttpHeaders;
 import lombok.Value;
 
-import java.time.Instant;
-
 @Value
 public class EntityHeader implements ToHttpHeaders {
-    Instant lastModified;
+    Timestamp lastModified;
     HttpHeaders extraHeaders;
 
     @Override
     public HttpHeaders toHttpHeaders() {
         return extraHeaders
-                .update(Header.lastModified(lastModified));
+                .update(HttpHeader.lastModified(lastModified));
     }
 }
