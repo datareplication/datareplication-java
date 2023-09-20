@@ -7,6 +7,5 @@ import java.time.Instant;
 
 @Value(staticConstructor = "of")
 public class Timestamp {
-    @NonNull
-    Instant value;
+    @NonNull Instant value;
 }

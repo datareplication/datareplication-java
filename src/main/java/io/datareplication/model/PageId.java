@@ -5,6 +5,5 @@ import lombok.Value;
 
 @Value(staticConstructor = "of")
 public class PageId {
-    @NonNull
-    String value;
+    @NonNull String value;
 }

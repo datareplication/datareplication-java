@@ -14,10 +14,8 @@ import java.util.List;
 
 @Value
 public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders> {
-    @NonNull
-    PageHeader header;
-    @NonNull
-    List<@NonNull Entity<@NonNull EntityHeader>> entities;
+    @NonNull PageHeader header;
+    @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities;
 
     public Page(@NonNull PageHeader header, @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
         this.header = header;

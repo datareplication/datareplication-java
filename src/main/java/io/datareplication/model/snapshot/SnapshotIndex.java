@@ -11,12 +11,9 @@ import java.util.List;
 
 @Value
 public class SnapshotIndex {
-    @NonNull
-    SnapshotId id;
-    @NonNull
-    Timestamp started;
-    @NonNull
-    List<@NonNull Url> pages;
+    @NonNull SnapshotId id;
+    @NonNull Timestamp started;
+    @NonNull List<@NonNull Url> pages;
 
     public SnapshotIndex(@NonNull SnapshotId id, @NonNull Timestamp started, @NonNull List<@NonNull Url> pages) {
         this.id = id;

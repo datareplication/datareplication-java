@@ -11,8 +11,7 @@ import java.util.Map;
 
 @EqualsAndHashCode
 public class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders {
-    @NonNull
-    private final Map<@NonNull String, @NonNull HttpHeader> headers;
+    @NonNull private final Map<@NonNull String, @NonNull HttpHeader> headers;
 
     private HttpHeaders(Map<@NonNull String, @NonNull HttpHeader> headers) {
         this.headers = Collections.unmodifiableMap(headers);
@@ -53,6 +52,5 @@ public class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders
         return update(new HashMap<>(), headers);
     }
 
-    @NonNull
-    public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
+    @NonNull public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
 }

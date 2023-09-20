@@ -9,10 +9,8 @@ import lombok.Value;
 
 @Value
 public class SnapshotEntityHeader implements ToHttpHeaders {
-    @NonNull
-    Timestamp lastModified;
-    @NonNull
-    HttpHeaders extraHeaders;
+    @NonNull Timestamp lastModified;
+    @NonNull HttpHeaders extraHeaders;
 
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {

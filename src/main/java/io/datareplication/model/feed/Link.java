@@ -6,6 +6,5 @@ import lombok.Value;
 
 @Value(staticConstructor = "of")
 public class Link {
-    @NonNull
-    Url value;
+    @NonNull Url value;
 }

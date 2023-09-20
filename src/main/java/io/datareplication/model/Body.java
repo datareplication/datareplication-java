@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public interface Body extends ToHttpHeaders {
     @NonNull InputStream newInputStream();
 
-    int contentLength();
+    long contentLength();
 
     // TODO: here?
     @NonNull ContentType contentType();
@@ -20,7 +20,7 @@ public interface Body extends ToHttpHeaders {
     default @NonNull HttpHeaders toHttpHeaders() {
         ArrayList<HttpHeader> headers = new ArrayList<>();
         headers.add(HttpHeader.contentType(contentType()));
-        int contentLength = contentLength();
+        long contentLength = contentLength();
         if (contentLength > 0) {
             headers.add(HttpHeader.contentLength(contentLength));
         }
@@ -32,7 +32,7 @@ public interface Body extends ToHttpHeaders {
     }
 
     default @NonNull byte[] toBytes() throws IOException {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream(contentLength())) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream((int) contentLength())) {
             try (InputStream input = newInputStream()) {
                 input.transferTo(output);
             }
@@ -60,7 +60,7 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public int contentLength() {
+            public long contentLength() {
                 return bytes.length;
             }
 

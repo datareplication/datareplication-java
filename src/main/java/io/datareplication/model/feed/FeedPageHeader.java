@@ -12,17 +12,12 @@ import java.util.Optional;
 
 @Value
 public class FeedPageHeader implements ToHttpHeaders {
-    @NonNull
-    Timestamp lastModified;
-    @NonNull
-    Link self;
+    @NonNull Timestamp lastModified;
+    @NonNull Link self;
     // TODO: Optional or Nullable?
-    @NonNull
-    Optional<@NonNull Link> prev;
-    @NonNull
-    Optional<@NonNull Link> next;
-    @NonNull
-    HttpHeaders extraHeaders;
+    @NonNull Optional<@NonNull Link> prev;
+    @NonNull Optional<@NonNull Link> next;
+    @NonNull HttpHeaders extraHeaders;
 
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {

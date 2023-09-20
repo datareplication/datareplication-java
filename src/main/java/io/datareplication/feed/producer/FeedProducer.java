@@ -23,4 +23,6 @@ public interface FeedProducer {
     @NonNull CompletionStage<Void> publish(@NonNull Entity<@NonNull FeedEntityHeader> entity);
 
     @NonNull CompletionStage<Void> assignPages();
+
+    @NonNull FeedPageProvider pageProvider();
 }

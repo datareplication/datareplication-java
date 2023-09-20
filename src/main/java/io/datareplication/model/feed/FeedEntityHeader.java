@@ -7,28 +7,19 @@ import io.datareplication.model.ToHttpHeaders;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.Optional;
-
 @Value
 public class FeedEntityHeader implements ToHttpHeaders {
-    @NonNull
-    Timestamp lastModified;
-    @NonNull
-    OperationType operationType;
-    @NonNull
-    Optional<@NonNull ContentId> contentId;
-    @NonNull
-    HttpHeaders extraHeaders;
+    @NonNull Timestamp lastModified;
+    @NonNull OperationType operationType;
+    @NonNull ContentId contentId;
+    @NonNull HttpHeaders extraHeaders;
 
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {
-        HttpHeaders updated = extraHeaders
+        return extraHeaders
                 .update(HttpHeader.lastModified(lastModified))
+                .update(HttpHeader.of(HttpHeader.CONTENT_ID, contentId.value()))
                 .update(operationTypeHeader());
-        if (contentId.isPresent()) {
-            updated = updated.update(HttpHeader.of(HttpHeader.CONTENT_ID, contentId.get().value()));
-        }
-        return updated;
     }
 
     private HttpHeader operationTypeHeader() {

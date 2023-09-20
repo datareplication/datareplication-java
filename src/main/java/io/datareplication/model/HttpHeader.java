@@ -8,10 +8,8 @@ import java.util.List;
 
 @Value
 public class HttpHeader {
-    @NonNull
-    String name;
-    @NonNull
-    List<@NonNull String> values;
+    @NonNull String name;
+    @NonNull List<@NonNull String> values;
 
     private HttpHeader(@NonNull String name, @NonNull List<@NonNull String> values) {
         this.name = name;
@@ -26,25 +24,19 @@ public class HttpHeader {
         return new HttpHeader(name, values);
     }
 
-    @NonNull
-    public static final String LAST_MODIFIED = "Last-Modified";
-    @NonNull
-    public static final String CONTENT_TYPE = "Content-Type";
-    @NonNull
-    public static final String CONTENT_LENGTH = "Content-Length";
-    @NonNull
-    public static final String CONTENT_ID = "Content-ID";
-    @NonNull
-    public static final String OPERATION_TYPE = "Operation-Type";
-    @NonNull
-    public static final String LINK = "Link";
+    @NonNull public static final String LAST_MODIFIED = "Last-Modified";
+    @NonNull public static final String CONTENT_TYPE = "Content-Type";
+    @NonNull public static final String CONTENT_LENGTH = "Content-Length";
+    @NonNull public static final String CONTENT_ID = "Content-ID";
+    @NonNull public static final String OPERATION_TYPE = "Operation-Type";
+    @NonNull public static final String LINK = "Link";
 
     public static @NonNull HttpHeader contentType(@NonNull ContentType contentType) {
         return HttpHeader.of(CONTENT_TYPE, contentType.value());
     }
 
-    public static @NonNull HttpHeader contentLength(int contentLength) {
-        return HttpHeader.of(CONTENT_LENGTH, Integer.toString(contentLength));
+    public static @NonNull HttpHeader contentLength(long contentLength) {
+        return HttpHeader.of(CONTENT_LENGTH, Long.toString(contentLength));
     }
 
     public static @NonNull HttpHeader lastModified(@NonNull Timestamp lastModified) {

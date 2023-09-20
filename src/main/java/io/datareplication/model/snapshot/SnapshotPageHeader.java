@@ -7,8 +7,7 @@ import lombok.Value;
 
 @Value
 public class SnapshotPageHeader implements ToHttpHeaders {
-    @NonNull
-    HttpHeaders extraHeaders;
+    @NonNull HttpHeaders extraHeaders;
 
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {
