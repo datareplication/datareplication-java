@@ -1,6 +1,8 @@
 package io.datareplication.model;
 
+import lombok.NonNull;
+
 public interface ToHttpHeaders {
     // TODO error handling?
-    HttpHeaders toHttpHeaders();
+    @NonNull HttpHeaders toHttpHeaders();
 }

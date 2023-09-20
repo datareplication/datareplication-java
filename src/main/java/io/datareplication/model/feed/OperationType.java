@@ -2,7 +2,8 @@ package io.datareplication.model.feed;
 
 public enum OperationType {
     PUT,
-    DELETE;
+    DELETE,
+    PATCH;
 
     @Override
     public String toString() {
@@ -11,6 +12,8 @@ public enum OperationType {
                 return "PUT";
             case DELETE:
                 return "DELETE";
+            case PATCH:
+                return "PATCH";
             default:
                 throw new RuntimeException("unknown value");
         }

@@ -4,19 +4,24 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.ToHttpHeaders;
+import lombok.NonNull;
 import lombok.Value;
 
 import java.util.Optional;
 
 @Value
 public class EntityHeader implements ToHttpHeaders {
+    @NonNull
     Timestamp lastModified;
+    @NonNull
     OperationType operationType;
-    Optional<ContentId> contentId;
+    @NonNull
+    Optional<@NonNull ContentId> contentId;
+    @NonNull
     HttpHeaders extraHeaders;
 
     @Override
-    public HttpHeaders toHttpHeaders() {
+    public @NonNull HttpHeaders toHttpHeaders() {
         HttpHeaders updated = extraHeaders
                 .update(HttpHeader.lastModified(lastModified))
                 .update(operationTypeHeader());

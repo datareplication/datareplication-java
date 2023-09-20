@@ -1,5 +1,7 @@
 package io.datareplication.model;
 
+import lombok.NonNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,15 +9,15 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 public interface Body extends ToHttpHeaders {
-    InputStream newInputStream();
+    @NonNull InputStream newInputStream();
 
     int contentLength();
 
     // TODO: here?
-    ContentType contentType();
+    @NonNull ContentType contentType();
 
     @Override
-    default HttpHeaders toHttpHeaders() {
+    default @NonNull HttpHeaders toHttpHeaders() {
         ArrayList<HttpHeader> headers = new ArrayList<>();
         headers.add(HttpHeader.contentType(contentType()));
         int contentLength = contentLength();
@@ -25,11 +27,11 @@ public interface Body extends ToHttpHeaders {
         return HttpHeaders.of(headers);
     }
 
-    default String toUtf8() {
+    default @NonNull String toUtf8() {
         throw new RuntimeException("not implemented");
     }
 
-    default byte[] toBytes() throws IOException {
+    default @NonNull byte[] toBytes() throws IOException {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream(contentLength())) {
             try (InputStream input = newInputStream()) {
                 input.transferTo(output);
@@ -38,22 +40,22 @@ public interface Body extends ToHttpHeaders {
         }
     }
 
-    static Body fromUtf8(String utf8) {
+    static @NonNull Body fromUtf8(@NonNull String utf8) {
         return fromUtf8(utf8, ContentType.of("text/plain; charset=utf-8"));
     }
 
-    static Body fromUtf8(String utf8, ContentType contentType) {
+    static @NonNull Body fromUtf8(@NonNull String utf8, @NonNull ContentType contentType) {
         throw new RuntimeException("not implemented");
     }
 
-    static Body fromBytes(byte[] bytes) {
+    static @NonNull Body fromBytes(@NonNull byte[] bytes) {
         return fromBytes(bytes, ContentType.of("application/octet-stream"));
     }
 
-    static Body fromBytes(byte[] bytes, ContentType contentType) {
+    static @NonNull Body fromBytes(@NonNull byte[] bytes, @NonNull ContentType contentType) {
         return new Body() {
             @Override
-            public InputStream newInputStream() {
+            public @NonNull InputStream newInputStream() {
                 return new ByteArrayInputStream(bytes);
             }
 
@@ -63,7 +65,7 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public ContentType contentType() {
+            public @NonNull ContentType contentType() {
                 return contentType;
             }
         };
