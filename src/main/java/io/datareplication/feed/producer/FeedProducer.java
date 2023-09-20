@@ -4,8 +4,12 @@ import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
@@ -24,5 +28,34 @@ public interface FeedProducer {
 
     @NonNull CompletionStage<Void> assignPages();
 
-    @NonNull FeedPageProvider pageProvider();
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    class Builder {
+        private FeedEntityRepository feedEntityRepository;
+        private FeedPageMetadataRepository feedPageMetadataRepository;
+        private FeedProducerJournalRepository feedProducerJournalRepository;
+        private FeedPageUrlBuilder feedPageUrlBuilder;
+        private Clock clock;
+        // TODO: threadpool
+        // TODO: more settings
+
+        @NonNull Builder clock(@NonNull Clock clock) {
+            this.clock = clock;
+            return this;
+        }
+
+        @NonNull FeedProducer build() {
+            throw new RuntimeException("not implemented");
+        }
+    }
+
+    static @NonNull Builder builder(@NonNull FeedEntityRepository feedEntityRepository,
+                                    @NonNull FeedPageMetadataRepository feedPageMetadataRepository,
+                                    @NonNull FeedProducerJournalRepository feedProducerJournalRepository,
+                                    @NonNull FeedPageUrlBuilder feedPageUrlBuilder) {
+        return new Builder(feedEntityRepository,
+                           feedPageMetadataRepository,
+                           feedProducerJournalRepository,
+                           feedPageUrlBuilder,
+                           Clock.systemUTC());
+    }
 }
