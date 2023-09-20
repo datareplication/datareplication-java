@@ -11,11 +11,12 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 @Value
-public class PageHeader implements ToHttpHeaders {
+public class FeedPageHeader implements ToHttpHeaders {
     @NonNull
     Timestamp lastModified;
     @NonNull
     Link self;
+    // TODO: Optional or Nullable?
     @NonNull
     Optional<@NonNull Link> prev;
     @NonNull

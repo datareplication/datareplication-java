@@ -10,7 +10,7 @@ import lombok.Value;
 import java.util.Optional;
 
 @Value
-public class EntityHeader implements ToHttpHeaders {
+public class FeedEntityHeader implements ToHttpHeaders {
     @NonNull
     Timestamp lastModified;
     @NonNull
