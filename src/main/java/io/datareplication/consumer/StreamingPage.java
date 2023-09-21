@@ -1,4 +1,4 @@
-package io.datareplication.streaming;
+package io.datareplication.consumer;
 
 import io.datareplication.model.Page;
 import io.datareplication.model.ToHttpHeaders;

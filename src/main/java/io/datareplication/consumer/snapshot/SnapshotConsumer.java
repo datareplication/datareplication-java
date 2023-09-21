@@ -1,28 +1,20 @@
-package io.datareplication.snapshot.consumer;
+package io.datareplication.consumer.snapshot;
 
 import io.datareplication.consumer.Authorization;
-import io.datareplication.feed.producer.FeedEntityRepository;
-import io.datareplication.feed.producer.FeedPageMetadataRepository;
-import io.datareplication.feed.producer.FeedPageUrlBuilder;
-import io.datareplication.feed.producer.FeedProducer;
-import io.datareplication.feed.producer.FeedProducerJournalRepository;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
-import io.datareplication.model.Page;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
-import io.datareplication.streaming.StreamingPage;
+import io.datareplication.consumer.StreamingPage;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 import java.util.function.Supplier;

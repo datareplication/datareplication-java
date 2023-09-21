@@ -1,10 +1,10 @@
-package io.datareplication.feed.consumer;
+package io.datareplication.consumer.feed;
 
 import io.datareplication.model.Entity;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
-import io.datareplication.streaming.StreamingPage;
+import io.datareplication.consumer.StreamingPage;
 import lombok.NonNull;
 
 import java.util.concurrent.Flow;

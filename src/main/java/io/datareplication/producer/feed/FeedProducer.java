@@ -1,4 +1,4 @@
-package io.datareplication.feed.producer;
+package io.datareplication.producer.feed;
 
 import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
@@ -7,7 +7,6 @@ import io.datareplication.model.feed.OperationType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 import java.time.Clock;
 import java.util.Optional;

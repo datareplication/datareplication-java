@@ -1,4 +1,4 @@
-package io.datareplication.snapshot.producer;
+package io.datareplication.producer.snapshot;
 
 import io.datareplication.model.snapshot.SnapshotIndex;
 import lombok.NonNull;

@@ -1,4 +1,4 @@
-package io.datareplication.feed.producer;
+package io.datareplication.producer.feed;
 
 import io.datareplication.model.Entity;
 import io.datareplication.model.PageId;

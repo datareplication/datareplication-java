@@ -1,4 +1,4 @@
-package io.datareplication.feed.consumer;
+package io.datareplication.consumer.feed;
 
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;

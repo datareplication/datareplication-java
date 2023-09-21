@@ -1,4 +1,4 @@
-package io.datareplication.snapshot.producer;
+package io.datareplication.producer.snapshot;
 
 import io.datareplication.model.PageId;
 import io.datareplication.model.Url;
