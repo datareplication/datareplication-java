@@ -30,6 +30,7 @@ public class HttpHeader {
     @NonNull public static final String CONTENT_ID = "Content-ID";
     @NonNull public static final String OPERATION_TYPE = "Operation-Type";
     @NonNull public static final String LINK = "Link";
+    @NonNull public static final String AUTHORIZATION = "Authorization";
 
     public static @NonNull HttpHeader contentType(@NonNull ContentType contentType) {
         return HttpHeader.of(CONTENT_TYPE, contentType.value());
