@@ -18,12 +18,10 @@ class MultipartParserTest {
     public void shouldParseMultipartBody() throws RequestInput {
         MultipartParser parser = new MultipartParser(utf8("_---_boundary"));
 
-        assertThat(parser.parse(utf8("preamble")))
-            .isEqualTo(new Result(Elem.Continue.INSTANCE, 8));
-        assertThat(parser.parse(utf8("\r\n more stuff \n\r")))
-            .isEqualTo(new Result(Elem.Continue.INSTANCE, 16));
-        assertThat(parser.parse(utf8("stuff--_---_boundary")))
-            .isEqualTo(new Result(Elem.Continue.INSTANCE, 20));
+        assertThat(parser.parse(utf8("preamble\r\n")))
+            .isEqualTo(new Result(Elem.Continue.INSTANCE, 10));
+        assertThat(parser.parse(utf8("--_---_boundary")))
+            .isEqualTo(new Result(Elem.Continue.INSTANCE, 15));
         assertThat(parser.parse(utf8("\r\nignored...")))
             .isEqualTo(new Result(Elem.PartBegin.INSTANCE, 2));
         assertThat(parser.parse(utf8("  Header  :   value\n")))

@@ -48,12 +48,16 @@ public class MultipartParser {
     public Result parse(@NonNull ByteBuffer input) throws RequestInput {
         switch (state) {
             case Preamble:
-                final Optional<Combinators.Pos> maybeBoundary = Combinators.scan(dashBoundary).parse(input, 0);
+                final Optional<Combinators.Pos> maybeBoundary = Combinators.tag(dashBoundary).parse(input, 0);
                 if (maybeBoundary.isPresent()) {
                     state = State.PartBegin;
                     return new Result(Elem.Continue.INSTANCE, maybeBoundary.get().end());
                 } else {
-                    return new Result(Elem.Continue.INSTANCE, input.capacity());
+                    return Combinators
+                        .scanEol()
+                        .parse(input, 0)
+                        .map(pos -> new Result(Elem.Continue.INSTANCE, pos.end()))
+                        .orElseGet(() -> new Result(Elem.Continue.INSTANCE, input.limit()));
                 }
             case PartBegin:
                 final Optional<Combinators.Pos> maybeEol = Combinators.eol().parse(input, 0);
@@ -77,7 +81,6 @@ public class MultipartParser {
 
                 final ByteBuffer headerLine = input.slice().limit(maybeLine.get().end());
                 String headerString = headerCharset.decode(headerLine).toString();
-
                 if (headerString.isBlank()) {
                     // empty line, go to body
                     ByteBuffer data = input.slice().position(maybeLine.get().end());
@@ -94,6 +97,7 @@ public class MultipartParser {
                 }
             case Data:
                 final Optional<Combinators.Pos> maybeLine2 = Combinators.scanEol().parse(input, 0);
+                // TODO: fix edgecases
                 if (maybeLine2.isPresent()) {
                     int p = maybeLine2.get().end();
                     final Optional<Combinators.Pos> end = Combinators.seq(Combinators.eol(), Combinators.tag(dashBoundary)).parse(input, p);

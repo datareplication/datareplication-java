@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,9 +19,6 @@ class Combinators {
         int start;
         int end;
     }
-
-    private static final ByteBuffer LF = ByteBuffer.wrap("\n".getBytes(StandardCharsets.US_ASCII));
-    private static final ByteBuffer CRLF = ByteBuffer.wrap("\r\n".getBytes(StandardCharsets.US_ASCII));
 
     static Parser tag(ByteBuffer tag) {
         return (ByteBuffer input, int start) -> {
@@ -41,32 +37,13 @@ class Combinators {
         };
     }
 
-    static Parser scan(ByteBuffer needle) {
-        return (ByteBuffer input, int start) -> scan(input, start, needle);
-    }
-
     static Parser scanEol() {
         return Combinators::scanEol;
     }
 
-    static Parser either(Parser a, Parser b) {
-        return (ByteBuffer input, int start) -> {
-            Optional<Pos> aResult = a.parse(input, start);
-            if (aResult.isPresent()) {
-                return aResult;
-            } else {
-                return b.parse(input, start);
-            }
-        };
-    }
-
     static Parser eol() {
-        return either(tag(CRLF), tag(LF));
+        return Combinators::eol;
     }
-
-    /*static Parser discard(Parser inner) {
-        return (ByteBuffer input, int start) -> inner.parse(input, start).or(() -> Optional.of(new Pos(start, start)));
-    }*/
 
     static Parser seq(Parser a, Parser b) {
         return (ByteBuffer input, int start) -> {
@@ -82,39 +59,28 @@ class Combinators {
         };
     }
 
-    static Optional<Pos> scanEol(ByteBuffer input, int start) throws RequestInput {
-        Optional<Pos> crlf = scan(input, start, CRLF);
-        if (crlf.isPresent()) {
-            return crlf;
-        } else {
-            return scan(input, start, LF);
+    private static Optional<Pos> eol(ByteBuffer input, int start) throws RequestInput {
+        byte b = input.get(start);
+        if (b == (byte) '\r') {
+            if (start == input.limit() - 1) {
+                throw new RequestInput();
+            }
+            if (input.get(start + 1) == (byte) '\n') {
+                return Optional.of(new Pos(start, start + 2));
+            }
+        } else if (b == (byte) '\n') {
+            return Optional.of(new Pos(start, start + 1));
         }
+        return Optional.empty();
     }
 
-    static Optional<Pos> scan(ByteBuffer input, int start, ByteBuffer needle) throws RequestInput {
-        int needlePos = 0;
-        for (int i = start; i < input.capacity(); i++) {
-            byte inputByte = input.get(i);
-            byte needleByte = needle.get(needlePos);
-            if (inputByte == needleByte) {
-                needlePos++;
-            } else {
-                needlePos = 0;
-            }
-
-            if (needlePos == needle.capacity()) {
-                // we've matched all bytes in the needle, so we're done and can return
-                return Optional.of(new Pos(i - needle.capacity() + 1, i + 1));
+    private static Optional<Pos> scanEol(ByteBuffer input, int start) throws RequestInput {
+        for (int i = start; i < input.limit(); i++) {
+            final Optional<Pos> maybeEol = eol(input, i);
+            if (maybeEol.isPresent()) {
+                return maybeEol;
             }
         }
-
-        // we've reached the end of our input
-        if (needlePos > 0) {
-            // we've partially but not fully matched the needle, so we ask for more input
-            throw new RequestInput();
-        } else {
-            // we're not in the middle of a match, so we know it's not here
-            return Optional.empty();
-        }
+        return Optional.empty();
     }
 }

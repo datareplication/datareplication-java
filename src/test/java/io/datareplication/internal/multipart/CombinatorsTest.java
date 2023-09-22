@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CombinatorsTest {
-    private static ByteBuffer utf8(String s) {
+    /*private static ByteBuffer utf8(String s) {
         return ByteBuffer.wrap(s.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -74,5 +74,5 @@ class CombinatorsTest {
     public void scan_shouldRequestMoreInput_shortInput() throws RequestInput {
         assertThatThrownBy(() -> Combinators.scan(utf8("prefix, and: t"), 0, utf8("teststring")))
             .isInstanceOf(RequestInput.class);
-    }
+    }*/
 }
