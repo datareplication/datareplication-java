@@ -5,13 +5,14 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class Combinators {
     @FunctionalInterface
     interface Parser {
-        Optional<Pos> parse(ByteBuffer input, int start) throws RequestInput;
+        Optional<Pos> parse(ByteBuffer input, int start);
     }
 
     @Value
@@ -19,6 +20,9 @@ class Combinators {
         int start;
         int end;
     }
+
+    private static final ByteBuffer CRLF = ByteBuffer.wrap("\r\n".getBytes(StandardCharsets.US_ASCII));
+    private static final ByteBuffer LF = ByteBuffer.wrap("\n".getBytes(StandardCharsets.US_ASCII));
 
     static Parser tag(ByteBuffer tag) {
         return (ByteBuffer input, int start) -> {
@@ -37,50 +41,33 @@ class Combinators {
         };
     }
 
-    static Parser scanEol() {
-        return Combinators::scanEol;
-    }
-
-    static Parser eol() {
-        return Combinators::eol;
-    }
-
     static Parser seq(Parser a, Parser b) {
+        return (ByteBuffer input, int start) -> a
+            .parse(input, start)
+            .flatMap(pos1 -> b
+                 .parse(input, pos1.end)
+                 .map(pos2 -> new Pos(pos1.start, pos2.end)));
+    }
+
+    static Parser either(Parser a, Parser b) {
+        return (ByteBuffer input, int start) -> a
+            .parse(input, start)
+            .or(() -> b.parse(input, start));
+    }
+
+    static Parser scan(Parser p) {
         return (ByteBuffer input, int start) -> {
-            Optional<Pos> aResult = a.parse(input, start);
-            if (aResult.isPresent()) {
-                Pos aPos = aResult.get();
-                Optional<Pos> bResult = b.parse(input, aPos.end);
-                if (bResult.isPresent()) {
-                    return Optional.of(new Pos(aPos.start, bResult.get().end));
+            for (int i = start; i < input.limit(); i++) {
+                Optional<Pos> result = p.parse(input, i);
+                if (result.isPresent()) {
+                    return result;
                 }
             }
             return Optional.empty();
         };
     }
 
-    private static Optional<Pos> eol(ByteBuffer input, int start) throws RequestInput {
-        byte b = input.get(start);
-        if (b == (byte) '\r') {
-            if (start == input.limit() - 1) {
-                throw new RequestInput();
-            }
-            if (input.get(start + 1) == (byte) '\n') {
-                return Optional.of(new Pos(start, start + 2));
-            }
-        } else if (b == (byte) '\n') {
-            return Optional.of(new Pos(start, start + 1));
-        }
-        return Optional.empty();
-    }
-
-    private static Optional<Pos> scanEol(ByteBuffer input, int start) throws RequestInput {
-        for (int i = start; i < input.limit(); i++) {
-            final Optional<Pos> maybeEol = eol(input, i);
-            if (maybeEol.isPresent()) {
-                return maybeEol;
-            }
-        }
-        return Optional.empty();
+    static Parser eol() {
+        return either(tag(CRLF), tag(LF));
     }
 }

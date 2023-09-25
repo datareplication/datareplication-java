@@ -33,13 +33,9 @@ class MultipartParserTest {
         assertThat(parser.parse(utf8("datadatadata")))
             .isEqualTo(new Result(new Elem.Data(utf8("datadatadata")), 12));
         assertThat(parser.parse(utf8("\r\nmore\ndata")))
-            .isEqualTo(new Result(new Elem.Data(utf8("\r\n")), 2));
-        assertThat(parser.parse(utf8("more\ndata")))
-            .isEqualTo(new Result(new Elem.Data(utf8("more")), 4));
+            .isEqualTo(new Result(new Elem.Data(utf8("\r\nmore")), 6));
         assertThat(parser.parse(utf8("\ndata")))
-            .isEqualTo(new Result(new Elem.Data(utf8("\n")), 1));
-        assertThat(parser.parse(utf8("data")))
-            .isEqualTo(new Result(new Elem.Data(utf8("data")), 4));
+            .isEqualTo(new Result(new Elem.Data(utf8("\ndata")), 5));
         assertThat(parser.parse(utf8("\r\n\n--_---_boundary")))
             .isEqualTo(new Result(Elem.PartEnd.INSTANCE, 18));
         assertThat(parser.parse(utf8("\n")))
@@ -68,10 +64,8 @@ class MultipartParserTest {
             .isEqualTo(new Result(Elem.DataBegin.INSTANCE, 2));
         assertThat(parser.parse(utf8("data\r\n--_---_fakeout; \r\n--_---_boundary--")))
             .isEqualTo(new Result(new Elem.Data(utf8("data")), 4));
-        assertThat(parser.parse(utf8("\r\n--_---_fakeout; \r\n--_---_boundary--")))
-            .isEqualTo(new Result(new Elem.Data(utf8("\r\n")), 2));
-        assertThat(parser.parse(utf8("--_---_fakeout; \r\n--_---_boundary--")))
-            .isEqualTo(new Result(new Elem.Data(utf8("--_---_fakeout; ")), 16));
+        assertThat(parser.parse(utf8("\r\n--_---_fakeout; \r\n\r\n--_---_boundary--")))
+            .isEqualTo(new Result(new Elem.Data(utf8("\r\n--_---_fakeout; ")), 18));
         assertThat(parser.parse(utf8("\r\n\r\n--_---_boundary")))
             .isEqualTo(new Result(Elem.PartEnd.INSTANCE, 19));
         assertThat(parser.parse(utf8("--")))
