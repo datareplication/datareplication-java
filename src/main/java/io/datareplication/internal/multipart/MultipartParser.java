@@ -4,7 +4,10 @@ import lombok.NonNull;
 import lombok.Value;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -28,14 +31,19 @@ public class MultipartParser {
     }
 
     private State state;
+    private long offset;
     private final ByteBuffer dashBoundary;
-    private final Charset headerCharset;
+    private final CharsetDecoder headerDecoder;
 
     private static final ByteBuffer CLOSE_DELIMITER = ByteBuffer.wrap("--".getBytes(StandardCharsets.US_ASCII));
 
     public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset) {
         state = State.Preamble;
-        this.headerCharset = headerCharset;
+        offset = 0;
+        headerDecoder = headerCharset
+                .newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT);
         dashBoundary = ByteBuffer.allocate(boundary.capacity() + 2);
         dashBoundary.put((byte) '-');
         dashBoundary.put((byte) '-');
@@ -46,8 +54,13 @@ public class MultipartParser {
         this(boundary, StandardCharsets.UTF_8);
     }
 
-    // TODO: real errors
-    public @NonNull Result parse(@NonNull ByteBuffer input) throws RequestInput {
+    public @NonNull Result parse(@NonNull ByteBuffer input) throws RequestInput, MultipartException {
+        Result result = parseInternal(input);
+        offset += result.consumedBytes;
+        return result;
+    }
+
+    private Result parseInternal(final ByteBuffer input) {
         switch (state) {
             case Preamble:
                 return Combinators
@@ -77,8 +90,7 @@ public class MultipartParser {
                                     state = State.Epilogue;
                                     return new Result(Elem.Continue.INSTANCE, pos.end());
                                 }))
-                        // TODO: offset
-                        .orElseThrow(() -> new MultipartException.InvalidBoundary(0));
+                        .orElseThrow(() -> new MultipartException.InvalidDelimiter(offset));
             case Headers:
                 // TODO: prevent too large header lines
                 final Combinators.Pos eol = Combinators
@@ -118,11 +130,17 @@ public class MultipartParser {
     }
 
     private Elem.Header parseHeader(ByteBuffer bytes) {
-        String headerString = headerCharset.decode(bytes).toString();
+        final String headerString;
+        try {
+            headerString = headerDecoder.decode(bytes).toString();
+        } catch (CharacterCodingException cause) {
+            final MultipartException exc = new MultipartException.UndecodableHeader(headerDecoder.charset(), offset);
+            exc.initCause(cause);
+            throw exc;
+        }
         int idx = headerString.indexOf(':');
         if (idx == -1) {
-            // TODO: offset
-            throw new MultipartException.InvalidHeader(headerString, 0);
+            throw new MultipartException.InvalidHeader(headerString, offset);
         }
         String name = headerString.substring(0, idx).trim();
         String value = headerString.substring(idx + 1).trim();
