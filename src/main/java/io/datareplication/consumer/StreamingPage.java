@@ -1,5 +1,6 @@
 package io.datareplication.consumer;
 
+import io.datareplication.model.Entity;
 import io.datareplication.model.Page;
 import io.datareplication.model.ToHttpHeaders;
 import lombok.NonNull;
@@ -12,9 +13,12 @@ public interface StreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
 
     // TODO: error handling
     // TODO: better reader
+    // TODO: content type and content length are inaccessible
     @NonNull CompletionStage<@NonNull Optional<@NonNull EntityHeader>> next();
 
     @NonNull CompletionStage<@NonNull Integer> read(@NonNull byte[] buffer);
+
+    @NonNull CompletionStage<@NonNull Optional<@NonNull Entity<@NonNull EntityHeader>>> nextEntity();
 
     @NonNull CompletionStage<@NonNull Page<PageHeader, EntityHeader>> toCompletePage();
 }

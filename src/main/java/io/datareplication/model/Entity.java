@@ -11,7 +11,7 @@ import java.util.Optional;
 public class Entity<Header extends ToHttpHeaders> implements ToHttpHeaders {
     @NonNull Header header;
     @NonNull Body body;
-    @NonNull Optional<Object> userData;
+    @NonNull Optional<@NonNull Object> userData;
 
     public Entity(@NonNull Header header, @NonNull Body body) {
         this(header, body, Optional.empty());

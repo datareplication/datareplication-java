@@ -22,11 +22,11 @@ public class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders
         return headers.values().iterator();
     }
 
-    public @NonNull HttpHeaders remove(@NonNull String headerName) {
+/*    public @NonNull HttpHeaders remove(@NonNull String headerName) {
         HashMap<String, HttpHeader> headerMap = new HashMap<>(headers);
         headerMap.remove(headerName);
         return new HttpHeaders(headerMap);
-    }
+    }*/
 
     public @NonNull HttpHeaders update(@NonNull HttpHeader... headers) {
         return update(Arrays.asList(headers));
