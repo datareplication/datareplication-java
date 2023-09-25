@@ -21,7 +21,6 @@ public class MultipartParser {
         PartBegin,
         Headers,
         Data,
-        PartEnd,
         Epilogue,
     }
 
@@ -83,9 +82,9 @@ public class MultipartParser {
                 String headerString = headerCharset.decode(headerLine).toString();
                 if (headerString.isBlank()) {
                     // empty line, go to body
-                    ByteBuffer data = input.slice().position(maybeLine.get().end());
+                    //ByteBuffer data = input.slice().position(maybeLine.get().end());
                     state = State.Data;
-                    return new Result(new Elem.Data(data), input.capacity());
+                    return new Result(Elem.DataBegin.INSTANCE, maybeLine.get().end());
                 } else {
                     int idx = headerString.indexOf(':');
                     if (idx == -1) {
@@ -96,21 +95,27 @@ public class MultipartParser {
                     return new Result(new Elem.Header(name, value), maybeLine.get().end());
                 }
             case Data:
-                final Optional<Combinators.Pos> maybeLine2 = Combinators.scanEol().parse(input, 0);
-                // TODO: fix edgecases
+                final Optional<Combinators.Pos> maybeLine2 = Combinators.eol().parse(input, 0);
                 if (maybeLine2.isPresent()) {
                     int p = maybeLine2.get().end();
                     final Optional<Combinators.Pos> end = Combinators.seq(Combinators.eol(), Combinators.tag(dashBoundary)).parse(input, p);
                     if (end.isPresent()) {
-                        state = State.PartEnd;
-                        final ByteBuffer data = input.slice().limit(maybeLine2.get().start());
-                        return new Result(new Elem.Data(data), end.get().end());
+                        state = State.PartBegin;
+                        //final ByteBuffer data = input.slice().limit(maybeLine2.get().start());
+                        return new Result(Elem.PartEnd.INSTANCE, end.get().end());
+                    } else {
+                        final ByteBuffer data = input.slice().limit(maybeLine2.get().end());
+                        return new Result(new Elem.Data(data), data.limit());
+                    }
+                } else {
+                    final Optional<Combinators.Pos> maybeLine3 = Combinators.scanEol().parse(input, 0);
+                    if (maybeLine3.isPresent()) {
+                        final ByteBuffer data = input.slice().limit(maybeLine3.get().start());
+                        return new Result(new Elem.Data(data), data.limit());
+                    } else {
+                        return new Result(new Elem.Data(input.slice()), input.limit());
                     }
                 }
-                return new Result(new Elem.Data(input), input.capacity());
-            case PartEnd:
-                state = State.PartBegin;
-                return new Result(Elem.PartEnd.INSTANCE, 0);
             case Epilogue:
                 return new Result(Elem.Continue.INSTANCE, input.capacity());
         }

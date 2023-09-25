@@ -34,6 +34,13 @@ public abstract class Elem {
 
     @Value
     @EqualsAndHashCode(callSuper = false)
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class DataBegin extends Elem {
+        public static final DataBegin INSTANCE = new DataBegin();
+    }
+
+    @Value
+    @EqualsAndHashCode(callSuper = false)
     public static class Data extends Elem {
         @NonNull ByteBuffer data;
     }
