@@ -25,6 +25,7 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
+        # https://docs.github.com/en/enterprise-cloud@latest/actions/publishing-packages/publishing-java-packages-with-maven#publishing-packages-to-the-maven-central-repository
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
