@@ -46,13 +46,13 @@ class CombinatorsTest {
     @Test
     public void tag_shouldRequestMoreInput() {
         assertThatThrownBy(() -> Combinators.tag(utf8("horse")).parse(utf8("hors"), 0))
-            .isInstanceOf(RequestInput.class);
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
     public void tag_shouldRequestMoreInputWithNonzeroStart() {
         assertThatThrownBy(() -> Combinators.tag(utf8("horse")).parse(utf8("prefix, and: hors"), 13))
-            .isInstanceOf(RequestInput.class);
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
@@ -100,13 +100,13 @@ class CombinatorsTest {
     @Test
     public void eol_shouldRequestMoreInputForCR() {
         assertThatThrownBy(() -> Combinators.eol().parse(utf8("\r"), 0))
-            .isInstanceOf(RequestInput.class);
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
     public void scan_shouldFindParserAtStart() {
         Optional<Pos> result = Combinators.scan(Combinators.tag(utf8("test")))
-            .parse(utf8("test"), 0);
+                .parse(utf8("test"), 0);
 
         assertThat(result).contains(new Pos(0, 4));
     }
@@ -114,7 +114,7 @@ class CombinatorsTest {
     @Test
     public void scan_shouldFindParserAtStartWithNonzeroStart() {
         Optional<Pos> result = Combinators.scan(Combinators.tag(utf8("test")))
-            .parse(utf8("123456: test"), 8);
+                .parse(utf8("123456: test"), 8);
 
         assertThat(result).contains(new Pos(8, 12));
     }
@@ -122,7 +122,7 @@ class CombinatorsTest {
     @Test
     public void scan_shouldFindParser() {
         Optional<Pos> result = Combinators.scan(Combinators.tag(utf8("test")))
-            .parse(utf8("first some stuff, and then test"), 0);
+                .parse(utf8("first some stuff, and then test"), 0);
 
         assertThat(result).contains(new Pos(27, 31));
     }
@@ -130,7 +130,7 @@ class CombinatorsTest {
     @Test
     public void scan_shouldFirstResultOfParser() {
         Optional<Pos> result = Combinators.scan(Combinators.tag(utf8("test")))
-            .parse(utf8("a test b test c test test d"), 0);
+                .parse(utf8("a test b test c test test d"), 0);
 
         assertThat(result).contains(new Pos(2, 6));
     }
@@ -138,7 +138,7 @@ class CombinatorsTest {
     @Test
     public void scan_shouldNotMatch() {
         Optional<Pos> result = Combinators.scan(Combinators.tag(utf8("test")))
-            .parse(utf8("tessellation"), 0);
+                .parse(utf8("tessellation"), 0);
 
         assertThat(result).isEmpty();
     }
@@ -146,14 +146,14 @@ class CombinatorsTest {
     @Test
     public void scan_shouldRequestMoreInput() {
         assertThatThrownBy(() -> Combinators.scan(Combinators.tag(utf8("test")))
-            .parse(utf8("some prefix stuff, and then tes"), 0))
-            .isInstanceOf(RequestInput.class);
+                .parse(utf8("some prefix stuff, and then tes"), 0))
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
     public void seq_shouldMatch() {
         Optional<Pos> result = Combinators.seq(Combinators.tag(utf8("word")), Combinators.eol())
-            .parse(utf8("word\r\n"), 0);
+                .parse(utf8("word\r\n"), 0);
 
         assertThat(result).contains(new Pos(0, 6));
     }
@@ -161,7 +161,7 @@ class CombinatorsTest {
     @Test
     public void seq_shouldMatchWithNonzeroStart() {
         Optional<Pos> result = Combinators.seq(Combinators.tag(utf8("word")), Combinators.eol())
-            .parse(utf8("ignored: word\r\n"), 9);
+                .parse(utf8("ignored: word\r\n"), 9);
 
         assertThat(result).contains(new Pos(9, 15));
     }
@@ -169,7 +169,7 @@ class CombinatorsTest {
     @Test
     public void seq_shouldNotMatchIfFirstIsNotMatching() {
         Optional<Pos> result = Combinators.seq(Combinators.tag(utf8("word")), Combinators.eol())
-            .parse(utf8("woah\n"), 0);
+                .parse(utf8("woah\n"), 0);
 
         assertThat(result).isEmpty();
     }
@@ -177,7 +177,7 @@ class CombinatorsTest {
     @Test
     public void seq_shouldNotMatchIfSecondIsNotMatching() {
         Optional<Pos> result = Combinators.seq(Combinators.tag(utf8("word")), Combinators.eol())
-            .parse(utf8("word..."), 0);
+                .parse(utf8("word..."), 0);
 
         assertThat(result).isEmpty();
     }
@@ -185,29 +185,29 @@ class CombinatorsTest {
     @Test
     public void seq_shouldRequestMoreInputForFirst() {
         assertThatThrownBy(() -> Combinators.seq(Combinators.tag(utf8("test")), Combinators.eol())
-            .parse(utf8("tes"), 0))
-            .isInstanceOf(RequestInput.class);
+                .parse(utf8("tes"), 0))
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
     public void seq_shouldRequestMoreInputForSecond() {
         assertThatThrownBy(() -> Combinators.seq(Combinators.tag(utf8("test")), Combinators.eol())
-            .parse(utf8("test\r"), 0))
-            .isInstanceOf(RequestInput.class);
+                .parse(utf8("test\r"), 0))
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
     public void seq_shouldRequestMoreInputIfOnlyFirstInInput() {
         assertThatThrownBy(() -> Combinators.seq(Combinators.tag(utf8("test")), Combinators.eol())
-            .parse(utf8("test"), 0))
-            .isInstanceOf(RequestInput.class);
+                .parse(utf8("test"), 0))
+                .isInstanceOf(RequestInput.class);
     }
 
     @Test
     public void either_shouldMatchFirst() {
         Optional<Pos> result = Combinators.either(Combinators.tag(utf8("a")),
                                                   Combinators.tag(utf8("b")))
-            .parse(utf8("a"), 0);
+                .parse(utf8("a"), 0);
 
         assertThat(result).contains(new Pos(0, 1));
     }
@@ -216,7 +216,7 @@ class CombinatorsTest {
     public void either_shouldMatchSecond() {
         Optional<Pos> result = Combinators.either(Combinators.tag(utf8("a")),
                                                   Combinators.tag(utf8("b")))
-            .parse(utf8("b"), 0);
+                .parse(utf8("b"), 0);
 
         assertThat(result).contains(new Pos(0, 1));
     }
@@ -225,7 +225,7 @@ class CombinatorsTest {
     public void either_shouldMatchFirstWithNonzeroStart() {
         Optional<Pos> result = Combinators.either(Combinators.tag(utf8("wordA")),
                                                   Combinators.tag(utf8("wordB")))
-            .parse(utf8("test wordA stuff"), 5);
+                .parse(utf8("test wordA stuff"), 5);
 
         assertThat(result).contains(new Pos(5, 10));
     }
@@ -234,7 +234,7 @@ class CombinatorsTest {
     public void either_shouldMatchSecondWithNonzeroStart() {
         Optional<Pos> result = Combinators.either(Combinators.tag(utf8("wordA")),
                                                   Combinators.tag(utf8("wordB")))
-            .parse(utf8("test wordB more"), 5);
+                .parse(utf8("test wordB more"), 5);
 
         assertThat(result).contains(new Pos(5, 10));
     }
@@ -243,8 +243,41 @@ class CombinatorsTest {
     public void either_shouldNotMatch() {
         Optional<Pos> result = Combinators.either(Combinators.tag(utf8("wordA")),
                                                   Combinators.tag(utf8("wordB")))
-            .parse(utf8("wordC"), 0);
+                .parse(utf8("wordC"), 0);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    public void either_shouldRequestMoreInputForFirst() {
+        assertThatThrownBy(() -> Combinators.either(Combinators.tag(utf8("word")),
+                                                    Combinators.tag(utf8("deed")))
+                .parse(utf8("wor"), 0))
+                .isInstanceOf(RequestInput.class);
+    }
+
+    @Test
+    public void either_shouldRequestMoreInputForSecond() {
+        assertThatThrownBy(() -> Combinators.either(Combinators.tag(utf8("word")),
+                                                    Combinators.tag(utf8("deed")))
+                .parse(utf8("de"), 0))
+                .isInstanceOf(RequestInput.class);
+    }
+
+    @Test
+    public void either_shouldMatchIfFirstIsPrefix() {
+        Optional<Pos> result = Combinators.either(Combinators.tag(utf8("pre")),
+                                                  Combinators.tag(utf8("prefix")))
+                .parse(utf8("prefix"), 0);
+
+        assertThat(result).contains(new Pos(0, 3));
+    }
+
+    @Test
+    public void either_shouldRequestMoreInputIfSecondIsPrefix() {
+        assertThatThrownBy(() -> Combinators.either(Combinators.tag(utf8("prefix")),
+                                                    Combinators.tag(utf8("pre")))
+                .parse(utf8("pre"), 0))
+                .isInstanceOf(RequestInput.class);
     }
 }

@@ -34,10 +34,13 @@ public class MultipartParser {
     private long offset;
     private final ByteBuffer dashBoundary;
     private final CharsetDecoder headerDecoder;
+    private final int maxHeaderSize;
 
     private static final ByteBuffer CLOSE_DELIMITER = ByteBuffer.wrap("--".getBytes(StandardCharsets.US_ASCII));
 
-    public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset) {
+    private static final int DEFAULT_MAX_HEADER_SIZE = 2048;
+
+    public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset, int maxHeaderSize) {
         state = State.Preamble;
         offset = 0;
         headerDecoder = headerCharset
@@ -48,10 +51,19 @@ public class MultipartParser {
         dashBoundary.put((byte) '-');
         dashBoundary.put((byte) '-');
         dashBoundary.put(boundary);
+        this.maxHeaderSize = maxHeaderSize;
+    }
+
+    public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset) {
+        this(boundary, headerCharset, DEFAULT_MAX_HEADER_SIZE);
+    }
+
+    public MultipartParser(@NonNull ByteBuffer boundary, int maxHeaderSize) {
+        this(boundary, StandardCharsets.UTF_8, maxHeaderSize);
     }
 
     public MultipartParser(@NonNull ByteBuffer boundary) {
-        this(boundary, StandardCharsets.UTF_8);
+        this(boundary, StandardCharsets.UTF_8, DEFAULT_MAX_HEADER_SIZE);
     }
 
     public @NonNull Result parse(@NonNull ByteBuffer input) throws RequestInput, MultipartException {
@@ -92,7 +104,6 @@ public class MultipartParser {
                                 }))
                         .orElseThrow(() -> new MultipartException.InvalidDelimiter(offset));
             case Headers:
-                // TODO: prevent too large header lines
                 final Combinators.Pos eol = Combinators
                         .scan(Combinators.eol())
                         .parse(input, 0)
