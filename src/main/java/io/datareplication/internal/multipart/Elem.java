@@ -9,7 +9,8 @@ import lombok.Value;
 import java.nio.ByteBuffer;
 
 public abstract class Elem {
-    private Elem() {}
+    private Elem() {
+    }
 
     @Value
     @EqualsAndHashCode(callSuper = false)

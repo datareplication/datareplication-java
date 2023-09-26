@@ -2,7 +2,6 @@ package io.datareplication.internal.multipart;
 
 import lombok.EqualsAndHashCode;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 public abstract class MultipartException extends RuntimeException {

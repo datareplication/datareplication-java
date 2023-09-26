@@ -34,13 +34,10 @@ public class MultipartParser {
     private long offset;
     private final ByteBuffer dashBoundary;
     private final CharsetDecoder headerDecoder;
-    private final int maxHeaderSize;
 
     private static final ByteBuffer CLOSE_DELIMITER = ByteBuffer.wrap("--".getBytes(StandardCharsets.US_ASCII));
 
-    private static final int DEFAULT_MAX_HEADER_SIZE = 2048;
-
-    public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset, int maxHeaderSize) {
+    public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset) {
         state = State.Preamble;
         offset = 0;
         headerDecoder = headerCharset
@@ -51,19 +48,10 @@ public class MultipartParser {
         dashBoundary.put((byte) '-');
         dashBoundary.put((byte) '-');
         dashBoundary.put(boundary);
-        this.maxHeaderSize = maxHeaderSize;
-    }
-
-    public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset) {
-        this(boundary, headerCharset, DEFAULT_MAX_HEADER_SIZE);
-    }
-
-    public MultipartParser(@NonNull ByteBuffer boundary, int maxHeaderSize) {
-        this(boundary, StandardCharsets.UTF_8, maxHeaderSize);
     }
 
     public MultipartParser(@NonNull ByteBuffer boundary) {
-        this(boundary, StandardCharsets.UTF_8, DEFAULT_MAX_HEADER_SIZE);
+        this(boundary, StandardCharsets.UTF_8);
     }
 
     public @NonNull Result parse(@NonNull ByteBuffer input) throws RequestInput, MultipartException {
@@ -135,9 +123,9 @@ public class MultipartParser {
                         .orElseGet(() -> Result.data(input.slice()));
             case Epilogue:
                 return new Result(Elem.Continue.INSTANCE, input.limit());
+            default:
+                throw new RuntimeException(String.format("unknown state %s; bug in parser?", state));
         }
-
-        throw new RuntimeException(String.format("unknown state %s; bug in parser?", state));
     }
 
     private Elem.Header parseHeader(ByteBuffer bytes) {
