@@ -19,12 +19,9 @@ public interface FeedProducer {
                                            @NonNull Body body,
                                            @NonNull Object userData);
 
-    @NonNull CompletionStage<Void> publish(@NonNull OperationType operationType,
-                                           @NonNull Body body,
-                                           @NonNull Optional<@NonNull Object> userData);
-
     @NonNull CompletionStage<Void> publish(@NonNull Entity<@NonNull FeedEntityHeader> entity);
 
+    // TODO: is there a better name?
     @NonNull CompletionStage<Void> assignPages();
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
