@@ -63,6 +63,7 @@ class MultipartParserTest {
                 .isEqualTo(new Result(Elem.Continue.INSTANCE, 2));
         assertThat(parser.parse(utf8("epilogue")))
                 .isEqualTo(new Result(Elem.Continue.INSTANCE, 8));
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
@@ -78,10 +79,11 @@ class MultipartParserTest {
                                  new Elem.Data(utf8("datadatadata")),
                                  Elem.PartEnd.INSTANCE,
                                  Elem.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
-    public void shouldIgnoreNotQuiteCorrectDelimiter() {
+    public void shouldSkipPastNotQuiteCorrectDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_---_boundary"));
 
         assertThat(parseExactly(parser, utf8("--_---_boundary\r\n\r\ndata data\r\n\r\n--_---_boundarz\n\n--_---_boundary--")))
@@ -93,10 +95,11 @@ class MultipartParserTest {
                                  new Elem.Data(utf8("\r\n--_---_boundarz")),
                                  Elem.PartEnd.INSTANCE,
                                  Elem.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
-    public void shouldIgnoreDelimiterWithOnlyOneNewline() {
+    public void shouldSkipPastDelimiterWithOnlyOneNewline() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThat(parseExactly(parser, utf8("--_b\n\ndata\n--_b-- other stuff\n\n--_b--")))
@@ -107,6 +110,7 @@ class MultipartParserTest {
                                  new Elem.Data(utf8("\n--_b-- other stuff")),
                                  Elem.PartEnd.INSTANCE,
                                  Elem.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
@@ -117,6 +121,7 @@ class MultipartParserTest {
                 .containsExactly(Elem.Continue.INSTANCE,
                                  Elem.Continue.INSTANCE,
                                  Elem.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
@@ -132,6 +137,7 @@ class MultipartParserTest {
                                  Elem.DataBegin.INSTANCE,
                                  Elem.PartEnd.INSTANCE,
                                  Elem.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
@@ -147,6 +153,7 @@ class MultipartParserTest {
                                  Elem.DataBegin.INSTANCE,
                                  Elem.PartEnd.INSTANCE,
                                  Elem.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
     }
 
     @Test
@@ -211,5 +218,45 @@ class MultipartParserTest {
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b\nheader: äö\n\n\n--_b--")))
                 .isEqualTo(new MultipartException.UndecodableHeader(StandardCharsets.US_ASCII, 5));
+    }
+
+    @Test
+    public void shouldNotBeFinished_whenInPrologue() {
+        MultipartParser parser = new MultipartParser(utf8("_b"));
+
+        parseExactly(parser, utf8("prologue... --_b\noops, fakeout"));
+        assertThat(parser.isFinished()).isFalse();
+    }
+
+    @Test
+    public void shouldNotBeFinished_whenOpenDelimiterWithoutNewline() {
+        MultipartParser parser = new MultipartParser(utf8("_b"));
+
+        parseExactly(parser, utf8("--_b"));
+        assertThat(parser.isFinished()).isFalse();
+    }
+
+    @Test
+    public void shouldNotBeFinished_whenUnterminatedHeaders() {
+        MultipartParser parser = new MultipartParser(utf8("_b"));
+
+        parseExactly(parser, utf8("--_b\nh1: v1\n"));
+        assertThat(parser.isFinished()).isFalse();
+    }
+
+    @Test
+    public void shouldNotBeFinished_whenUnterminatedData() {
+        MultipartParser parser = new MultipartParser(utf8("_b"));
+
+        parseExactly(parser, utf8("--_b\n\ndatadatadata"));
+        assertThat(parser.isFinished()).isFalse();
+    }
+
+    @Test
+    public void shouldNotBeFinished_whenIncompleteCloseDelimiter() {
+        MultipartParser parser = new MultipartParser(utf8("_b"));
+
+        parseExactly(parser, utf8("--_b\nh1:v1\n\ndata\n\n--_b"));
+        assertThat(parser.isFinished()).isFalse();
     }
 }

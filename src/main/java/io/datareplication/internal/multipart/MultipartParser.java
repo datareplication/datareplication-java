@@ -146,4 +146,8 @@ public class MultipartParser {
         String value = headerString.substring(idx + 1).trim();
         return new Elem.Header(name, value);
     }
+
+    public boolean isFinished() {
+        return state == State.Epilogue;
+    }
 }
