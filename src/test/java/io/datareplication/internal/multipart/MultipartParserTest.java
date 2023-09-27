@@ -86,7 +86,8 @@ class MultipartParserTest {
     void shouldSkipPastNotQuiteCorrectDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_---_boundary"));
 
-        assertThat(parseExactly(parser, utf8("--_---_boundary\r\n\r\ndata data\r\n\r\n--_---_boundarz\n\n--_---_boundary--")))
+        final String multipart = "--_---_boundary\r\n\r\ndata data\r\n\r\n--_---_boundarz\n\n--_---_boundary--";
+        assertThat(parseExactly(parser, utf8(multipart)))
                 .containsExactly(Elem.Continue.INSTANCE,
                                  Elem.PartBegin.INSTANCE,
                                  Elem.DataBegin.INSTANCE,
