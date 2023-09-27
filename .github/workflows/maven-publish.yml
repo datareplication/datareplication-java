@@ -10,8 +10,8 @@ on:
       - 'feature/**'
 
 jobs:
-  build:
-
+  maven_build:
+    name: "Build and publish with Maven"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,6 +30,15 @@ jobs:
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+    - name: Write jacoco report with Maven
+      run: mvn -B jacoco:report --file pom.xml
+    - name: Check
+      run: ls -lart target/site/jacoco
+    - name: Run codacy-coverage-reporter
+      uses: codacy/codacy-coverage-reporter-action@v1
+      with:
+        api-token: ${{ secrets.CODACY_API_TOKEN }}
+        coverage-reports: target/site/jacoco/jacoco.xml
 
     #- name: Publish to GitHub Packages Apache Maven
     #  run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
