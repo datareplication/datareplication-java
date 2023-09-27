@@ -15,7 +15,7 @@ public interface FeedPageProvider {
     // TODO: alternative: put content-* stuff into extraHeaders
     // TODO: better name?
     @Value
-    public class FeedPageHeaderWithContentType {
+    class FeedPageHeaderWithContentType {
         @NonNull FeedPageHeader header;
         @NonNull ContentType contentType;
         long contentLength;

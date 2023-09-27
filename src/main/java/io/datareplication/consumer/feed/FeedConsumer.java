@@ -11,8 +11,9 @@ import java.util.concurrent.Flow;
 
 public interface FeedConsumer {
     // TODO: error handling
-    @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(@NonNull Url url,
-                                                                                                                    @NonNull StartFrom startFrom);
+    @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(
+        @NonNull Url url,
+        @NonNull StartFrom startFrom);
 
     @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
                                                                                        @NonNull StartFrom startFrom);

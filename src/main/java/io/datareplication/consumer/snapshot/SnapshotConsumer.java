@@ -27,10 +27,13 @@ public interface SnapshotConsumer {
     // TODO: parallelism setting
 
     // TODO: error handling
-    @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>> streamPages(
-            @NonNull SnapshotIndex snapshotIndex);
+    @NonNull Flow.Publisher<
+        @NonNull StreamingPage<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>
+        > streamPages(@NonNull SnapshotIndex snapshotIndex);
 
-    @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> streamEntities(@NonNull SnapshotIndex snapshotIndex);
+    @NonNull Flow.Publisher<
+        @NonNull Entity<@NonNull SnapshotEntityHeader>
+        > streamEntities(@NonNull SnapshotIndex snapshotIndex);
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {

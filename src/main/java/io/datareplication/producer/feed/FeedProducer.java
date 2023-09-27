@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 import java.time.Clock;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
 public interface FeedProducer {
