@@ -8,7 +8,7 @@ import lombok.Value;
 
 import java.nio.ByteBuffer;
 
-public abstract class Elem {
+public class Elem {
     private Elem() {
     }
 

@@ -12,6 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class MultipartParser {
+    private State state;
+    private long offset;
+    private final ByteBuffer dashBoundary;
+    private final CharsetDecoder headerDecoder;
+
+    private static final ByteBuffer CLOSE_DELIMITER = ByteBuffer.wrap("--".getBytes(StandardCharsets.US_ASCII));
+
     @Value
     public static class Result {
         @NonNull Elem elem;
@@ -23,22 +30,15 @@ public class MultipartParser {
     }
 
     private enum State {
-        Preamble,
-        PartBegin,
-        Headers,
-        Data,
-        Epilogue,
+        PREAMBLE,
+        PART_BEGIN,
+        HEADERS,
+        DATA,
+        EPILOGUE,
     }
 
-    private State state;
-    private long offset;
-    private final ByteBuffer dashBoundary;
-    private final CharsetDecoder headerDecoder;
-
-    private static final ByteBuffer CLOSE_DELIMITER = ByteBuffer.wrap("--".getBytes(StandardCharsets.US_ASCII));
-
     public MultipartParser(@NonNull ByteBuffer boundary, @NonNull Charset headerCharset) {
-        state = State.Preamble;
+        state = State.PREAMBLE;
         offset = 0;
         headerDecoder = headerCharset
                 .newDecoder()
@@ -54,7 +54,11 @@ public class MultipartParser {
         this(boundary, StandardCharsets.UTF_8);
     }
 
-    public @NonNull Result parse(@NonNull ByteBuffer input) throws RequestInput, MultipartException {
+    /**
+     * @throws RequestInput give me more bytes
+     * @throws MultipartException something went wrong
+     */
+    public @NonNull Result parse(@NonNull ByteBuffer input) {
         Result result = parseInternal(input);
         offset += result.consumedBytes;
         return result;
@@ -62,12 +66,12 @@ public class MultipartParser {
 
     private Result parseInternal(final ByteBuffer input) {
         switch (state) {
-            case Preamble:
+            case PREAMBLE:
                 return Combinators
                         .tag(dashBoundary)
                         .parse(input, 0)
                         .map(pos -> {
-                            state = State.PartBegin;
+                            state = State.PART_BEGIN;
                             return new Result(Elem.Continue.INSTANCE, pos.end());
                         })
                         .or(() -> Combinators
@@ -75,42 +79,42 @@ public class MultipartParser {
                                 .parse(input, 0)
                                 .map(pos -> new Result(Elem.Continue.INSTANCE, pos.end())))
                         .orElseGet(() -> new Result(Elem.Continue.INSTANCE, input.limit()));
-            case PartBegin:
+            case PART_BEGIN:
                 return Combinators
                         .eol()
                         .parse(input, 0)
                         .map(pos -> {
-                            state = State.Headers;
+                            state = State.HEADERS;
                             return new Result(Elem.PartBegin.INSTANCE, pos.end());
                         })
                         .or(() -> Combinators
                                 .tag(CLOSE_DELIMITER)
                                 .parse(input, 0)
                                 .map(pos -> {
-                                    state = State.Epilogue;
+                                    state = State.EPILOGUE;
                                     return new Result(Elem.Continue.INSTANCE, pos.end());
                                 }))
                         .orElseThrow(() -> new MultipartException.InvalidDelimiter(offset));
-            case Headers:
+            case HEADERS:
                 final Combinators.Pos eol = Combinators
                         .scan(Combinators.eol())
                         .parse(input, 0)
                         .orElseThrow(RequestInput::new);
                 if (eol.start() == 0) {
                     // immediate newline, go to body
-                    state = State.Data;
+                    state = State.DATA;
                     return new Result(Elem.DataBegin.INSTANCE, eol.end());
                 } else {
                     final ByteBuffer headerLine = input.slice().limit(eol.start());
                     return new Result(parseHeader(headerLine), eol.end());
                 }
-            case Data:
+            case DATA:
                 return Combinators
                         .seq(Combinators.seq(Combinators.eol(), Combinators.eol()),
                              Combinators.tag(dashBoundary))
                         .parse(input, 0)
                         .map(pos -> {
-                            state = State.PartBegin;
+                            state = State.PART_BEGIN;
                             return new Result(Elem.PartEnd.INSTANCE, pos.end());
                         })
                         .or(() -> Combinators
@@ -121,7 +125,7 @@ public class MultipartParser {
                                         : Optional.of(pos))
                                 .map(pos -> Result.data(input.slice().limit(pos.start()))))
                         .orElseGet(() -> Result.data(input.slice()));
-            case Epilogue:
+            case EPILOGUE:
                 return new Result(Elem.Continue.INSTANCE, input.limit());
             default:
                 throw new IllegalStateException(String.format("unknown state %s; bug in parser?", state));
@@ -147,6 +151,6 @@ public class MultipartParser {
     }
 
     public boolean isFinished() {
-        return state == State.Epilogue;
+        return state == State.EPILOGUE;
     }
 }

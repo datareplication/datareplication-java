@@ -24,6 +24,7 @@
     <rule ref="category/java/errorprone.xml">
         <exclude name="MissingSerialVersionUID" />
         <exclude name="DataflowAnomalyAnalysis" />
+        <exclude name="AvoidFieldNameMatchingTypeName" />
     </rule>
     <rule ref="category/java/performance.xml">
         <exclude name="AvoidInstantiatingObjectsInLoops" />

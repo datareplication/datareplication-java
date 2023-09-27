@@ -10,6 +10,9 @@ import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class Combinators {
+    private static final ByteBuffer CRLF = ByteBuffer.wrap("\r\n".getBytes(StandardCharsets.US_ASCII));
+    private static final ByteBuffer LF = ByteBuffer.wrap("\n".getBytes(StandardCharsets.US_ASCII));
+
     @FunctionalInterface
     interface Parser {
         Optional<Pos> parse(ByteBuffer input, int start);
@@ -20,9 +23,6 @@ class Combinators {
         int start;
         int end;
     }
-
-    private static final ByteBuffer CRLF = ByteBuffer.wrap("\r\n".getBytes(StandardCharsets.US_ASCII));
-    private static final ByteBuffer LF = ByteBuffer.wrap("\n".getBytes(StandardCharsets.US_ASCII));
 
     static Parser tag(ByteBuffer tag) {
         return (ByteBuffer input, int start) -> {
@@ -41,24 +41,24 @@ class Combinators {
         };
     }
 
-    static Parser seq(Parser a, Parser b) {
-        return (ByteBuffer input, int start) -> a
+    static Parser seq(Parser first, Parser second) {
+        return (ByteBuffer input, int start) -> first
             .parse(input, start)
-            .flatMap(pos1 -> b
+            .flatMap(pos1 -> second
                  .parse(input, pos1.end)
                  .map(pos2 -> new Pos(pos1.start, pos2.end)));
     }
 
-    static Parser either(Parser a, Parser b) {
-        return (ByteBuffer input, int start) -> a
+    static Parser either(Parser first, Parser second) {
+        return (ByteBuffer input, int start) -> first
             .parse(input, start)
-            .or(() -> b.parse(input, start));
+            .or(() -> second.parse(input, start));
     }
 
-    static Parser scan(Parser p) {
+    static Parser scan(Parser parser) {
         return (ByteBuffer input, int start) -> {
             for (int i = start; i < input.limit(); i++) {
-                Optional<Pos> result = p.parse(input, i);
+                Optional<Pos> result = parser.parse(input, i);
                 if (result.isPresent()) {
                     return result;
                 }
