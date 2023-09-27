@@ -72,7 +72,7 @@
                     <failOnViolation>false</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
                     <rulesets>
-                        <ruleset>pmd.xml</ruleset>
+                        <ruleset>ruleset.xml</ruleset>
                     </rulesets>
                 </configuration>
                 <executions>
@@ -110,6 +110,9 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.7.3.6</version>
+                <configuration>
+                    <excludeFilterFile>spotbugs.xml</excludeFilterFile>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
