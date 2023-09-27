@@ -6,6 +6,7 @@
     <description>
         default ruleset
     </description>
+    <exclude-pattern>.*Test[.]java</exclude-pattern>
 
     <rule ref="category/java/bestpractices.xml" />
     <rule ref="category/java/codestyle.xml">
@@ -24,6 +25,7 @@
     <rule ref="category/java/errorprone.xml">
         <exclude name="MissingSerialVersionUID" />
         <exclude name="DataflowAnomalyAnalysis" />
+        <exclude name="AvoidFieldNameMatchingTypeName" />
     </rule>
     <rule ref="category/java/performance.xml">
         <exclude name="AvoidInstantiatingObjectsInLoops" />
