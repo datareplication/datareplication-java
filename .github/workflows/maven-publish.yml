@@ -40,8 +40,31 @@ jobs:
       with:
         api-token: ${{ secrets.CODACY_API_TOKEN }}
         coverage-reports: target/site/jacoco/jacoco.xml
+    - name: Create Javadoc with Maven
+      #if: ${{ github.ref == 'refs/heads/main' }}
+      run: mvn -B javadoc:javadoc --file pom.xml
+    - name: Upload Javadoc artifact
+      #if: ${{ github.ref == 'refs/heads/main' }}
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: ./target/site/apidocs
 
     #- name: Publish to GitHub Packages Apache Maven
     #  run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
     #  env:
     #    GITHUB_TOKEN: ${{ github.token }}
+
+  publish_javadoc:
+    environment:
+      name: Deploy Javadoc to github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pages: write
+    needs: maven_build
+    steps:
+      - name: Deploy to GitHub Pages
+        #if: ${{ github.ref == 'refs/heads/main' }}
+        id: deployment
+        uses: actions/deploy-pages@v2
