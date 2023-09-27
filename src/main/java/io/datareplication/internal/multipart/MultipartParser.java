@@ -50,7 +50,7 @@ public class MultipartParser {
         dashBoundary.put(boundary);
     }
 
-    public MultipartParser(@NonNull ByteBuffer boundary) {
+    public MultipartParser(ByteBuffer boundary) {
         this(boundary, StandardCharsets.UTF_8);
     }
 
