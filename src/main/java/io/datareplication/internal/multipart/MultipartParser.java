@@ -124,7 +124,7 @@ public class MultipartParser {
             case Epilogue:
                 return new Result(Elem.Continue.INSTANCE, input.limit());
             default:
-                throw new RuntimeException(String.format("unknown state %s; bug in parser?", state));
+                throw new IllegalStateException(String.format("unknown state %s; bug in parser?", state));
         }
     }
 
