@@ -72,7 +72,7 @@
                     <failOnViolation>false</failOnViolation>
                     <printFailingErrors>true</printFailingErrors>
                     <rulesets>
-                        <ruleset>jpinpoint-rules.xml</ruleset>
+                        <ruleset>pmd.xml</ruleset>
                     </rulesets>
                 </configuration>
                 <executions>
