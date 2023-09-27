@@ -28,7 +28,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldParseMultipartBodyDetailed() {
+    void shouldParseMultipartBodyDetailed() {
         MultipartParser parser = new MultipartParser(utf8("_---_boundary"));
 
         assertThat(parser.parse(utf8("preamble\r\n")))
@@ -67,7 +67,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldParseMultipartBody() {
+    void shouldParseMultipartBody() {
         MultipartParser parser = new MultipartParser(utf8("..."));
 
         assertThat(parseExactly(parser, utf8("--...\nh1:v1\nh2:v2\n\ndatadatadata\n\n--...--")))
@@ -83,7 +83,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldSkipPastNotQuiteCorrectDelimiter() {
+    void shouldSkipPastNotQuiteCorrectDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_---_boundary"));
 
         assertThat(parseExactly(parser, utf8("--_---_boundary\r\n\r\ndata data\r\n\r\n--_---_boundarz\n\n--_---_boundary--")))
@@ -99,7 +99,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldSkipPastDelimiterWithOnlyOneNewline() {
+    void shouldSkipPastDelimiterWithOnlyOneNewline() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThat(parseExactly(parser, utf8("--_b\n\ndata\n--_b-- other stuff\n\n--_b--")))
@@ -114,7 +114,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldParseEmptyMultipart() {
+    void shouldParseEmptyMultipart() {
         MultipartParser parser = new MultipartParser(utf8("bnd"));
 
         assertThat(parseExactly(parser, utf8("--bnd--epilogue more stuff")))
@@ -125,7 +125,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldRequireNewlineAfterPrologue() {
+    void shouldRequireNewlineAfterPrologue() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThat(parseExactly(parser, utf8("fake start: --_b\n\nactual start:\n--_b\n\n\n\n--_b--")))
@@ -141,7 +141,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldTrimHeaderWhitespace() {
+    void shouldTrimHeaderWhitespace() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThat(parseExactly(parser, utf8("--_b\nh1:v1\n   h2      :    v2    \nh 3: v 3\n\n\n\n--_b--")))
@@ -157,7 +157,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldRequestMoreInput_whenIncompleteInitialDelimiter() {
+    void shouldRequestMoreInput_whenIncompleteInitialDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_")))
@@ -165,7 +165,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldRequestMoreInput_whenIncompleteLaterDelimiter() {
+    void shouldRequestMoreInput_whenIncompleteLaterDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b\n\n\n\n--_")))
@@ -173,7 +173,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldRequestMoreInput_whenIncompleteCloseDelimiter() {
+    void shouldRequestMoreInput_whenIncompleteCloseDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b-")))
@@ -181,7 +181,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldRequestMoreInput_whenUndelimitedHeader() {
+    void shouldRequestMoreInput_whenUndelimitedHeader() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b\nh1: v1\nh2: v2    --_b--")))
@@ -189,7 +189,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldError_whenInvalidInitialDelimiter() {
+    void shouldError_whenInvalidInitialDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b... oh no!")))
@@ -197,7 +197,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldError_whenInvalidCloseDelimiter() {
+    void shouldError_whenInvalidCloseDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b\n\n\n\n--_b-.")))
@@ -205,7 +205,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldError_whenHeaderLineWithoutColon() {
+    void shouldError_whenHeaderLineWithoutColon() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b\nheader... oops\n\n\n--_b--")))
@@ -213,7 +213,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldError_whenUndecodableHeader() {
+    void shouldError_whenUndecodableHeader() {
         MultipartParser parser = new MultipartParser(utf8("_b"), StandardCharsets.US_ASCII);
 
         assertThatThrownBy(() -> parseExactly(parser, utf8("--_b\nheader: äö\n\n\n--_b--")))
@@ -221,7 +221,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldNotBeFinished_whenInPrologue() {
+    void shouldNotBeFinished_whenInPrologue() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         parseExactly(parser, utf8("prologue... --_b\noops, fakeout"));
@@ -229,7 +229,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldNotBeFinished_whenOpenDelimiterWithoutNewline() {
+    void shouldNotBeFinished_whenOpenDelimiterWithoutNewline() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         parseExactly(parser, utf8("--_b"));
@@ -237,7 +237,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldNotBeFinished_whenUnterminatedHeaders() {
+    void shouldNotBeFinished_whenUnterminatedHeaders() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         parseExactly(parser, utf8("--_b\nh1: v1\n"));
@@ -245,7 +245,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldNotBeFinished_whenUnterminatedData() {
+    void shouldNotBeFinished_whenUnterminatedData() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         parseExactly(parser, utf8("--_b\n\ndatadatadata"));
@@ -253,7 +253,7 @@ class MultipartParserTest {
     }
 
     @Test
-    public void shouldNotBeFinished_whenIncompleteCloseDelimiter() {
+    void shouldNotBeFinished_whenIncompleteCloseDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
         parseExactly(parser, utf8("--_b\nh1:v1\n\ndata\n\n--_b"));
