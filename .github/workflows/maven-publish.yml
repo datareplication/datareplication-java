@@ -31,8 +31,6 @@ jobs:
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: Write jacoco report with Maven
-      run: mvn -B jacoco:report --file pom.xml
     - name: Check
       run: ls -lart target/site/jacoco
     - name: Run codacy-coverage-reporter
