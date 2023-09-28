@@ -14,6 +14,7 @@ import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
@@ -39,7 +40,7 @@ public interface SnapshotConsumer {
     class Builder {
         // TODO: threadpool
         // TODO: parallelism setting?
-        private final ArrayList<HttpHeader> additionalHeaders;
+        private final List<HttpHeader> additionalHeaders;
         private Supplier<Optional<Authorization>> authSupplier;
 
         public @NonNull Builder additionalHeaders(@NonNull HttpHeader... headers) {

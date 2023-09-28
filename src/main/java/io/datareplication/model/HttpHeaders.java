@@ -10,8 +10,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 @EqualsAndHashCode
-public class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders {
+public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders {
     @NonNull private final Map<@NonNull String, @NonNull HttpHeader> headers;
+
+    @NonNull public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
 
     private HttpHeaders(Map<@NonNull String, @NonNull HttpHeader> headers) {
         this.headers = Collections.unmodifiableMap(headers);
@@ -36,7 +38,7 @@ public class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders
         return update(new HashMap<>(this.headers), headers);
     }
 
-    private static HttpHeaders update(HashMap<String, HttpHeader> headerMap, Iterable<HttpHeader> headers) {
+    private static HttpHeaders update(Map<String, HttpHeader> headerMap, Iterable<HttpHeader> headers) {
         for (HttpHeader header : headers) {
             headerMap.put(header.name(), header);
         }
@@ -51,6 +53,4 @@ public class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders
     public static @NonNull HttpHeaders of(@NonNull Iterable<@NonNull HttpHeader> headers) {
         return update(new HashMap<>(), headers);
     }
-
-    @NonNull public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
 }
