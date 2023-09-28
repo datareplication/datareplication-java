@@ -6,4 +6,7 @@
 	<Match>
 		<Bug pattern="EI_EXPOSE_REP2" type="EI_EXPOSE_REP2"/>
 	</Match>
+    <Match>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" type="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Match>
 </FindBugsFilter>
