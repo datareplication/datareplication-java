@@ -53,6 +53,7 @@ jobs:
     #    GITHUB_TOKEN: ${{ github.token }}
 
   publish_javadoc:
+    if: ${{ github.ref == 'refs/heads/main' }}
     environment:
       name: Deploy Javadoc to github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -63,6 +64,5 @@ jobs:
     needs: maven_build
     steps:
       - name: Deploy to GitHub Pages
-        if: ${{ github.ref == 'refs/heads/main' }}
         id: deployment
         uses: actions/deploy-pages@v2
