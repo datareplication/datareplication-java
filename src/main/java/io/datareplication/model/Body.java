@@ -1,18 +1,21 @@
 package io.datareplication.model;
 
 import lombok.NonNull;
+import org.apache.commons.io.input.ReaderInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 
 /**
  * <p>
@@ -93,8 +96,6 @@ public interface Body extends ToHttpHeaders {
         );
     }
 
-    // TODO: error handling; just throw and document a decoding exception I guess
-
     /**
      * <p>
      * Decode this byte sequence as UTF-8.
@@ -106,7 +107,7 @@ public interface Body extends ToHttpHeaders {
      * </p>
      *
      * @return the content of this Body as UTF-8
-     * @throws IOException when the InputStream returned by {{@link #newInputStream()}} throws an IOException
+     * @throws IOException              when the InputStream returned by {{@link #newInputStream()}} throws an IOException
      * @throws CharacterCodingException when the underlying bytes are not valid UTF-8
      */
     default @NonNull String toUtf8() throws IOException {
@@ -160,7 +161,39 @@ public interface Body extends ToHttpHeaders {
      * @return a Body of the bytes of the given String encoded as UTF-8
      */
     static @NonNull Body fromUtf8(@NonNull String utf8, @NonNull ContentType contentType) {
-        throw new RuntimeException("not implemented");
+        final long contentLength = countUtf8Bytes(utf8);
+
+        return new Body() {
+            @Override
+            public @NonNull InputStream newInputStream() {
+                try {
+                    // TODO: I hate this
+                    return ReaderInputStream
+                        .builder()
+                        .setCharset(StandardCharsets.UTF_8)
+                        .setReader(new StringReader(utf8))
+                        .get();
+                } catch (IOException e) {
+                    // I'm assuming this can't happen, based on reading the source and the parameters we supply
+                    throw new IllegalStateException("unexpected IOException in fromUtf8#newInputStream; bug?");
+                }
+            }
+
+            @Override
+            public long contentLength() {
+                return contentLength;
+            }
+
+            @Override
+            public @NonNull ContentType contentType() {
+                return contentType;
+            }
+
+            @Override
+            public @NonNull String toUtf8() {
+                return utf8;
+            }
+        };
     }
 
     /**
@@ -226,5 +259,35 @@ public interface Body extends ToHttpHeaders {
      */
     static @NonNull Body fromBytes(@NonNull byte[] bytes) {
         return fromBytes(bytes, ContentType.of("application/octet-stream"));
+    }
+
+    private static long countUtf8Bytes(String utf8) {
+        class CountingOutputStream extends OutputStream {
+            private long count = 0;
+
+            @Override
+            public void write(final byte[] b) {
+                count += b.length;
+            }
+
+            @Override
+            public void write(final byte[] b, final int off, final int len) {
+                count += len;
+            }
+
+            @Override
+            public void write(final int b) {
+                count += 1;
+            }
+        }
+        try (CountingOutputStream counter = new CountingOutputStream()) {
+            try (OutputStreamWriter encoder = new OutputStreamWriter(counter, StandardCharsets.UTF_8)) {
+                encoder.write(utf8);
+            }
+            return counter.count;
+        } catch (IOException e) {
+            // can't happen
+            throw new IllegalStateException("unexpected IOException in countUtf8Bytes; bug?", e);
+        }
     }
 }
