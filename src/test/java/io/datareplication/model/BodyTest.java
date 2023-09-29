@@ -5,6 +5,7 @@ import lombok.Value;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.CharacterCodingException;
@@ -54,6 +55,13 @@ class BodyTest {
         }
     }
 
+    private static byte[] readAll(InputStream input) throws IOException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            input.transferTo(output);
+            return output.toByteArray();
+        }
+    }
+
     @Test
     void toHttpHeaders_shouldReturnContentLengthAndContentTypeHeaders() {
         final TestBody body = new TestBody(EmptyInputStream::new, 591, ContentType.of("application/json"));
@@ -61,8 +69,8 @@ class BodyTest {
         final HttpHeaders result = body.toHttpHeaders();
 
         assertThat(result).isEqualTo(HttpHeaders.of(
-            HttpHeader.contentLength(591),
-            HttpHeader.contentType(ContentType.of("application/json"))
+                HttpHeader.contentLength(591),
+                HttpHeader.contentType(ContentType.of("application/json"))
         ));
     }
 
@@ -73,8 +81,8 @@ class BodyTest {
         final HttpHeaders result = body.toHttpHeaders();
 
         assertThat(result).isEqualTo(HttpHeaders.of(
-            HttpHeader.contentLength(0),
-            HttpHeader.contentType(ANY_CONTENT_TYPE)
+                HttpHeader.contentLength(0),
+                HttpHeader.contentType(ANY_CONTENT_TYPE)
         ));
     }
 
@@ -85,8 +93,8 @@ class BodyTest {
         final HttpHeaders result = body.toHttpHeaders();
 
         assertThat(result).isEqualTo(HttpHeaders.of(
-            HttpHeader.contentLength(-1),
-            HttpHeader.contentType(ANY_CONTENT_TYPE)
+                HttpHeader.contentLength(-1),
+                HttpHeader.contentType(ANY_CONTENT_TYPE)
         ));
     }
 
@@ -188,5 +196,79 @@ class BodyTest {
         final TestBody body = new TestBody(ThrowingInputStream::new, 0, ANY_CONTENT_TYPE);
 
         assertThatThrownBy(body::toBytes).isInstanceOf(IOException.class);
+    }
+
+    @Test
+    void fromBytes_shouldReturnBody() throws IOException {
+        final byte[] bytes = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+        final Body body = Body.fromBytes(bytes, ContentType.of("application/xml"));
+
+        assertThat(readAll(body.newInputStream())).isEqualTo(bytes);
+        assertThat(body.contentLength()).isEqualTo(10);
+        assertThat(body.contentType()).isEqualTo(ContentType.of("application/xml"));
+    }
+
+    @Test
+    void fromBytes_shouldReturnBodyWithDefaultContentType() throws IOException {
+        final byte[] bytes = new byte[]{6, 6, 6, 6, 6, 6};
+
+        final Body body = Body.fromBytes(bytes);
+
+        assertThat(readAll(body.newInputStream())).isEqualTo(bytes);
+        assertThat(body.contentLength()).isEqualTo(6);
+        assertThat(body.contentType()).isEqualTo(ContentType.of("application/octet-stream"));
+    }
+
+    @Test
+    void fromBytes_shouldNotReturnTheSameByteArrayFromToBytes() throws IOException {
+        final byte[] bytes = new byte[]{1, 2, 3, 5, 8, 13, 21};
+
+        final Body body = Body.fromBytes(bytes);
+
+        assertThat(body.toBytes()).isEqualTo(bytes);
+        assertThat(body.toBytes()).isNotSameAs(bytes);
+    }
+
+    @Test
+    void fromUtf8_shouldReturnBody_whenAsciiOnly() throws IOException {
+        final String s = "this is the test string";
+
+        final Body body = Body.fromUtf8(s, ContentType.of("text/html"));
+
+        assertThat(readAll(body.newInputStream())).isEqualTo(s.getBytes(StandardCharsets.US_ASCII));
+        assertThat(body.contentLength()).isEqualTo(s.length());
+        assertThat(body.contentType()).isEqualTo(ContentType.of("text/html"));
+    }
+
+    @Test
+    void fromUtf8_shouldReturnBodyWithDefaultContentType() throws IOException {
+        final String s = "this is the test string";
+
+        final Body body = Body.fromUtf8(s);
+
+        assertThat(readAll(body.newInputStream())).isEqualTo(s.getBytes(StandardCharsets.US_ASCII));
+        assertThat(body.contentLength()).isEqualTo(s.length());
+        assertThat(body.contentType()).isEqualTo(ContentType.of("text/plain; charset=utf-8"));
+    }
+
+    @Test
+    void fromUtf8_shouldReturnBody_whenNotAsciiOnly() throws IOException {
+        final String s = "test äöüß é à";
+
+        final Body body = Body.fromUtf8(s);
+
+        assertThat(readAll(body.newInputStream())).isEqualTo(s.getBytes(StandardCharsets.UTF_8));
+        assertThat(body.contentLength()).isEqualTo(19);
+    }
+
+    @Test
+    void fromUtf8_shouldReturnTheSameStringFromToUtf8() throws IOException {
+        final String s = "test string";
+
+        final Body body = Body.fromUtf8(s);
+
+        assertThat(body.toUtf8()).isEqualTo(s);
+        assertThat(body.toUtf8()).isSameAs(s);
     }
 }
