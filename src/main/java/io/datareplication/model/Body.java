@@ -6,6 +6,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 /**
@@ -49,7 +55,7 @@ public interface Body extends ToHttpHeaders {
     @NonNull InputStream newInputStream();
 
     /**
-     * Return the length of the underlying byte sequence in bytes.
+     * Return the length of the underlying byte sequence in bytes. Must not be negative.
      *
      * @return the length of the underlying byte sequence
      */
@@ -81,16 +87,14 @@ public interface Body extends ToHttpHeaders {
      */
     @Override
     default @NonNull HttpHeaders toHttpHeaders() {
-        ArrayList<HttpHeader> headers = new ArrayList<>();
-        headers.add(HttpHeader.contentType(contentType()));
-        long contentLength = contentLength();
-        if (contentLength > 0) {
-            headers.add(HttpHeader.contentLength(contentLength));
-        }
-        return HttpHeaders.of(headers);
+        return HttpHeaders.of(
+            HttpHeader.contentType(contentType()),
+            HttpHeader.contentLength(contentLength())
+        );
     }
 
     // TODO: error handling; just throw and document a decoding exception I guess
+
     /**
      * <p>
      * Decode this byte sequence as UTF-8.
@@ -102,9 +106,22 @@ public interface Body extends ToHttpHeaders {
      * </p>
      *
      * @return the content of this Body as UTF-8
+     * @throws IOException when the InputStream returned by {{@link #newInputStream()}} throws an IOException
+     * @throws CharacterCodingException when the underlying bytes are not valid UTF-8
      */
-    default @NonNull String toUtf8() {
-        throw new RuntimeException("not implemented");
+    default @NonNull String toUtf8() throws IOException {
+        try (StringWriter writer = new StringWriter(getBufferSize(this))) {
+            try (InputStream input = newInputStream()) {
+                final CharsetDecoder decoder = StandardCharsets.UTF_8
+                    .newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT);
+                try (InputStreamReader wrappingReader = new InputStreamReader(input, decoder)) {
+                    wrappingReader.transferTo(writer);
+                }
+            }
+            return writer.toString();
+        }
     }
 
     /**
@@ -119,9 +136,10 @@ public interface Body extends ToHttpHeaders {
      * </p>
      *
      * @return the byte contents of this Body
+     * @throws IOException when the InputStream returned by {{@link #newInputStream()}} throws an IOException
      */
     default @NonNull byte[] toBytes() throws IOException {
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream((int) contentLength())) {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream(getBufferSize(this))) {
             try (InputStream input = newInputStream()) {
                 input.transferTo(output);
             }
@@ -129,18 +147,46 @@ public interface Body extends ToHttpHeaders {
         }
     }
 
-    static @NonNull Body fromUtf8(@NonNull String utf8) {
-        return fromUtf8(utf8, ContentType.of("text/plain; charset=utf-8"));
+    private static int getBufferSize(Body body) {
+        return Math.max((int) body.contentLength(), 0);
     }
 
+    /**
+     * Return a Body over the bytes of the given String encoded as UTF-8. This method retains the String and does not
+     * allocate an additional backing buffer.
+     *
+     * @param utf8        the String
+     * @param contentType the content type for the created Body
+     * @return a Body of the bytes of the given String encoded as UTF-8
+     */
     static @NonNull Body fromUtf8(@NonNull String utf8, @NonNull ContentType contentType) {
         throw new RuntimeException("not implemented");
     }
 
-    static @NonNull Body fromBytes(@NonNull byte[] bytes) {
-        return fromBytes(bytes, ContentType.of("application/octet-stream"));
+    /**
+     * Return a Body over the bytes of the given String encoded as UTF-8 with the default content type
+     * <code>text/plain; charset=utf-8</code>.
+     *
+     * @param utf8 the String
+     * @return a Body of the bytes of the given String encoded as UTF-8
+     * @see #fromUtf8(String, ContentType)
+     */
+    static @NonNull Body fromUtf8(@NonNull String utf8) {
+        return fromUtf8(utf8, ContentType.of("text/plain; charset=utf-8"));
     }
 
+    /**
+     * <p>Return a Body containing the bytes of the given byte array.</p>
+     *
+     * <p>The byte array is not copied, therefore you have to make sure that the array is
+     * <strong>NEVER MODIFIED</strong> after being passed to this method. If you can't guarantee that, always clone
+     * the array before passing it to this method.
+     * </p>
+     *
+     * @param bytes       the byte array
+     * @param contentType the content type for the created Body
+     * @return a Body of the array's bytes
+     */
     static @NonNull Body fromBytes(@NonNull byte[] bytes, @NonNull ContentType contentType) {
         return new Body() {
             @Override
@@ -163,5 +209,22 @@ public interface Body extends ToHttpHeaders {
                 return bytes.clone();
             }
         };
+    }
+
+    /**
+     * <p>Return a Body containing the bytes of the given byte array with the default content-type
+     * <code>application/octet-stream</code>
+     * </p>
+     *
+     * <p>The byte array is not copied, therefore you have to make sure that the array is
+     * <strong>NEVER MODIFIED</strong> after being passed to this method. If you can't guarantee that, always clone
+     * the array before passing it to this method.
+     * </p>
+     *
+     * @param bytes the byte array
+     * @return a Body of the array's bytes
+     */
+    static @NonNull Body fromBytes(@NonNull byte[] bytes) {
+        return fromBytes(bytes, ContentType.of("application/octet-stream"));
     }
 }

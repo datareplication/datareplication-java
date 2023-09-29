@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @EqualsAndHashCode
@@ -52,5 +53,9 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
 
     public static @NonNull HttpHeaders of(@NonNull Iterable<@NonNull HttpHeader> headers) {
         return update(new HashMap<>(), headers);
+    }
+
+    public static @NonNull HttpHeaders of(@NonNull HttpHeader... headers) {
+        return update(new HashMap<>(), List.of(headers));
     }
 }
