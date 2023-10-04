@@ -43,7 +43,7 @@ class HttpHeaderTest {
 
     @Test
     void shouldCreateLastModifiedHeader() {
-        final HttpHeader header = HttpHeader.lastModified(Timestamp.of(Instant.parse("2023-10-04T08:25:33.000Z")));
+        final HttpHeader header = HttpHeader.lastModified(Timestamp.of(Instant.parse("2023-10-04T08:25:33.666Z")));
 
         assertThat(header)
             .isEqualTo(HttpHeader.of("Last-Modified", "Wed, 04 Oct 2023 08:25:33 GMT"));
