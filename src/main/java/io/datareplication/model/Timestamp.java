@@ -12,4 +12,11 @@ import java.time.Instant;
 @Value(staticConstructor = "of")
 public class Timestamp {
     @NonNull Instant value;
+
+    /**
+     * Return a new Timestamp for the current instant (according to the system clock).
+     */
+    public static @NonNull Timestamp now() {
+        return Timestamp.of(Instant.now());
+    }
 }
