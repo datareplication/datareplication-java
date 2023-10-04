@@ -9,16 +9,29 @@ import lombok.Value;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * The index of a snapshot. In addition to some metadata, this primarily contains of a list of URLs to the pages that
+ * make up this snapshot.
+ */
 @Value
 public class SnapshotIndex {
+    /**
+     * The ID of the snapshot.
+     */
     @NonNull SnapshotId id;
-    @NonNull Timestamp started;
+    /**
+     * The timestamp of the dataset contained in this snapshot. This is usually the time when snapshot creation started.
+     */
+    @NonNull Timestamp createdAt;
+    /**
+     * The URLs of the pages that make up this snapshot.
+     */
     @NonNull List<@NonNull Url> pages;
 
-    public SnapshotIndex(@NonNull SnapshotId id, @NonNull Timestamp started, @NonNull List<@NonNull Url> pages) {
+    public SnapshotIndex(@NonNull SnapshotId id, @NonNull Timestamp createdAt, @NonNull List<@NonNull Url> pages) {
         this.id = id;
-        this.started = started;
-        this.pages = Collections.unmodifiableList(pages);
+        this.createdAt = createdAt;
+        this.pages = List.copyOf(pages);
     }
 
     public @NonNull Body toJson() {
