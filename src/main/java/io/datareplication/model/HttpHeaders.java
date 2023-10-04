@@ -2,6 +2,7 @@ package io.datareplication.model;
 
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.Map;
  * guaranteed and the order is not preserved.
  */
 @EqualsAndHashCode
+@ToString
 public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders {
     @NonNull private final Map<@NonNull String, @NonNull HttpHeader> headers;
 
