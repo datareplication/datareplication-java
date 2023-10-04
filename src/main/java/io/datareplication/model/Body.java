@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * <p>
- * The <pre>Body</pre> interface represents a sequence of bytes (usually for an entity or page body) including a length
+ * The <code>Body</code> interface represents a sequence of bytes (usually for an entity or page body) including a length
  * and an HTTP content type.
  * </p>
  *
@@ -167,7 +167,7 @@ public interface Body extends ToHttpHeaders {
             @Override
             public @NonNull InputStream newInputStream() {
                 try {
-                    // TODO: I hate this
+                    // TODO: maybe replace this to get rid of commons-io dependency
                     return ReaderInputStream
                         .builder()
                         .setCharset(StandardCharsets.UTF_8)
