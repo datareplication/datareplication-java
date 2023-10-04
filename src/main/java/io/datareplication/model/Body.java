@@ -1,6 +1,9 @@
 package io.datareplication.model;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 import org.apache.commons.io.input.ReaderInputStream;
 
 import java.io.ByteArrayInputStream;
@@ -161,9 +164,14 @@ public interface Body extends ToHttpHeaders {
      * @return a Body of the bytes of the given String encoded as UTF-8
      */
     static @NonNull Body fromUtf8(@NonNull String utf8, @NonNull ContentType contentType) {
-        final long contentLength = countUtf8Bytes(utf8);
+        @EqualsAndHashCode
+        @ToString
+        @AllArgsConstructor
+        class Utf8Body implements Body {
+            private final String utf8;
+            private final long contentLength;
+            private final ContentType contentType;
 
-        return new Body() {
             @Override
             public @NonNull InputStream newInputStream() {
                 try {
@@ -193,7 +201,8 @@ public interface Body extends ToHttpHeaders {
             public @NonNull String toUtf8() {
                 return utf8;
             }
-        };
+        }
+        return new Utf8Body(utf8, countUtf8Bytes(utf8), contentType);
     }
 
     /**
@@ -221,7 +230,13 @@ public interface Body extends ToHttpHeaders {
      * @return a Body of the array's bytes
      */
     static @NonNull Body fromBytes(@NonNull byte[] bytes, @NonNull ContentType contentType) {
-        return new Body() {
+        @EqualsAndHashCode
+        @ToString
+        @AllArgsConstructor
+        class BytesBody implements Body {
+            private final byte[] bytes;
+            private final ContentType contentType;
+
             @Override
             public @NonNull InputStream newInputStream() {
                 return new ByteArrayInputStream(bytes);
@@ -238,10 +253,11 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public @NonNull byte[] toBytes() throws IOException {
+            public @NonNull byte[] toBytes() {
                 return bytes.clone();
             }
-        };
+        }
+        return new BytesBody(bytes, contentType);
     }
 
     /**
