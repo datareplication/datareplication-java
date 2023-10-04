@@ -3,8 +3,11 @@ package io.datareplication.model;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Value
 public class HttpHeader {
@@ -19,9 +22,13 @@ public class HttpHeader {
     @NonNull public static final String LINK = "Link";
     @NonNull public static final String AUTHORIZATION = "Authorization";
 
+    private static DateTimeFormatter HTTP_HEADER_FORMATTER = DateTimeFormatter
+        .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
+        .withZone(ZoneId.of("GMT"));
+
     private HttpHeader(@NonNull String name, @NonNull List<@NonNull String> values) {
         this.name = name;
-        this.values = Collections.unmodifiableList(values);
+        this.values = List.copyOf(values);
     }
 
     public static @NonNull HttpHeader of(@NonNull String name, @NonNull String value) {
@@ -41,6 +48,6 @@ public class HttpHeader {
     }
 
     public static @NonNull HttpHeader lastModified(@NonNull Timestamp lastModified) {
-        throw new RuntimeException("not implemented");
+        return HttpHeader.of(LAST_MODIFIED, HTTP_HEADER_FORMATTER.format(lastModified.value()));
     }
 }
