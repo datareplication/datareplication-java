@@ -3,17 +3,16 @@ package io.datareplication.model;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
- * The <code>Page</code> class represents a complete feed or snapshot page, both on the producer and consumer side. A
- * page consists of page headers and a list of entities. This class always represents a page that is fully present in
- * memory; it does not handle streaming.
+ * The <code>Page</code> class represents a complete feed or snapshot page, both on the producer and consumer side. This
+ * class always represents a page that is fully present in memory; it does not handle streaming.
  *
- * @param <PageHeader> the type of the page header; in practice this will be either
- *  * {@link io.datareplication.model.snapshot.SnapshotPageHeader} or
- *  * {@link io.datareplication.model.feed.FeedPageHeader}
+ * @param <PageHeader>   the type of the page header; in practice this will be either
+ *                       * {@link io.datareplication.model.snapshot.SnapshotPageHeader} or
+ *                       * {@link io.datareplication.model.feed.FeedPageHeader}
  * @param <EntityHeader> the type of the entity headers; see {@link Entity}
  */
 @Value
@@ -27,13 +26,34 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
      * The list of entities for this page.
      */
     @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities;
+    /**
+     * The boundary string for the page's multipart representation.
+     */
+    @NonNull String boundary;
 
-    public Page(@NonNull PageHeader header, @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
+    public Page(@NonNull PageHeader header,
+                @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities,
+                @NonNull String boundary) {
         this.header = header;
-        this.entities = Collections.unmodifiableList(entities);
+        this.entities = List.copyOf(entities);
+        this.boundary = boundary;
     }
 
-    // TODO: should the boundary be stored in the page itself so the return value of this does not have any randomness?
+    /**
+     * Create a new page with a random boundary.
+     *
+     * @param header   the page header
+     * @param entities the page's entities
+     */
+    public Page(@NonNull PageHeader header,
+                @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
+        this(header, entities, randomBoundary());
+    }
+
+    private static String randomBoundary() {
+        return String.format("_---_%s", UUID.randomUUID());
+    }
+
     /**
      * <p>Return the body of this page as a multipart document.</p>
      *
