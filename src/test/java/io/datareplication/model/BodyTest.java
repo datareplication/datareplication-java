@@ -231,6 +231,18 @@ class BodyTest {
     }
 
     @Test
+    void fromBytes_shouldHaveSameEqualToAndHashCode() {
+        final byte[] bytes1 = new byte[]{1, 2, 3, 5, 8, 13, 21};
+        final byte[] bytes2 = bytes1.clone();
+
+        final Body body1 = Body.fromBytes(bytes1);
+        final Body body2 = Body.fromBytes(bytes2);
+
+        assertThat(body1).isEqualTo(body2);
+        assertThat(body1).hasSameHashCodeAs(body2);
+    }
+
+    @Test
     void fromUtf8_shouldReturnBody_whenAsciiOnly() throws IOException {
         final String s = "this is the test string";
 
@@ -270,5 +282,16 @@ class BodyTest {
 
         assertThat(body.toUtf8()).isEqualTo(s);
         assertThat(body.toUtf8()).isSameAs(s);
+    }
+
+    @Test
+    void fromUtf8_shouldHaveSameEqualToAndHashCode() {
+        final String s = "you can compare these specific implementations because it's useful for tests";
+
+        final Body body1 = Body.fromUtf8(s);
+        final Body body2 = Body.fromUtf8(s);
+
+        assertThat(body1).isEqualTo(body2);
+        assertThat(body1).hasSameHashCodeAs(body2);
     }
 }
