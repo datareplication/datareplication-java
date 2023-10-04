@@ -1,2 +1,5 @@
 .idea
 target
+# ignore maven configuration files from actions/setup-java@v3
+settings.xml
+toolchains.xml
