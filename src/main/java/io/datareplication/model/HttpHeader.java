@@ -25,7 +25,7 @@ public class HttpHeader {
     @NonNull public static final String LINK = "Link";
     @NonNull public static final String AUTHORIZATION = "Authorization";
 
-    private static DateTimeFormatter HTTP_HEADER_FORMATTER = DateTimeFormatter
+    private static final DateTimeFormatter HTTP_HEADER_FORMATTER = DateTimeFormatter
         .ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
         .withZone(ZoneId.of("GMT"));
 

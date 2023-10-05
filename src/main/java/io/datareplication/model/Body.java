@@ -22,8 +22,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * <p>
- * The <code>Body</code> interface represents a sequence of bytes (usually for an entity or page body) including a length
- * and an HTTP content type.
+ * The <code>Body</code> interface represents a sequence of bytes (usually for an entity or page body) including a
+ * length and an HTTP content type.
  * </p>
  *
  * <p>
@@ -110,7 +110,7 @@ public interface Body extends ToHttpHeaders {
      * </p>
      *
      * @return the content of this Body as UTF-8
-     * @throws IOException              when the InputStream returned by {{@link #newInputStream()}} throws an IOException
+     * @throws IOException              when the InputStream returned by {{@link #newInputStream()}} throws IOException
      * @throws CharacterCodingException when the underlying bytes are not valid UTF-8
      */
     default @NonNull String toUtf8() throws IOException {
@@ -183,7 +183,7 @@ public interface Body extends ToHttpHeaders {
                         .get();
                 } catch (IOException e) {
                     // I'm assuming this can't happen, based on reading the source and the parameters we supply
-                    throw new IllegalStateException("unexpected IOException in fromUtf8#newInputStream; bug?");
+                    throw new IllegalStateException("unexpected IOException in fromUtf8#newInputStream; bug?", e);
                 }
             }
 
@@ -279,7 +279,7 @@ public interface Body extends ToHttpHeaders {
 
     private static long countUtf8Bytes(String utf8) {
         class CountingOutputStream extends OutputStream {
-            private long count = 0;
+            private long count;
 
             @Override
             public void write(final byte[] b) {

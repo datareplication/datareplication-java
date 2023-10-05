@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class HttpHeadersTest {
     private static final HttpHeader HEADER_1_1 = HttpHeader.of("X-1", "value1");
