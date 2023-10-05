@@ -18,14 +18,11 @@ public interface FeedPageMetadataRepository {
         @NonNull Optional<@NonNull PageId> next;
         long contentLength;
         int numberOfEntities;
-        int generation;
     }
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> get(@NonNull PageId pageId);
 
     @NonNull CompletionStage<Void> save(@NonNull List<@NonNull PageMetadata> pages);
 
-    // TODO: explain: page with no next link with the lowest generation
-    // TODO: implementation note: need to rotate generations once we reach a limit
-    @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> getLatest();
+    // TODO: was there anything else?
 }

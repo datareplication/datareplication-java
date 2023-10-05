@@ -18,7 +18,6 @@
         <exclude name="CommentDefaultAccessModifier"/>
         <exclude name="DefaultPackage"/>
         <exclude name="GenericsNaming"/>
-        <exclude name="ShortVariable"/>
     </rule>
     <rule ref="category/java/design.xml">
         <exclude name="LawOfDemeter"/>
@@ -35,6 +34,14 @@
 
 
     <rule ref="category/java/codestyle.xml/ShortClassName">
+        <properties>
+            <property name="minimum">
+                <value>2</value>
+            </property>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml/ShortVariable">
         <properties>
             <property name="minimum">
                 <value>2</value>

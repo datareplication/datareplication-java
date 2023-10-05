@@ -1,7 +1,7 @@
 # indicate this is the root of the project
 root = true
 
-[*.{java,xml,md,multipart,json}]
+[*.{java,xml,md}]
 charset = utf-8
 indent_style = space
 indent_size = 4

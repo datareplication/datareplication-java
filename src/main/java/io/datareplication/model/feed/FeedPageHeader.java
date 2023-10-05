@@ -10,33 +10,13 @@ import lombok.Value;
 import java.util.ArrayList;
 import java.util.Optional;
 
-/**
- * This class represents the headers of a snapshot page.
- */
 @Value
 public class FeedPageHeader implements ToHttpHeaders {
-    /**
-     * The page's timestamp. This is equal to the timestamp of the page's final entity.
-     */
     @NonNull Timestamp lastModified;
-    /**
-     * The stable URL of this page itself. This URL must always resolve to this page, even as new entities are added to
-     * the feed.
-     */
     @NonNull Link self;
-    /**
-     * The URL of the immediately previous (i.e. older) feed page. If this header is missing then there are no older
-     * pages and this page marks the start of the feed.
-     */
+    // TODO: Optional or Nullable?
     @NonNull Optional<@NonNull Link> prev;
-    /**
-     * The URL of the immediately next (i.e. newer) feed page. If this header is missing then there are no newer
-     * pages and this is currently the latest page of the feed.
-     */
     @NonNull Optional<@NonNull Link> next;
-    /**
-     * Additional unstructured headers.
-     */
     @NonNull HttpHeaders extraHeaders;
 
     @Override
