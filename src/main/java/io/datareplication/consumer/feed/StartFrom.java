@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
-public abstract class StartFrom {
+public class StartFrom {
     private StartFrom() {
     }
 

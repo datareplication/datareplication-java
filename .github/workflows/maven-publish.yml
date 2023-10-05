@@ -5,9 +5,6 @@ name: Maven Package
 
 on:
   push:
-    branches:
-      - main
-      - 'feature/**'
 
 jobs:
   maven_build:
@@ -28,20 +25,45 @@ jobs:
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
         cache: 'maven'
-
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: Write jacoco report with Maven
-      run: mvn -B jacoco:report --file pom.xml
-    - name: Check
-      run: ls -lart target/site/jacoco
+    - name: Run Codacy Analysis CLI
+      uses: codacy/codacy-analysis-cli-action@master
+      with:
+        tool: SpotBugs
+        api-token: ${{ secrets.CODACY_API_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
     - name: Run codacy-coverage-reporter
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
         api-token: ${{ secrets.CODACY_API_TOKEN }}
         coverage-reports: target/site/jacoco/jacoco.xml
+    - name: Create Javadoc with Maven
+      if: ${{ github.ref == 'refs/heads/main' }}
+      run: mvn -B javadoc:javadoc --file pom.xml
+    - name: Upload Javadoc artifact
+      if: ${{ github.ref == 'refs/heads/main' }}
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: ./target/site/apidocs
 
     #- name: Publish to GitHub Packages Apache Maven
     #  run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
     #  env:
     #    GITHUB_TOKEN: ${{ github.token }}
+
+  publish_javadoc:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment:
+      name: Deploy Javadoc to github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pages: write
+    needs: maven_build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
