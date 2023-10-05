@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public interface Body extends ToHttpHeaders {
@@ -27,8 +28,8 @@ public interface Body extends ToHttpHeaders {
         return HttpHeaders.of(headers);
     }
 
-    default @NonNull String toUtf8() {
-        throw new RuntimeException("not implemented");
+    default @NonNull String toUtf8() throws IOException {
+        return new String(newInputStream().readAllBytes(), StandardCharsets.UTF_8);
     }
 
     default @NonNull byte[] toBytes() throws IOException {
@@ -45,7 +46,22 @@ public interface Body extends ToHttpHeaders {
     }
 
     static @NonNull Body fromUtf8(@NonNull String utf8, @NonNull ContentType contentType) {
-        throw new RuntimeException("not implemented");
+        return new Body() {
+            @Override
+            public @NonNull InputStream newInputStream() {
+                return new ByteArrayInputStream(utf8.getBytes());
+            }
+
+            @Override
+            public long contentLength() {
+                return utf8.getBytes().length;
+            }
+
+            @Override
+            public @NonNull ContentType contentType() {
+                return contentType;
+            }
+        };
     }
 
     static @NonNull Body fromBytes(@NonNull byte[] bytes) {
