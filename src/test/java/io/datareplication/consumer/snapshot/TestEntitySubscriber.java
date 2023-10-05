@@ -4,9 +4,12 @@ import io.datareplication.model.Entity;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import lombok.Getter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Flow;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEntityHeader>> {
     private Flow.Subscription subscription;
@@ -23,7 +26,11 @@ public class TestEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEnti
 
     @Override
     public void onNext(final Entity<SnapshotEntityHeader> item) {
-        consumedEntities.add(item.body().toUtf8());
+        try {
+            consumedEntities.add(item.body().toUtf8());
+        } catch (IOException e) {
+            fail(e);
+        }
         subscription.request(1);
     }
 
