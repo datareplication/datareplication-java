@@ -5,9 +5,6 @@ name: Maven Package
 
 on:
   push:
-    branches:
-      - main
-      - 'feature/**'
 
 jobs:
   maven_build:
