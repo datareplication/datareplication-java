@@ -1,0 +1,19 @@
+--<random-boundary>
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Last-Modified: Thu, 5 Oct 2023 03:00:15 GMT
+Content-Length: 1
+
+a
+
+--<random-boundary>
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Last-Modified: Thu, 5 Oct 2023 03:00:16 GMT
+Content-Length: 8
+
+Snapshot
+
+--<random-boundary>--

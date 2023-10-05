@@ -20,7 +20,7 @@ public class SnapshotAcceptanceTest {
     void shouldPublishAndConsumeSnapshot() throws ExecutionException, InterruptedException {
         List<String> snapshotEntities = List.of("1", "2", "3");
         TestEntitySubscriber subscriber = new TestEntitySubscriber();
-        // TODO: Create Snapshot with Snapshot Producer
+        // TODO: Create Snapshot with Snapshot Producer -> Serve via Http Server
 
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
