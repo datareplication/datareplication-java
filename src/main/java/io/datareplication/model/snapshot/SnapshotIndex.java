@@ -6,7 +6,6 @@ import io.datareplication.model.Url;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
