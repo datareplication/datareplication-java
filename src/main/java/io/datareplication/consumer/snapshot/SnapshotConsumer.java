@@ -57,7 +57,7 @@ public interface SnapshotConsumer {
             return this;
         }
 
-        @NonNull SnapshotConsumer build() {
+        public @NonNull SnapshotConsumer build() {
             throw new RuntimeException("not implemented");
         }
     }
