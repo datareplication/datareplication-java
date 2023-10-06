@@ -1,16 +1,24 @@
 package io.datareplication.internal.http;
 
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Value;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 @Value
 public class HeaderFieldValue {
     String mainValue;
+    @Getter(AccessLevel.PRIVATE)
     Map<String, String> parameters;
+
+    public Optional<String> parameter(String name) {
+        return Optional.ofNullable(parameters.get(name));
+    }
 
     private static class ParameterParser {
         private final String input;
@@ -36,7 +44,7 @@ public class HeaderFieldValue {
         private String parameterName() {
             final int start = idx;
             advanceWhile(c -> c != '=' && c != ';');
-            return input.substring(start, idx).trim();
+            return input.substring(start, idx).trim().toLowerCase();
         }
 
         private String parameterValue() {

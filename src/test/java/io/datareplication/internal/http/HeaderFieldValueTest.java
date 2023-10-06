@@ -27,6 +27,9 @@ class HeaderFieldValueTest {
                 "a; b=c",
                 new HeaderFieldValue("a", Map.of("b", "c"))),
             Arguments.of(
+                "AbCDe; pArAM=VALUe",
+                new HeaderFieldValue("AbCDe", Map.of("param", "VALUe"))),
+            Arguments.of(
                 "a; b=",
                 new HeaderFieldValue("a", Map.of("b", ""))),
             Arguments.of(
