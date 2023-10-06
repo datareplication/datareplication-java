@@ -4,6 +4,7 @@ import io.datareplication.model.Entity;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import lombok.Getter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Flow;
@@ -23,7 +24,11 @@ public class TestEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEnti
 
     @Override
     public void onNext(final Entity<SnapshotEntityHeader> item) {
-        consumedEntities.add(item.body().toUtf8());
+        try {
+            consumedEntities.add(item.body().toUtf8());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         subscription.request(1);
     }
 
