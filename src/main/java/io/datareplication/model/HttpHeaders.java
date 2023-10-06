@@ -48,7 +48,7 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
      * @return a new HttpHeaders with the given updates
      */
     public @NonNull HttpHeaders update(@NonNull HttpHeader... headers) {
-        return update(Arrays.asList(headers));
+        return update(Arrays.stream(headers).iterator());
     }
 
     /**
@@ -59,11 +59,23 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
      * @return a new HttpHeaders with the given updates
      */
     public @NonNull HttpHeaders update(@NonNull Iterable<@NonNull HttpHeader> headers) {
+        return update(new HashMap<>(this.headers), headers.iterator());
+    }
+
+    /**
+     * Return a new HttpHeaders with the given headers updated. Any header names that are already present will
+     * be replaced, i.e. values are <em>not</em> merged.
+     *
+     * @param headers the headers to update
+     * @return a new HttpHeaders with the given updates
+     */
+    public @NonNull HttpHeaders update(@NonNull Iterator<@NonNull HttpHeader> headers) {
         return update(new HashMap<>(this.headers), headers);
     }
 
-    private static HttpHeaders update(Map<String, HttpHeader> headerMap, Iterable<HttpHeader> headers) {
-        for (HttpHeader header : headers) {
+    private static HttpHeaders update(Map<String, HttpHeader> headerMap, Iterator<HttpHeader> headers) {
+        while (headers.hasNext()) {
+            final HttpHeader header = headers.next();
             headerMap.put(header.name(), header);
         }
         return new HttpHeaders(headerMap);
@@ -84,14 +96,21 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
     /**
      * Create a new HttpHeaders from the given headers. Only the last value for any given header name will be kept.
      */
-    public static @NonNull HttpHeaders of(@NonNull Iterable<@NonNull HttpHeader> headers) {
-        return update(new HashMap<>(), headers);
+    public static @NonNull HttpHeaders of(@NonNull HttpHeader... headers) {
+        return update(new HashMap<>(), Arrays.stream(headers).iterator());
     }
 
     /**
      * Create a new HttpHeaders from the given headers. Only the last value for any given header name will be kept.
      */
-    public static @NonNull HttpHeaders of(@NonNull HttpHeader... headers) {
-        return update(new HashMap<>(), List.of(headers));
+    public static @NonNull HttpHeaders of(@NonNull Iterable<@NonNull HttpHeader> headers) {
+        return update(new HashMap<>(), headers.iterator());
+    }
+
+    /**
+     * Create a new HttpHeaders from the given headers. Only the last value for any given header name will be kept.
+     */
+    public static @NonNull HttpHeaders of(@NonNull Iterator<@NonNull HttpHeader> headers) {
+        return update(new HashMap<>(), headers);
     }
 }

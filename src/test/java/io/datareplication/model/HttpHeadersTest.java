@@ -2,6 +2,7 @@ package io.datareplication.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +33,14 @@ class HttpHeadersTest {
     @Test
     void shouldCreateHeadersFromIterable() {
         final HttpHeaders headers = HttpHeaders.of(List.of(HEADER_1_1, HEADER_2, HEADER_3_1));
+
+        assertThat(headers.isEmpty()).isFalse();
+        assertThat(headers).containsExactlyInAnyOrder(HEADER_1_1, HEADER_2, HEADER_3_1);
+    }
+
+    @Test
+    void shouldCreateHeadersFromIterator() {
+        final HttpHeaders headers = HttpHeaders.of(List.of(HEADER_1_1, HEADER_2, HEADER_3_1).iterator());
 
         assertThat(headers.isEmpty()).isFalse();
         assertThat(headers).containsExactlyInAnyOrder(HEADER_1_1, HEADER_2, HEADER_3_1);
@@ -86,6 +95,28 @@ class HttpHeadersTest {
         );
 
         final HttpHeaders updated = headers.update(List.of(HEADER_1_3));
+
+        assertThat(headers).containsExactlyInAnyOrder(
+            HEADER_1_1,
+            HEADER_2,
+            HEADER_3_1
+        );
+        assertThat(updated).containsExactlyInAnyOrder(
+            HEADER_1_3,
+            HEADER_2,
+            HEADER_3_1
+        );
+    }
+
+    @Test
+    void shouldUpdateFromIterator() {
+        final HttpHeaders headers = HttpHeaders.of(
+            HEADER_1_1,
+            HEADER_2,
+            HEADER_3_1
+        );
+
+        final HttpHeaders updated = headers.update(List.of(HEADER_1_3).iterator());
 
         assertThat(headers).containsExactlyInAnyOrder(
             HEADER_1_1,
