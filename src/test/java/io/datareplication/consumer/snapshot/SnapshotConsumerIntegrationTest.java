@@ -41,7 +41,7 @@ class SnapshotConsumerIntegrationTest {
     @Test
     void shouldConsumeSnapshot() throws ExecutionException, InterruptedException {
         List<String> snapshotEntities = List.of("Hello", "World", "I", "am", "a", "Snapshot");
-        TestEntitySubscriber subscriber = new TestEntitySubscriber();
+        SnapshotEntitySubscriber subscriber = new SnapshotEntitySubscriber();
 
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
@@ -51,7 +51,7 @@ class SnapshotConsumerIntegrationTest {
         SnapshotIndex snapshotIndex = consumer.loadSnapshotIndex(snapshotUrl).toCompletableFuture().get();
 
         consumer.streamEntities(snapshotIndex).subscribe(subscriber);
-        await().atMost(5, TimeUnit.SECONDS).until(subscriber::isCompleted);
+        await().atMost(5, TimeUnit.SECONDS).until(subscriber::hasCompleted);
         assertThat(subscriber.getConsumedEntities()).isEqualTo(snapshotEntities);
     }
 }

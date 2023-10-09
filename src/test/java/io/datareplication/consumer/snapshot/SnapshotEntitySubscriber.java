@@ -2,17 +2,16 @@ package io.datareplication.consumer.snapshot;
 
 import io.datareplication.model.Entity;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
-import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Flow;
 
-public class TestEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEntityHeader>> {
+public class SnapshotEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEntityHeader>> {
     private Flow.Subscription subscription;
-    @Getter
     private final List<String> consumedEntities = new ArrayList<>();
-    @Getter
+
     private boolean completed = false;
 
     @Override
@@ -29,11 +28,25 @@ public class TestEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEnti
 
     @Override
     public void onError(final Throwable throwable) {
-        throw new RuntimeException(throwable);
+        throw new SnapshotEntitySubscriberException(throwable);
     }
 
     @Override
     public void onComplete() {
         completed = true;
+    }
+
+    public boolean hasCompleted() {
+        return completed;
+    }
+
+    public List<String> getConsumedEntities() {
+        return Collections.unmodifiableList(consumedEntities);
+    }
+
+    public static class SnapshotEntitySubscriberException extends RuntimeException {
+        public SnapshotEntitySubscriberException(final Throwable throwable) {
+            super(throwable);
+        }
     }
 }
