@@ -27,8 +27,7 @@ public class TestEntitySubscriber implements Flow.Subscriber<Entity<SnapshotEnti
         try {
             consumedEntities.add(item.body().toUtf8());
         } catch (IOException e) {
-            // TODO: better excetion handling
-            throw new RuntimeException(e);
+            onError(e);
         }
         subscription.request(1);
     }

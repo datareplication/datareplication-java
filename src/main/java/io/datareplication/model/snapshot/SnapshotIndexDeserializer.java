@@ -5,7 +5,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 
@@ -18,7 +17,7 @@ public class SnapshotIndexDeserializer implements JsonDeserializer<SnapshotIndex
     @Override
     public SnapshotIndex deserialize(JsonElement json,
                                      Type typeOfT,
-                                     JsonDeserializationContext context) throws JsonParseException {
+                                     JsonDeserializationContext context) {
         JsonObject jsonObject = json.getAsJsonObject();
 
         checkForCompleteness(jsonObject);

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-public class SnapshotAcceptanceTest {
+class SnapshotAcceptanceTest {
     private static final Url SNAPSHOT_URL = Url.of("TODO: Http Server provides the created Files");
 
     @Test
