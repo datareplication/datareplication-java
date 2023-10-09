@@ -13,7 +13,10 @@ import io.datareplication.model.Url;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
@@ -104,24 +107,31 @@ class SnapshotIndexTest {
 
     @Test
     void fromJson_happyPath() throws IOException {
-        String json = "{\n"
-                      + "    \"id\": \"12345678\",\n"
-                      + "    \"createdAt\": \"2023-09-29T20:52:17.000Z\",\n"
-                      + "    \"pages\":["
-                      + "    \"https://localhost:12345/snapshot/12345678/1\","
-                      + "    \"https://localhost:12345/snapshot/12345678/2\","
-                      + "    \"https://localhost:12345/snapshot/12345678/3\""
-                      + "    ]"
-                      + "}";
+        String json = readFromInputStream("__files/snapshot/index.json");
         SnapshotIndex snapshotIndex = SnapshotIndex.fromJson(Body.fromUtf8(json));
-        assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("12345678"));
-        assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-09-29T20:52:17.000Z")));
+        assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("example"));
+        assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-10-07T15:00:00Z")));
         assertThat(snapshotIndex.pages()).contains(
-            Url.of("https://localhost:12345/snapshot/12345678/1"),
-            Url.of("https://localhost:12345/snapshot/12345678/2"),
-            Url.of("https://localhost:12345/snapshot/12345678/3")
+            Url.of("https://localhost:8443/1.content.multipart"),
+            Url.of("https://localhost:8443/2.content.multipart"),
+            Url.of("https://localhost:8443/3.content.multipart")
         );
     }
+
+    // Move this method to a generic helper class for more convenience
+    // if this method is used multiple times
+    private String readFromInputStream(String pathToFile) throws IOException {
+        InputStream inputStream = getClass().getClassLoader().getResource(pathToFile).openStream();
+        StringBuilder resultStringBuilder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                resultStringBuilder.append(line).append("\n");
+            }
+        }
+        return resultStringBuilder.toString();
+    }
+
     @Test
     void fromJson_throwsExceptionBecauseOfMalformattedCreatedAtTime() {
         String json = "{\n"
