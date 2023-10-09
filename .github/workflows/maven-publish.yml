@@ -28,6 +28,7 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml
     - name: Run Codacy Analysis CLI
+      if: ${{ github.triggering_actor == 'dependabot' }}
       uses: codacy/codacy-analysis-cli-action@master
       with:
         tool: SpotBugs
@@ -35,6 +36,7 @@ jobs:
         upload: true
         max-allowed-issues: 2147483647
     - name: Run codacy-coverage-reporter
+      if: ${{ github.triggering_actor == 'dependabot' }}
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
         api-token: ${{ secrets.CODACY_API_TOKEN }}
