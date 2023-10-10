@@ -10,15 +10,18 @@ import java.util.concurrent.Flow;
 
 // TODO: impl the impl
 class SnapshotProducerImpl implements SnapshotProducer {
-    public SnapshotProducerImpl(final SnapshotIndexRepository snapshotIndexRepository,
-                                final SnapshotPageRepository snapshotPageRepository,
-                                final PageIdProvider pageIdProvider,
-                                final SnapshotIdProvider snapshotIdProvider, final int maxWeightPerPage) {
+    SnapshotProducerImpl(final SnapshotIndexRepository snapshotIndexRepository,
+                         final SnapshotPageRepository snapshotPageRepository,
+                         final PageIdProvider pageIdProvider,
+                         final SnapshotIdProvider snapshotIdProvider,
+                         final int maxWeightPerPage) {
 
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull SnapshotIndex> produce(final Flow.@NonNull Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities) {
+    public @NonNull CompletionStage<@NonNull SnapshotIndex> produce(
+        final @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities
+    ) {
         throw new RuntimeException("not implemented");
     }
 }

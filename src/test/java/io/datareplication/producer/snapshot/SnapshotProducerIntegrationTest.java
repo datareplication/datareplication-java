@@ -40,7 +40,8 @@ class SnapshotProducerIntegrationTest {
                                @Mock SnapshotIndexRepository snapshotIndexRepository,
                                @Mock SnapshotPageUrlBuilder snapshotPageUrlBuilder,
                                @Mock PageIdProvider pageIdProvider,
-                               @Mock SnapshotIdProvider snapshotIdProvider) throws ExecutionException, InterruptedException {
+                               @Mock SnapshotIdProvider snapshotIdProvider)
+        throws ExecutionException, InterruptedException {
         Flowable<Entity<SnapshotEntityHeader>> entityFlow = Flowable
             .just("Hello", "World", "I", "am", "a", "snapshot")
             .map(this::toSnapshotEntity);
@@ -78,23 +79,30 @@ class SnapshotProducerIntegrationTest {
 
         assertThat(result).isEqualTo(expectedSnapshotIndex);
         verify(snapshotIndexRepository).save(expectedSnapshotIndex);
-        // TODO: PageHeader
+        // TODO: Add SnapshotPageHeader
         verify(snapshotPageRepository).save(
-            new Page<>(new SnapshotPageHeader(snapshotId, HttpHeaders.EMPTY),
+            snapshotId,
+            pageId1,
+            new Page<>(
+                new SnapshotPageHeader(HttpHeaders.EMPTY),
                 List.of(
                     toSnapshotEntity("Hello"),
                     toSnapshotEntity("World"))
             )
         );
         verify(snapshotPageRepository).save(
-            new Page<>(new SnapshotPageHeader(snapshotId, HttpHeaders.EMPTY),
+            snapshotId,
+            pageId2,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
                 List.of(
                     toSnapshotEntity("I"),
                     toSnapshotEntity("am"))
             )
         );
         verify(snapshotPageRepository).save(
-            new Page<>(new SnapshotPageHeader(snapshotId, HttpHeaders.EMPTY),
+            snapshotId,
+            pageId3,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
                 List.of(
                     toSnapshotEntity("a"),
                     toSnapshotEntity("snapshot"))
