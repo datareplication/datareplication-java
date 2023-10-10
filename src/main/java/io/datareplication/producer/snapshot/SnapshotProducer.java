@@ -3,8 +3,6 @@ package io.datareplication.producer.snapshot;
 import io.datareplication.model.Entity;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 import java.util.concurrent.CompletionStage;
@@ -14,11 +12,38 @@ public interface SnapshotProducer {
     @NonNull CompletionStage<@NonNull SnapshotIndex> produce(
         @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities);
 
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {
 
-        public @NonNull SnapshotProducer build() {
-            throw new RuntimeException("not implemented");
+        // TODO: Default impl
+        private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
+        // TODO: Default impl
+        private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
+        private int maxWeightPerPage = 100;
+
+        public @NonNull SnapshotProducer build(final SnapshotIndexRepository snapshotIndexRepository,
+                                               final SnapshotPageRepository snapshotPageRepository) {
+            return new SnapshotProducerImpl(
+                snapshotIndexRepository,
+                snapshotPageRepository,
+                pageIdProvider,
+                snapshotIdProvider,
+                maxWeightPerPage
+            );
+        }
+
+        public Builder pageIdProvider(final PageIdProvider pageIdProvider) {
+            this.pageIdProvider = pageIdProvider;
+            return this;
+        }
+
+        public Builder snapshotIdProvider(final SnapshotIdProvider snapshotIdProvider) {
+            this.snapshotIdProvider = snapshotIdProvider;
+            return this;
+        }
+
+        public Builder maxWeightPerPage(final int maxWeightPerPage) {
+            this.maxWeightPerPage = maxWeightPerPage;
+            return this;
         }
     }
 
