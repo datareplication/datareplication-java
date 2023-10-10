@@ -15,6 +15,8 @@ public class Timestamp {
 
     /**
      * Return a new Timestamp for the current instant (according to the system clock).
+     *
+     * @return the Timestamp
      */
     public static @NonNull Timestamp now() {
         return Timestamp.of(Instant.now());

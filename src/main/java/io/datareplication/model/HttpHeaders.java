@@ -18,12 +18,14 @@ import java.util.Map;
 @EqualsAndHashCode
 @ToString
 public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpHeaders {
-    @NonNull private final Map<@NonNull String, @NonNull HttpHeader> headers;
+    @NonNull
+    private final Map<@NonNull String, @NonNull HttpHeader> headers;
 
     /**
      * An empty HttpHeaders instance.
      */
-    @NonNull public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
+    @NonNull
+    public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
 
     private HttpHeaders(Map<@NonNull String, @NonNull HttpHeader> headers) {
         this.headers = headers;
@@ -81,7 +83,7 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
     }
 
     /**
-     * Check if this HttpHeaders is empty.
+     * @return Check if this HttpHeaders is empty.
      */
     public boolean isEmpty() {
         return headers.isEmpty();
@@ -94,6 +96,9 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
 
     /**
      * Create a new HttpHeaders from the given headers. Only the last value for any given header name will be kept.
+     *
+     * @param headers the headers to include
+     * @return a new HttpHeaders from the given headers.
      */
     public static @NonNull HttpHeaders of(@NonNull HttpHeader... headers) {
         return update(new HashMap<>(), Arrays.stream(headers).iterator());
@@ -101,6 +106,9 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
 
     /**
      * Create a new HttpHeaders from the given headers. Only the last value for any given header name will be kept.
+     *
+     * @param headers the headers to include
+     * @return a new HttpHeaders from the given headers.
      */
     public static @NonNull HttpHeaders of(@NonNull Iterable<@NonNull HttpHeader> headers) {
         return update(new HashMap<>(), headers.iterator());
@@ -108,6 +116,9 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
 
     /**
      * Create a new HttpHeaders from the given headers. Only the last value for any given header name will be kept.
+     *
+     * @param headers the headers to include
+     * @return the HttpHeaders
      */
     public static @NonNull HttpHeaders of(@NonNull Iterator<@NonNull HttpHeader> headers) {
         return update(new HashMap<>(), headers);

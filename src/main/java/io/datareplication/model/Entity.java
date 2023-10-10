@@ -11,8 +11,8 @@ import java.util.Optional;
  * optional piece of user-specified metadata.
  *
  * @param <Header> the type of the entity headers; in practice this will be either
- * {@link io.datareplication.model.snapshot.SnapshotEntityHeader} or
- * {@link io.datareplication.model.feed.FeedEntityHeader}
+ *                 {@link io.datareplication.model.snapshot.SnapshotEntityHeader} or
+ *                 {@link io.datareplication.model.feed.FeedEntityHeader}
  */
 @Value
 @AllArgsConstructor
@@ -46,7 +46,7 @@ public class Entity<Header extends ToHttpHeaders> implements ToHttpHeaders {
      * Create a new entity with empty <code>userData</code>.
      *
      * @param header the entity header
-     * @param body the entity body
+     * @param body   the entity body
      */
     public Entity(@NonNull Header header, @NonNull Body body) {
         this(header, body, Optional.empty());
@@ -54,7 +54,7 @@ public class Entity<Header extends ToHttpHeaders> implements ToHttpHeaders {
 
     /**
      * Return all headers for this entity. This combines the actual entity headers with the Content-Type and
-     * Content-Length headers from the {@link #body()}.
+     * Content-Length headers from the {@link #body}.
      *
      * @return all headers for this entity
      */
