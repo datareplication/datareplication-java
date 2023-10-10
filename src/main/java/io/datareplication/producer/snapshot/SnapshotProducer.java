@@ -14,9 +14,7 @@ public interface SnapshotProducer {
 
     class Builder {
 
-        // TODO: Default impl
         private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
-        // TODO: Default impl
         private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
         private int maxWeightPerPage = 100;
 
