@@ -3,6 +3,7 @@ package io.datareplication.consumer.snapshot;
 import io.datareplication.model.Entity;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +23,11 @@ public class SnapshotEntitySubscriber implements Flow.Subscriber<Entity<Snapshot
 
     @Override
     public void onNext(final Entity<SnapshotEntityHeader> item) {
-        consumedEntities.add(item.body().toUtf8());
+        try {
+            consumedEntities.add(item.body().toUtf8());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         subscription.request(1);
     }
 

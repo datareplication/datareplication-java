@@ -18,7 +18,7 @@ public interface FeedEntityRepository {
     class PageAssignment {
         @NonNull ContentId contentId;
         @NonNull Timestamp lastModified;
-        @NonNull int contentLength;
+        int contentLength;
         @NonNull Optional<@NonNull PageId> pageId;
     }
 
