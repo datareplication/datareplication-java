@@ -50,7 +50,7 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
         this(header, entities, randomBoundary());
     }
 
-    private static String randomBoundary() {
+    private static @NonNull String randomBoundary() {
         return String.format("_---_%s", UUID.randomUUID());
     }
 
