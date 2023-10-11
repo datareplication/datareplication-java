@@ -242,6 +242,13 @@
                         </reports>
                     </reportSet>
                 </reportSets>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <failOnViolation>false</failOnViolation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
@@ -254,6 +261,10 @@
                         </reports>
                     </reportSet>
                 </reportSets>
+                <configuration>
+                    <excludeFilterFile>spotbugs.xml</excludeFilterFile>
+                    <failOnError>true</failOnError>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -266,6 +277,14 @@
                         </reports>
                     </reportSet>
                 </reportSets>
+                <configuration>
+                    <targetJdk>11</targetJdk>
+                    <failOnViolation>false</failOnViolation>
+                    <printFailingErrors>true</printFailingErrors>
+                    <rulesets>
+                        <ruleset>ruleset.xml</ruleset>
+                    </rulesets>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

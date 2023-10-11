@@ -5,6 +5,7 @@ import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import lombok.NonNull;
 
+import java.time.Clock;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
@@ -21,13 +22,21 @@ public interface SnapshotProducer {
         public @NonNull SnapshotProducer build(final SnapshotIndexRepository snapshotIndexRepository,
                                                final SnapshotPageRepository snapshotPageRepository,
                                                final SnapshotPageUrlBuilder snapshotPageUrlBuilder) {
+            return build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder, Clock.systemUTC());
+        }
+
+        public @NonNull SnapshotProducer build(final SnapshotIndexRepository snapshotIndexRepository,
+                                               final SnapshotPageRepository snapshotPageRepository,
+                                               final SnapshotPageUrlBuilder snapshotPageUrlBuilder,
+                                               final Clock clock) {
             return new SnapshotProducerImpl(
                 snapshotPageUrlBuilder,
                 snapshotIndexRepository,
                 snapshotPageRepository,
                 pageIdProvider,
                 snapshotIdProvider,
-                maxWeightPerPage
+                maxWeightPerPage,
+                clock
             );
         }
 
