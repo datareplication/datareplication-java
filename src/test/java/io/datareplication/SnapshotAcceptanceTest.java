@@ -41,11 +41,16 @@ public class SnapshotAcceptanceTest {
             // TODO: Additional configuration
             .build();
         Flowable<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
-            Flowable.fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamEntities(producedSnapshotIndex)));
+            Flowable.fromPublisher(
+                FlowAdapters.toPublisher(snapshotConsumer.streamEntities(producedSnapshotIndex))
+            );
         //endregion
 
         //region Assert SnapshotIndex
-        var snapshotIndexFromUrl = snapshotConsumer.loadSnapshotIndex(snapshotUrl(producedSnapshotIndex)).toCompletableFuture().get();
+        var snapshotIndexFromUrl = snapshotConsumer
+            .loadSnapshotIndex(snapshotUrl(producedSnapshotIndex))
+            .toCompletableFuture()
+            .get();
         assertThat(producedSnapshotIndex).isEqualTo(snapshotIndexFromUrl);
         //endregion
         //region Assert consumed entities

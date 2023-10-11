@@ -3,20 +3,20 @@ package io.datareplication.producer.snapshot;
 import io.datareplication.model.Entity;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
 // TODO: impl the impl
+@AllArgsConstructor
 class SnapshotProducerImpl implements SnapshotProducer {
-    SnapshotProducerImpl(final SnapshotIndexRepository snapshotIndexRepository,
-                         final SnapshotPageRepository snapshotPageRepository,
-                         final PageIdProvider pageIdProvider,
-                         final SnapshotIdProvider snapshotIdProvider,
-                         final int maxWeightPerPage) {
-
-    }
+    private final SnapshotIndexRepository snapshotIndexRepository;
+    private final SnapshotPageRepository snapshotPageRepository;
+    private final PageIdProvider pageIdProvider;
+    private final SnapshotIdProvider snapshotIdProvider;
+    private final int maxWeightPerPage;
 
     @Override
     public @NonNull CompletionStage<@NonNull SnapshotIndex> produce(
