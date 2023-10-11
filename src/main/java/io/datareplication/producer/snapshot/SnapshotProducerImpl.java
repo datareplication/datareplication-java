@@ -12,6 +12,7 @@ import java.util.concurrent.Flow;
 // TODO: impl the impl
 @AllArgsConstructor
 class SnapshotProducerImpl implements SnapshotProducer {
+    private final SnapshotPageUrlBuilder snapshotPageUrlBuilder;
     private final SnapshotIndexRepository snapshotIndexRepository;
     private final SnapshotPageRepository snapshotPageRepository;
     private final PageIdProvider pageIdProvider;

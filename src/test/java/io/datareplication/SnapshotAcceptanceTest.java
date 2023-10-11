@@ -27,9 +27,10 @@ public class SnapshotAcceptanceTest {
             .map(this::toSnapshotEntity);
         // TODO: Create Snapshot with Snapshot Producer -> Serve via Http Server
 
-        SnapshotProducer snapshotProducer = SnapshotProducer.builder()
-            // TODO: Additional configuration
-            .build(null, null);
+        SnapshotProducer snapshotProducer = SnapshotProducer
+            .builder()
+            // TODO: Additional configuration & use InMemoryRepositories
+            .build(null, null, null);
         SnapshotIndex producedSnapshotIndex = snapshotProducer
             .produce(FlowAdapters.toFlowPublisher(entityFlow))
             .toCompletableFuture()

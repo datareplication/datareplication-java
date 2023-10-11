@@ -69,7 +69,7 @@ class SnapshotProducerIntegrationTest {
             .snapshotIdProvider(snapshotIdProvider)
             .maxWeightPerPage(2)
             // TODO: Additional configuration
-            .build(snapshotIndexRepository, snapshotPageRepository);
+            .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
 
 
         SnapshotIndex result = snapshotProducer

@@ -19,8 +19,10 @@ public interface SnapshotProducer {
         private int maxWeightPerPage = 100;
 
         public @NonNull SnapshotProducer build(final SnapshotIndexRepository snapshotIndexRepository,
-                                               final SnapshotPageRepository snapshotPageRepository) {
+                                               final SnapshotPageRepository snapshotPageRepository,
+                                               final SnapshotPageUrlBuilder snapshotPageUrlBuilder) {
             return new SnapshotProducerImpl(
+                snapshotPageUrlBuilder,
                 snapshotIndexRepository,
                 snapshotPageRepository,
                 pageIdProvider,
