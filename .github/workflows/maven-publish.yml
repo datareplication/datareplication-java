@@ -29,6 +29,8 @@ jobs:
       run: mvn -B package --file pom.xml
     - name: Run Codacy Analysis CLI
       uses: codacy/codacy-analysis-cli-action@master
+    - name: Run Codacy Analysis CLI (SpotBugs)
+      uses: codacy/codacy-analysis-cli-action@master
       with:
         tool: SpotBugs
         api-token: ${{ secrets.CODACY_API_TOKEN }}
