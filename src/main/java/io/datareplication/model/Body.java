@@ -10,10 +10,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-<<<<<<< HEAD
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-=======
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -23,7 +19,6 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
->>>>>>> main
 
 /**
  * <p>
@@ -222,31 +217,6 @@ public interface Body extends ToHttpHeaders {
         return fromUtf8(utf8, ContentType.of("text/plain; charset=utf-8"));
     }
 
-<<<<<<< HEAD
-    static @NonNull Body fromUtf8(@NonNull String utf8, @NonNull ContentType contentType) {
-        return new Body() {
-            @Override
-            public @NonNull InputStream newInputStream() {
-                return new ByteArrayInputStream(utf8.getBytes());
-            }
-
-            @Override
-            public long contentLength() {
-                return utf8.getBytes().length;
-            }
-
-            @Override
-            public @NonNull ContentType contentType() {
-                return contentType;
-            }
-        };
-    }
-
-    static @NonNull Body fromBytes(@NonNull byte[] bytes) {
-        return fromBytes(bytes, ContentType.of("application/octet-stream"));
-    }
-
-=======
     /**
      * <p>Return a Body containing the bytes of the given byte array.</p>
      *
@@ -259,7 +229,6 @@ public interface Body extends ToHttpHeaders {
      * @param contentType the content type for the created Body
      * @return a Body of the array's bytes
      */
->>>>>>> main
     static @NonNull Body fromBytes(@NonNull byte[] bytes, @NonNull ContentType contentType) {
         @EqualsAndHashCode
         @ToString
