@@ -36,6 +36,10 @@ jobs:
         max-allowed-issues: 2147483647
     - name: Run Codacy Analysis CLI
       uses: codacy/codacy-analysis-cli-action@master
+      with:
+        api-token: ${{ secrets.CODACY_API_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
     - name: Run codacy-coverage-reporter
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
