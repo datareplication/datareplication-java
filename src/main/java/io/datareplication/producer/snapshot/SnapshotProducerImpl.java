@@ -22,6 +22,6 @@ class SnapshotProducerImpl implements SnapshotProducer {
     public @NonNull CompletionStage<@NonNull SnapshotIndex> produce(
         final @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities
     ) {
-        throw new RuntimeException("not implemented");
+        throw new UnsupportedOperationException("not implemented");
     }
 }
