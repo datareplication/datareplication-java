@@ -27,10 +27,16 @@ jobs:
         cache: 'maven'
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: Run Codacy Analysis CLI
+    - name: Run Codacy Analysis CLI (SpotBugs)
       uses: codacy/codacy-analysis-cli-action@master
       with:
         tool: SpotBugs
+        api-token: ${{ secrets.CODACY_API_TOKEN }}
+        upload: true
+        max-allowed-issues: 2147483647
+    - name: Run Codacy Analysis CLI
+      uses: codacy/codacy-analysis-cli-action@master
+      with:
         api-token: ${{ secrets.CODACY_API_TOKEN }}
         upload: true
         max-allowed-issues: 2147483647
