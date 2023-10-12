@@ -6,12 +6,17 @@ import lombok.Value;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 @Value
 public class HeaderFieldValue {
+    private static final char QUOTE = '"';
+    private static final char DELIMITER = ';';
+    private static final char ASSIGNMENT_OPERATOR = '=';
+    private static final char ESCAPE_SPECIAL_CHAR = '\\';
     String mainValue;
     @Getter(AccessLevel.PRIVATE)
     Map<String, String> parameters;
@@ -21,6 +26,7 @@ public class HeaderFieldValue {
     }
 
     private static class ParameterParser {
+
         private final String input;
         private int idx;
         private final Map<String, String> parameters;
@@ -32,10 +38,10 @@ public class HeaderFieldValue {
         }
 
         private void parseNextParameter() {
-            expect(';');
+            expect(DELIMITER);
             eatWhitespace();
             String name = parameterName();
-            expect('=');
+            expect(ASSIGNMENT_OPERATOR);
             eatWhitespace();
             String value = parameterValue();
             parameters.put(name, value);
@@ -43,33 +49,33 @@ public class HeaderFieldValue {
 
         private String parameterName() {
             final int start = idx;
-            advanceWhile(c -> c != '=' && c != ';');
-            return input.substring(start, idx).trim().toLowerCase();
+            advanceWhile(c -> c != ASSIGNMENT_OPERATOR && c != DELIMITER);
+            return input.substring(start, idx).trim().toLowerCase(Locale.ENGLISH);
         }
 
         private String parameterValue() {
             if (atEnd()) {
                 return "";
             }
-            if (peek() == '"') {
+            if (peek() == QUOTE) {
                 return quotedString();
             }
             final int start = idx;
-            advanceWhile(c -> c != ';');
+            advanceWhile(c -> c != DELIMITER);
             return input.substring(start, idx).trim();
         }
 
         private String quotedString() {
-            expect('"');
+            expect(QUOTE);
             final StringBuilder value = new StringBuilder();
-            while (!atEnd() && peek() != '"') {
-                if (peek() == '\\') {
+            while (!atEnd() && peek() != QUOTE) {
+                if (peek() == ESCAPE_SPECIAL_CHAR) {
                     idx++;
                 }
                 value.append(peek());
                 idx++;
             }
-            expect('"');
+            expect(QUOTE);
             eatWhitespace();
             return value.toString();
         }
@@ -108,7 +114,7 @@ public class HeaderFieldValue {
     }
 
     public static HeaderFieldValue parse(String headerField) {
-        int mainValueEnd = headerField.indexOf(";");
+        int mainValueEnd = headerField.indexOf(DELIMITER);
         if (mainValueEnd == -1) {
             return new HeaderFieldValue(headerField.trim(), Collections.emptyMap());
         }
