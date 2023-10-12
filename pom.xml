@@ -183,7 +183,7 @@
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.7.3.6</version>
                 <configuration>
-                    <excludeFilterFile>spotbugs.xml</excludeFilterFile>
+                    <excludeFilterFile>spotbugs-excludes.xml</excludeFilterFile>
                     <failOnError>false</failOnError>
                 </configuration>
                 <executions>
@@ -262,7 +262,7 @@
                     </reportSet>
                 </reportSets>
                 <configuration>
-                    <excludeFilterFile>spotbugs.xml</excludeFilterFile>
+                    <excludeFilterFile>spotbugs-excludes.xml</excludeFilterFile>
                     <failOnError>true</failOnError>
                 </configuration>
             </plugin>
