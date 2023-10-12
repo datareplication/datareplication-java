@@ -35,7 +35,7 @@ public enum OperationType {
             case PATCH:
                 return "PATCH";
             default:
-                throw new RuntimeException("unknown value");
+                throw new UnsupportedOperationException("unknown value");
         }
     }
 }

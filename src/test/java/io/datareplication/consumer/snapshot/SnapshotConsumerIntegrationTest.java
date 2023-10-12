@@ -1,21 +1,22 @@
 package io.datareplication.consumer.snapshot;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.datareplication.model.Entity;
 import io.datareplication.model.Url;
+import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
+import io.reactivex.rxjava3.core.Flowable;
+import lombok.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.reactivestreams.FlowAdapters;
 
-import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 class SnapshotConsumerIntegrationTest {
     private Url snapshotUrl;
@@ -40,18 +41,18 @@ class SnapshotConsumerIntegrationTest {
 
     @Test
     void shouldConsumeSnapshot() throws ExecutionException, InterruptedException {
-        List<String> snapshotEntities = List.of("Hello", "World", "I", "am", "a", "Snapshot");
-        SnapshotEntitySubscriber subscriber = new SnapshotEntitySubscriber();
-
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             // TODO: Additional configuration
             .build();
 
         SnapshotIndex snapshotIndex = consumer.loadSnapshotIndex(snapshotUrl).toCompletableFuture().get();
+        Flowable<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
+            Flowable.fromPublisher(FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)));
 
-        consumer.streamEntities(snapshotIndex).subscribe(subscriber);
-        await().atMost(5, TimeUnit.SECONDS).until(subscriber::hasCompleted);
-        assertThat(subscriber.getConsumedEntities()).isEqualTo(snapshotEntities);
+        entityFlowable
+            .map(entity -> entity.body().toUtf8())
+            .test()
+            .assertValues("Hello", "World", "I", "am", "a", "Snapshot");
     }
 }

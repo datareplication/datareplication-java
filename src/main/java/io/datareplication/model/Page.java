@@ -70,6 +70,6 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
      * @return a Body containing the page's entities as a multipart document
      */
     public @NonNull Body toMultipartBody() {
-        throw new RuntimeException("not implemented");
+        throw new UnsupportedOperationException("not implemented");
     }
 }

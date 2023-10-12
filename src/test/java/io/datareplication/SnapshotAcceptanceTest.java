@@ -1,36 +1,73 @@
 package io.datareplication;
 
 import io.datareplication.consumer.snapshot.SnapshotConsumer;
-import io.datareplication.consumer.snapshot.SnapshotEntitySubscriber;
+import io.datareplication.model.Body;
+import io.datareplication.model.Entity;
+import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
+import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
+import io.datareplication.producer.snapshot.SnapshotProducer;
+import io.reactivex.rxjava3.core.Flowable;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.FlowAdapters;
 
-import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 public class SnapshotAcceptanceTest {
-    private static final Url SNAPSHOT_URL = Url.of("TODO: Http Server provides the created Files");
 
     @Test
     void shouldPublishAndConsumeSnapshot() throws ExecutionException, InterruptedException {
-        List<String> snapshotEntities = List.of("1", "2", "3");
-        SnapshotEntitySubscriber subscriber = new SnapshotEntitySubscriber();
+        //region Produce Snapshot
+        Flowable<Entity<SnapshotEntityHeader>> entityFlow = Flowable
+            .just("Hello", "World", "I", "am", "a", "snapshot")
+            .map(this::toSnapshotEntity);
         // TODO: Create Snapshot with Snapshot Producer -> Serve via Http Server
 
-        SnapshotConsumer consumer = SnapshotConsumer
+        SnapshotProducer snapshotProducer = SnapshotProducer
+            .builder()
+            // TODO: Additional configuration & use InMemoryRepositories
+            .build(null, null, null);
+        SnapshotIndex producedSnapshotIndex = snapshotProducer
+            .produce(FlowAdapters.toFlowPublisher(entityFlow))
+            .toCompletableFuture()
+            .get();
+        //endregion
+        //region Consume Snapshot
+        SnapshotConsumer snapshotConsumer = SnapshotConsumer
             .builder()
             // TODO: Additional configuration
             .build();
+        Flowable<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
+            Flowable.fromPublisher(
+                FlowAdapters.toPublisher(snapshotConsumer.streamEntities(producedSnapshotIndex))
+            );
+        //endregion
 
-        SnapshotIndex snapshotIndex = consumer.loadSnapshotIndex(SNAPSHOT_URL).toCompletableFuture().get();
+        //region Assert SnapshotIndex
+        var snapshotIndexFromUrl = snapshotConsumer
+            .loadSnapshotIndex(snapshotUrl(producedSnapshotIndex))
+            .toCompletableFuture()
+            .get();
+        assertThat(producedSnapshotIndex).isEqualTo(snapshotIndexFromUrl);
+        //endregion
+        //region Assert consumed entities
+        entityFlowable
+            .map(entity -> entity.body().toUtf8())
+            .test()
+            .assertValues("Hello", "World", "I", "am", "a", "Snapshot");
+        //endregion
+    }
 
-        consumer.streamEntities(snapshotIndex).subscribe(subscriber);
-        await().atMost(5, TimeUnit.SECONDS).until(subscriber::hasCompleted);
-        assertThat(subscriber.getConsumedEntities()).isEqualTo(snapshotEntities);
+    private @NonNull Entity<@NonNull SnapshotEntityHeader> toSnapshotEntity(String content) {
+        return new Entity<>(new SnapshotEntityHeader(HttpHeaders.EMPTY), Body.fromUtf8(content));
+    }
+
+    private Url snapshotUrl(SnapshotIndex index) {
+        // TODO: Server configuration
+        return Url.of("https://localhost:8080/" + index.id().value());
     }
 }
