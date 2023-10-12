@@ -39,7 +39,7 @@ public interface FeedProducer {
         }
 
         @NonNull FeedProducer build() {
-            throw new RuntimeException("not implemented");
+            throw new UnsupportedOperationException("not implemented");
         }
     }
 

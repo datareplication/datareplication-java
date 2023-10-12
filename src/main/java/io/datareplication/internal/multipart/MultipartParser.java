@@ -55,8 +55,12 @@ public class MultipartParser {
     }
 
     /**
+     *
+     * @param input the ByteBuffer
      * @throws RequestInput give me more bytes
      * @throws MultipartException something went wrong
+     *
+     * @return the parsed result
      */
     public @NonNull Result parse(@NonNull ByteBuffer input) {
         Result result = parseInternal(input);
