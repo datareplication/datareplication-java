@@ -6,9 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
-public class ResourceReader {
+public final class ResourceReader {
 
-    private ResourceReader(){
+    private ResourceReader() {
     }
 
     public static  String readFromInputStream(String pathToFile) throws IOException {
