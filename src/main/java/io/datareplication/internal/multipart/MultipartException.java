@@ -10,7 +10,7 @@ public abstract class MultipartException extends RuntimeException {
     }
 
     @EqualsAndHashCode(callSuper = false)
-    public static class InvalidDelimiter extends MultipartException {
+    public static final class InvalidDelimiter extends MultipartException {
         private final long offset;
 
         public InvalidDelimiter(long offset) {
@@ -20,7 +20,7 @@ public abstract class MultipartException extends RuntimeException {
     }
 
     @EqualsAndHashCode(callSuper = false)
-    public static class UndecodableHeader extends MultipartException {
+    public static final class UndecodableHeader extends MultipartException {
         private final Charset charset;
         private final long offset;
 
@@ -32,7 +32,7 @@ public abstract class MultipartException extends RuntimeException {
     }
 
     @EqualsAndHashCode(callSuper = false)
-    public static class InvalidHeader extends MultipartException {
+    public static final class InvalidHeader extends MultipartException {
         private final String header;
         private final long offset;
 

@@ -55,6 +55,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.24.2</version>
@@ -194,7 +200,7 @@
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.7.3.6</version>
                 <configuration>
-                    <excludeFilterFile>spotbugs.xml</excludeFilterFile>
+                    <includeFilterFile>spotbugs.xml</includeFilterFile>
                     <failOnError>false</failOnError>
                 </configuration>
                 <executions>
@@ -273,7 +279,7 @@
                     </reportSet>
                 </reportSets>
                 <configuration>
-                    <excludeFilterFile>spotbugs.xml</excludeFilterFile>
+                    <excludeFilterFile>spotbugs-excludes.xml</excludeFilterFile>
                     <failOnError>true</failOnError>
                 </configuration>
             </plugin>
