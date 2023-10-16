@@ -33,17 +33,15 @@ class SnapshotIndexTest {
         "https://www.datareplication.io/spec/snapshot/index.schema.json";
     private final ObjectMapper mapper = new ObjectMapper();
     private JsonSchema schema;
-    private ResourceReader resourceReader;
 
     @BeforeEach
     void setUp() throws URISyntaxException {
         schema = fetchJsonSchemaFromUrl();
-        resourceReader = new ResourceReader();
     }
 
     @Test
     void fromJson_happyPath() throws IOException {
-        String json = resourceReader.readFromInputStream("__files/snapshot/index.json");
+        String json = ResourceReader.readFromInputStream("__files/snapshot/index.json");
         SnapshotIndex snapshotIndex = SnapshotIndex.fromJson(Body.fromUtf8(json));
         assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("example"));
         assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-10-07T15:00:00Z")));

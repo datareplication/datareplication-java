@@ -3,7 +3,7 @@ package io.datareplication.model.snapshot;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class SnapshotIndexGsonUtil {
+public final class SnapshotIndexGsonUtil {
 
     private static Gson instance;
 

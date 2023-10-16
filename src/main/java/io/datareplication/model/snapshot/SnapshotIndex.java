@@ -43,7 +43,7 @@ public class SnapshotIndex {
         try {
             return SnapshotIndexGsonUtil.getInstance().fromJson(json.toUtf8(), SnapshotIndex.class);
         } catch (IllegalArgumentException | DateTimeParseException | IOException ex) {
-            throw new SnapshotIndexCreationException(ex.getMessage());
+            throw (SnapshotIndexCreationException) new SnapshotIndexCreationException(ex.getMessage()).initCause(ex);
         }
     }
 

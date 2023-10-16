@@ -4,19 +4,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 
 public class ResourceReader {
 
-    public String readFromInputStream(String pathToFile) throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResource(pathToFile).openStream();
-        StringBuilder resultStringBuilder = new StringBuilder();
+    public static  String readFromInputStream(String pathToFile) throws IOException {
+        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResource(pathToFile).openStream();
+        String result;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                resultStringBuilder.append(line).append("\n");
-            }
+            result = br.lines().map(line -> line + "\n").collect(Collectors.joining());
         }
-        return resultStringBuilder.toString();
+        return result;
     }
 
 }
