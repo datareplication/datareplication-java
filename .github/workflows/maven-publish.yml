@@ -27,6 +27,11 @@ jobs:
         cache: 'maven'
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+    - name: Run codacy-coverage-reporter
+      uses: codacy/codacy-coverage-reporter-action@v1
+      with:
+        api-token: ${{ secrets.CODACY_API_TOKEN }}
+        coverage-reports: target/site/jacoco/jacoco.xml
     - name: Run Codacy Analysis CLI (SpotBugs)
       uses: codacy/codacy-analysis-cli-action@master
       with:
@@ -40,11 +45,6 @@ jobs:
         api-token: ${{ secrets.CODACY_API_TOKEN }}
         upload: true
         max-allowed-issues: 2147483647
-    - name: Run codacy-coverage-reporter
-      uses: codacy/codacy-coverage-reporter-action@v1
-      with:
-        api-token: ${{ secrets.CODACY_API_TOKEN }}
-        coverage-reports: target/site/jacoco/jacoco.xml
     - name: Create Javadoc with Maven
       if: ${{ github.ref == 'refs/heads/main' }}
       run: mvn -B javadoc:javadoc --file pom.xml
