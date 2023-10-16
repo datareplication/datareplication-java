@@ -16,9 +16,9 @@ class SnapshotIndexSerializer implements JsonSerializer<SnapshotIndex> {
         JsonObject jsonSnapshotIndex = new JsonObject();
 
         JsonArray pagesArray = new JsonArray();
-        for (int i = 0; i < src.pages().size(); i++) {
-           pagesArray.add(src.pages().get(i).value());
-        }
+        src.pages().forEach(
+            page -> pagesArray.add(page.value())
+        );
 
         jsonSnapshotIndex.addProperty("id", src.id().value());
         jsonSnapshotIndex.addProperty("createdAt", src.createdAt().value().toString());
