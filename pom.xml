@@ -37,7 +37,7 @@
             <artifactId>rxjava</artifactId>
             <version>3.1.8</version>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
@@ -279,7 +279,7 @@
                     </reportSet>
                 </reportSets>
                 <configuration>
-                    <excludeFilterFile>spotbugs-excludes.xml</excludeFilterFile>
+                    <includeFilterFile>spotbugs.xml</includeFilterFile>
                     <failOnError>true</failOnError>
                 </configuration>
             </plugin>
@@ -334,5 +334,4 @@
             </plugin>
         </plugins>
     </reporting>
-
 </project>
