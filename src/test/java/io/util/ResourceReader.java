@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 
 public class ResourceReader {
 
+    private ResourceReader(){
+    }
+
     public static  String readFromInputStream(String pathToFile) throws IOException {
         InputStream inputStream = Thread.currentThread().getContextClassLoader().getResource(pathToFile).openStream();
         String result;
