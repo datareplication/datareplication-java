@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -152,7 +151,7 @@ class SnapshotIndexTest {
                       + "    \"pages\":[]"
                       + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(DateTimeParseException.class, () -> SnapshotIndex.fromJson(body));
+        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
     }
 
     @Test
@@ -162,7 +161,7 @@ class SnapshotIndexTest {
                       + "    \"pages\":[]"
                       + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(IllegalArgumentException.class, () -> SnapshotIndex.fromJson(body));
+        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
     }
 
     @Test
@@ -172,7 +171,7 @@ class SnapshotIndexTest {
                       + "    \"pages\":[]"
                       + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(IllegalArgumentException.class, () -> SnapshotIndex.fromJson(body));
+        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
     }
 
     @Test
@@ -182,7 +181,7 @@ class SnapshotIndexTest {
                       + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\"\n"
                       + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(IllegalArgumentException.class, () -> SnapshotIndex.fromJson(body));
+        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
     }
 
     private static final Url URL_1 = Url.of("https://example.datareplication.io/1");

@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 import java.io.IOException;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -38,9 +39,12 @@ public class SnapshotIndex {
         return Body.fromUtf8(SnapshotIndexGsonUtil.getInstance().toJson(this));
     }
 
-    // TODO: error handling
-    public static @NonNull SnapshotIndex fromJson(@NonNull Body json) throws IOException {
-        return SnapshotIndexGsonUtil.getInstance().fromJson(json.toUtf8(), SnapshotIndex.class);
+    public static @NonNull SnapshotIndex fromJson(@NonNull Body json) {
+        try {
+            return SnapshotIndexGsonUtil.getInstance().fromJson(json.toUtf8(), SnapshotIndex.class);
+        } catch (IllegalArgumentException | DateTimeParseException | IOException ex) {
+            throw new SnapshotIndexCreationException(ex.getMessage());
+        }
     }
 
 }
