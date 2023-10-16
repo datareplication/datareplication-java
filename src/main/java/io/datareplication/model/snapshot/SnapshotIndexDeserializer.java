@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SnapshotIndexDeserializer implements JsonDeserializer<SnapshotIndex> {
+class SnapshotIndexDeserializer implements JsonDeserializer<SnapshotIndex> {
     @Override
     public SnapshotIndex deserialize(JsonElement json,
                                      Type typeOfT,
@@ -28,10 +28,11 @@ public class SnapshotIndexDeserializer implements JsonDeserializer<SnapshotIndex
         Timestamp timestamp = Timestamp.of(Instant.parse(iso8601Timestamp));
 
         JsonArray pagesArray = jsonObject.getAsJsonArray("pages");
+
         List<Url> pages = new ArrayList<>();
-        for (int i = 0; i < pagesArray.size(); i++) {
-            pages.add(Url.of(pagesArray.get(i).getAsString()));
-        }
+        pagesArray.asList().forEach(
+            page -> pages.add(Url.of(page.getAsString()))
+        );
 
         return new SnapshotIndex(
             snapshotId,

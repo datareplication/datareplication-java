@@ -8,7 +8,7 @@ import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 
-public class SnapshotIndexSerializer implements JsonSerializer<SnapshotIndex> {
+class SnapshotIndexSerializer implements JsonSerializer<SnapshotIndex> {
 
     public JsonElement serialize(SnapshotIndex src,
                                  Type type,

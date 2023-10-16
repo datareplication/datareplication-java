@@ -10,13 +10,11 @@ import com.networknt.schema.ValidationMessage;
 import io.datareplication.model.Body;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
+import io.util.ResourceReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
@@ -36,10 +34,47 @@ class SnapshotIndexTest {
         "https://www.datareplication.io/spec/snapshot/index.schema.json";
     private final ObjectMapper mapper = new ObjectMapper();
     private JsonSchema schema;
+    private ResourceReader resourceReader;
 
     @BeforeEach
     void setUp() throws URISyntaxException {
         schema = fetchJsonSchemaFromUrl();
+        resourceReader = new ResourceReader();
+    }
+
+    @Test
+    void fromJson_happyPath() throws IOException {
+        String json = resourceReader.readFromInputStream("__files/snapshot/index.json");
+        SnapshotIndex snapshotIndex = SnapshotIndex.fromJson(Body.fromUtf8(json));
+        assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("example"));
+        assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-10-07T15:00:00Z")));
+        assertThat(snapshotIndex.pages()).contains(
+            Url.of("https://localhost:8443/1.content.multipart"),
+            Url.of("https://localhost:8443/2.content.multipart"),
+            Url.of("https://localhost:8443/3.content.multipart")
+        );
+    }
+
+    @Test
+    void toJson_happyPath() throws IOException {
+        SnapshotIndex snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("12345678"),
+            Timestamp.of(Instant.parse("2023-09-29T20:52:17.000Z")),
+            List.of(
+                Url.of("https://localhost:12345/snapshot/12345678/1"),
+                Url.of("https://localhost:12345/snapshot/12345678/2"),
+                Url.of("https://localhost:12345/snapshot/12345678/3")
+            )
+        );
+        Body snapshotIndexJson = snapshotIndex.toJson();
+        assertThat(snapshotIndexJson.toUtf8()).isEqualTo(
+            "{\"id\":\"12345678\",\"createdAt\":\"2023-09-29T20:52:17Z\","
+            + "\"pages\":["
+            + "\"https://localhost:12345/snapshot/12345678/1\","
+            + "\"https://localhost:12345/snapshot/12345678/2\","
+            + "\"https://localhost:12345/snapshot/12345678/3\""
+            + "]}"
+        );
     }
 
     @Test
@@ -70,10 +105,12 @@ class SnapshotIndexTest {
                                                      + "  }");
         Set<ValidationMessage> errors = schema.validate(node);
         assertThat(errors).hasSize(3);
-        assertThat(errors.stream().map(ValidationMessage::toString)).contains("$.id: is missing but it is required");
-        assertThat(errors.stream().map(ValidationMessage::toString))
+        assertThat(errors.stream().map(ValidationMessage::getMessage))
+            .contains("$.id: is missing but it is required");
+        assertThat(errors.stream().map(ValidationMessage::getMessage))
             .contains("$.createdAt: is missing but it is required");
-        assertThat(errors.stream().map(ValidationMessage::toString)).contains("$.pages: is missing but it is required");
+        assertThat(errors.stream().map(ValidationMessage::getMessage))
+            .contains("$.pages: is missing but it is required");
     }
 
     @Test
@@ -85,9 +122,9 @@ class SnapshotIndexTest {
                                                      + "  }");
         Set<ValidationMessage> errors = schema.validate(node);
         assertThat(errors).hasSize(2);
-        assertThat(errors.stream().map(ValidationMessage::toString))
+        assertThat(errors.stream().map(ValidationMessage::getMessage))
             .contains("$.createdAt: 2023-09-99T20:52:17.000Z is an invalid date-time");
-        assertThat(errors.stream().map(ValidationMessage::toString))
+        assertThat(errors.stream().map(ValidationMessage::getMessage))
             .contains("$.pages: string found, array expected");
     }
 
@@ -105,33 +142,6 @@ class SnapshotIndexTest {
 
     protected JsonNode getJsonNodeFromStringContent(String content) throws IOException {
         return mapper.readTree(content);
-    }
-
-    @Test
-    void fromJson_happyPath() throws IOException {
-        String json = readFromInputStream("__files/snapshot/index.json");
-        SnapshotIndex snapshotIndex = SnapshotIndex.fromJson(Body.fromUtf8(json));
-        assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("example"));
-        assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-10-07T15:00:00Z")));
-        assertThat(snapshotIndex.pages()).contains(
-            Url.of("https://localhost:8443/1.content.multipart"),
-            Url.of("https://localhost:8443/2.content.multipart"),
-            Url.of("https://localhost:8443/3.content.multipart")
-        );
-    }
-
-    // Move this method to a generic helper class for more convenience
-    // if this method is used multiple times
-    private String readFromInputStream(String pathToFile) throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResource(pathToFile).openStream();
-        StringBuilder resultStringBuilder = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                resultStringBuilder.append(line).append("\n");
-            }
-        }
-        return resultStringBuilder.toString();
     }
 
     @Test
@@ -173,28 +183,6 @@ class SnapshotIndexTest {
                       + "}";
         Body body = Body.fromUtf8(json);
         assertThrows(IllegalArgumentException.class, () -> SnapshotIndex.fromJson(body));
-    }
-
-    @Test
-    void toJson_happyPath() throws IOException {
-        SnapshotIndex snapshotIndex = new SnapshotIndex(
-            SnapshotId.of("12345678"),
-            Timestamp.of(Instant.parse("2023-09-29T20:52:17.000Z")),
-            List.of(
-                Url.of("https://localhost:12345/snapshot/12345678/1"),
-                Url.of("https://localhost:12345/snapshot/12345678/2"),
-                Url.of("https://localhost:12345/snapshot/12345678/3")
-            )
-        );
-        Body snapshotIndexJson = snapshotIndex.toJson();
-        assertThat(snapshotIndexJson.toUtf8()).isEqualTo(
-            "{\"id\":\"12345678\",\"createdAt\":\"2023-09-29T20:52:17Z\","
-            + "\"pages\":["
-            + "\"https://localhost:12345/snapshot/12345678/1\","
-            + "\"https://localhost:12345/snapshot/12345678/2\","
-            + "\"https://localhost:12345/snapshot/12345678/3\""
-            + "]}"
-        );
     }
 
     private static final Url URL_1 = Url.of("https://example.datareplication.io/1");
