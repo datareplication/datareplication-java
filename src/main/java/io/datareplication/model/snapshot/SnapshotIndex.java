@@ -1,7 +1,5 @@
 package io.datareplication.model.snapshot;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.datareplication.model.Body;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
@@ -37,18 +35,12 @@ public class SnapshotIndex {
     }
 
     public @NonNull Body toJson() {
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(SnapshotIndex.class, new SnapshotIndexSerializer())
-            .create();
-        return Body.fromUtf8(gson.toJson(this));
+        return Body.fromUtf8(SnapshotIndexGsonUtil.getInstance().toJson(this));
     }
 
     // TODO: error handling
     public static @NonNull SnapshotIndex fromJson(@NonNull Body json) throws IOException {
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(SnapshotIndex.class, new SnapshotIndexDeserializer())
-            .create();
-        return gson.fromJson(json.toUtf8(), SnapshotIndex.class);
+        return SnapshotIndexGsonUtil.getInstance().fromJson(json.toUtf8(), SnapshotIndex.class);
     }
 
 }
