@@ -35,15 +35,25 @@ public class SnapshotIndex {
         this.pages = List.copyOf(pages);
     }
 
+    /**
+     * Converts this Snapshot instance to a Body
+     * @return the converted Body
+     */
     public @NonNull Body toJson() {
         return Body.fromUtf8(SnapshotIndexGsonUtil.getInstance().toJson(this));
     }
 
+    /**
+     * Parses Tries to parse JSON a SnapshotIndex
+     * @throws SnapshotIndexCreationException if JSON is not a SnapshotIndex
+     * @param json the json representation of a SnapshotIndex
+     * @return the parsed SnapshotIndex
+     */
     public static @NonNull SnapshotIndex fromJson(@NonNull Body json) {
         try {
             return SnapshotIndexGsonUtil.getInstance().fromJson(json.toUtf8(), SnapshotIndex.class);
         } catch (IllegalArgumentException | DateTimeParseException | IOException ex) {
-            throw (SnapshotIndexCreationException) new SnapshotIndexCreationException(ex.getMessage()).initCause(ex);
+            throw new SnapshotIndexCreationException(ex.getMessage(), ex);
         }
     }
 

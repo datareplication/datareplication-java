@@ -142,7 +142,7 @@ class SnapshotIndexTest {
     }
 
     @Test
-    void fromJson_throwsExceptionBecauseOfMalformattedCreatedAtTime() {
+    void fromJson_throwsExceptionBecauseOfMalformedCreatedAtTime() {
         String json = "{\n"
                       + "    \"id\": \"12345678\",\n"
                       + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\",\n"
