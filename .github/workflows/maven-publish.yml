@@ -46,7 +46,6 @@ jobs:
         upload: true
         max-allowed-issues: 2147483647
     - name: Create Javadoc with Maven
-      if: ${{ github.ref == 'refs/heads/main' }}
       run: mvn -B javadoc:javadoc --file pom.xml
     - name: Upload Javadoc artifact
       if: ${{ github.ref == 'refs/heads/main' }}
