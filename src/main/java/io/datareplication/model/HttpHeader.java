@@ -1,5 +1,6 @@
 package io.datareplication.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -14,7 +15,15 @@ import java.util.Locale;
  */
 @Value
 public class HttpHeader {
+    /**
+     * The normalized header name for case-insensitive comparisons.
+     */
     @NonNull String name;
+    // TODO: exclude from equals and hashCode?
+    /**
+     * The header name with its original capitalization for prettier printing.
+     */
+    @NonNull String displayName;
     @NonNull List<@NonNull String> values;
 
     @NonNull
@@ -37,7 +46,8 @@ public class HttpHeader {
         .withZone(ZoneId.of("GMT"));
 
     private HttpHeader(@NonNull String name, @NonNull List<@NonNull String> values) {
-        this.name = name;
+        this.displayName = name;
+        this.name = name.toLowerCase(Locale.ENGLISH);
         this.values = List.copyOf(values);
     }
 

@@ -26,6 +26,14 @@ class HttpHeaderTest {
     }
 
     @Test
+    void shouldLowerCaseName() {
+        final HttpHeader header = HttpHeader.of("Upper-And-Lower-Case", "value");
+
+        assertThat(header.displayName()).isEqualTo("Upper-And-Lower-Case");
+        assertThat(header.name()).isEqualTo("upper-and-lower-case");
+    }
+
+    @Test
     void shouldCreateContentTypeHeader() {
         final HttpHeader header = HttpHeader.contentType(ContentType.of("application/json"));
 
