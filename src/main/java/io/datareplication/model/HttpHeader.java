@@ -1,11 +1,11 @@
 package io.datareplication.model;
 
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -49,6 +49,30 @@ public class HttpHeader {
         this.displayName = name;
         this.name = name.toLowerCase(Locale.ENGLISH);
         this.values = List.copyOf(values);
+    }
+
+    /**
+     * Append a single value to this header.
+     *
+      * @param value the new value to append
+     * @return a new HttpHeader with the given value appended
+     */
+    public @NonNull HttpHeader append(@NonNull String value) {
+        final ArrayList<String> newValues = new ArrayList<>(values);
+        newValues.add(value);
+        return HttpHeader.of(displayName, newValues);
+    }
+
+    /**
+     * Append multiple value to this header.
+     *
+     * @param values the values to append
+     * @return a new HttpHeader with the given values appended
+     */
+    public @NonNull HttpHeader append(@NonNull List<@NonNull String> values) {
+        final ArrayList<String> newValues = new ArrayList<>(this.values);
+        newValues.addAll(values);
+        return HttpHeader.of(displayName, newValues);
     }
 
     /**

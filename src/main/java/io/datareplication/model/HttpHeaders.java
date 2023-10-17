@@ -88,7 +88,7 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
     private static HttpHeaders update(Map<String, HttpHeader> headerMap, Iterator<HttpHeader> headers) {
         while (headers.hasNext()) {
             final HttpHeader header = headers.next();
-            headerMap.put(header.name(), header);
+            headerMap.merge(header.name(), header, (present, added) -> present.append(added.values()));
         }
         return new HttpHeaders(headerMap);
     }
