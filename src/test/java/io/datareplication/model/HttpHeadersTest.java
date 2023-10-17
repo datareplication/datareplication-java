@@ -30,6 +30,13 @@ class HttpHeadersTest {
     }
 
     @Test
+    void shouldStreamHeaders() {
+        final HttpHeaders headers = HttpHeaders.of(HEADER_1_1, HEADER_2, HEADER_3_1);
+
+        assertThat(headers.stream()).containsExactlyInAnyOrder(HEADER_1_1, HEADER_2, HEADER_3_1);
+    }
+
+    @Test
     void shouldCreateHeadersFromIterable() {
         final HttpHeaders headers = HttpHeaders.of(List.of(HEADER_1_1, HEADER_2, HEADER_3_1));
 

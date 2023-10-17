@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A collection of multiple {@link HttpHeader} objects. There's only one set of values per name so repeated headers
@@ -39,6 +41,15 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
     @Override
     public @NonNull Iterator<@NonNull HttpHeader> iterator() {
         return headers.values().iterator();
+    }
+
+    /**
+     * Return a {@link Stream} over the headers in this object.
+     *
+     * @return a {@link Stream} over all {@link HttpHeader} values in this collection
+     */
+    public @NonNull Stream<@NonNull HttpHeader> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 
     /**
