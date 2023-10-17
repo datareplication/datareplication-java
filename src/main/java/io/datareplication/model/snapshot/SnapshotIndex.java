@@ -4,11 +4,11 @@ import io.datareplication.model.Body;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
 import java.io.IOException;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -43,7 +43,7 @@ public class SnapshotIndex {
      */
     public @NonNull Body toJson() {
         return Body.fromUtf8(
-            SnapshotIndexGsonUtil.getInstance().toJson(this),
+            SnapshotIndexJsonCodec.toJson(this),
             ContentType.of("application/json")
         );
     }
@@ -53,14 +53,20 @@ public class SnapshotIndex {
      *
      * @param json the json representation of a SnapshotIndex
      * @return the parsed SnapshotIndex
-     * @throws SnapshotIndexCreationException if JSON is not a SnapshotIndex
+     * @throws ParsingException if JSON is not a SnapshotIndex
+     * @throws IOException      if the underlying Body throws an IOException
      */
-    public static @NonNull SnapshotIndex fromJson(@NonNull Body json) {
-        try {
-            return SnapshotIndexGsonUtil.getInstance().fromJson(json.toUtf8(), SnapshotIndex.class);
-        } catch (IllegalArgumentException | DateTimeParseException | IOException ex) {
-            throw new SnapshotIndexCreationException(ex.getMessage(), ex);
-        }
+    public static @NonNull SnapshotIndex fromJson(@NonNull Body json) throws IOException {
+        return SnapshotIndexJsonCodec.fromJson(json.toUtf8());
     }
 
+    /**
+     * ParsingException occurs when a SnapshotIndex can't be parsed
+     */
+    @EqualsAndHashCode(callSuper = false)
+    public static final class ParsingException extends RuntimeException {
+        public ParsingException(@NonNull Throwable t) {
+            super(t.getMessage(), t);
+        }
+    }
 }

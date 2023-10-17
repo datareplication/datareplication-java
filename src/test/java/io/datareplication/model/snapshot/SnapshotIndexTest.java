@@ -67,11 +67,11 @@ class SnapshotIndexTest {
         Body snapshotIndexJson = snapshotIndex.toJson();
         assertThat(snapshotIndexJson.toUtf8()).isEqualTo(
             "{\"id\":\"12345678\",\"createdAt\":\"2023-09-29T20:52:17Z\","
-            + "\"pages\":["
-            + "\"https://localhost:12345/snapshot/12345678/1\","
-            + "\"https://localhost:12345/snapshot/12345678/2\","
-            + "\"https://localhost:12345/snapshot/12345678/3\""
-            + "]}"
+                + "\"pages\":["
+                + "\"https://localhost:12345/snapshot/12345678/1\","
+                + "\"https://localhost:12345/snapshot/12345678/2\","
+                + "\"https://localhost:12345/snapshot/12345678/3\""
+                + "]}"
         );
         assertThat(snapshotIndexJson.contentType()).isEqualTo(ContentType.of("application/json"));
     }
@@ -79,14 +79,14 @@ class SnapshotIndexTest {
     @Test
     void schemaValidation_providedJsonValidates() throws IOException {
         JsonNode node = getJsonNodeFromStringContent("{\n"
-                                                     + "    \"id\": \"12345678\",\n"
-                                                     + "    \"createdAt\": \"2023-09-27T20:52:17.000Z\",\n"
-                                                     + "    \"pages\": [\n"
-                                                     + "      \"https://example.datareplication.io/12345678/page/1\",\n"
-                                                     + "      \"https://example.datareplication.io/12345678/page/2\",\n"
-                                                     + "      \"https://example.datareplication.io/12345678/page/3\"\n"
-                                                     + "    ]\n"
-                                                     + "  }");
+            + "    \"id\": \"12345678\",\n"
+            + "    \"createdAt\": \"2023-09-27T20:52:17.000Z\",\n"
+            + "    \"pages\": [\n"
+            + "      \"https://example.datareplication.io/12345678/page/1\",\n"
+            + "      \"https://example.datareplication.io/12345678/page/2\",\n"
+            + "      \"https://example.datareplication.io/12345678/page/3\"\n"
+            + "    ]\n"
+            + "  }");
         Set<ValidationMessage> errors = schema.validate(node);
         assertThat(errors).isEmpty();
     }
@@ -94,14 +94,14 @@ class SnapshotIndexTest {
     @Test
     void schemaValidation_providedJsonFailsToValidateBecauseItHasMissingKeys() throws IOException {
         JsonNode node = getJsonNodeFromStringContent("{\n"
-                                                     + "    \"id1\": \"12345678\",\n"
-                                                     + "    \"createdAt2\": \"2023-09-27T20:52:17.000Z\",\n"
-                                                     + "    \"pages3\": [\n"
-                                                     + "      \"https://example.datareplication.io/12345678/page/1\",\n"
-                                                     + "      \"https://example.datareplication.io/12345678/page/2\",\n"
-                                                     + "      \"https://example.datareplication.io/12345678/page/3\"\n"
-                                                     + "    ]\n"
-                                                     + "  }");
+            + "    \"id1\": \"12345678\",\n"
+            + "    \"createdAt2\": \"2023-09-27T20:52:17.000Z\",\n"
+            + "    \"pages3\": [\n"
+            + "      \"https://example.datareplication.io/12345678/page/1\",\n"
+            + "      \"https://example.datareplication.io/12345678/page/2\",\n"
+            + "      \"https://example.datareplication.io/12345678/page/3\"\n"
+            + "    ]\n"
+            + "  }");
         Set<ValidationMessage> errors = schema.validate(node);
         assertThat(errors).hasSize(3);
         assertThat(errors.stream().map(ValidationMessage::getMessage))
@@ -115,10 +115,10 @@ class SnapshotIndexTest {
     @Test
     void schemaValidation_providedJsonFailsToValidateBecauseItHasWrongValues() throws IOException {
         JsonNode node = getJsonNodeFromStringContent("{\n"
-                                                     + "    \"id\": \"12345678\",\n"
-                                                     + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\",\n"
-                                                     + "    \"pages\": \"no array\"\n"
-                                                     + "  }");
+            + "    \"id\": \"12345678\",\n"
+            + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\",\n"
+            + "    \"pages\": \"no array\"\n"
+            + "  }");
         Set<ValidationMessage> errors = schema.validate(node);
         assertThat(errors).hasSize(2);
         assertThat(errors.stream().map(ValidationMessage::getMessage))
@@ -144,44 +144,60 @@ class SnapshotIndexTest {
     }
 
     @Test
-    void fromJson_throwsExceptionBecauseOfMalformedCreatedAtTime() {
-        String json = "{\n"
-                      + "    \"id\": \"12345678\",\n"
-                      + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\",\n"
-                      + "    \"pages\":[]"
-                      + "}";
-        Body body = Body.fromUtf8(json);
-        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
-    }
-
-    @Test
     void fromJson_throwExceptionBecauseItIsMissingPropertyId() {
         String json = "{\n"
-                      + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\",\n"
-                      + "    \"pages\":[]"
-                      + "}";
+            + "    \"createdAt\": \"2023-09-27T20:52:17.000Z\",\n"
+            + "    \"pages\":[]"
+            + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
+        assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body));
     }
 
     @Test
     void fromJson_throwExceptionBecauseItIsMissingPropertyCreatedAt() {
         String json = "{\n"
-                      + "    \"id\": \"12345678\",\n"
-                      + "    \"pages\":[]"
-                      + "}";
+            + "    \"id\": \"12345678\",\n"
+            + "    \"pages\":[]"
+            + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
+        var thrown = assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body), "");
+        assertThat(thrown.getMessage()).isEqualTo("provided json is missing a property: 'createdAt'");
+    }
+
+    @Test
+    void fromJson_throwExceptionBecauseItHasInvalidPagesArray() {
+        String json = "{\n"
+            + "    \"id\": \"12345678\",\n"
+            + "    \"createdAt\": \"2023-09-27T20:52:17.000Z\",\n"
+            + "    \"pages\":\"not an array\""
+            + "}";
+        Body body = Body.fromUtf8(json);
+        var thrown = assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body));
+        assertThat(thrown.getMessage())
+            .isEqualTo("java.lang.IllegalStateException: "
+                + "Expected BEGIN_ARRAY but was STRING at line 4 column 14 path $.pages");
     }
 
     @Test
     void fromJson_throwExceptionBecauseItIsMissingPropertyPages() {
         String json = "{\n"
-                      + "    \"id\": \"12345678\",\n"
-                      + "    \"createdAt\": \"2023-09-99T20:52:17.000Z\"\n"
-                      + "}";
+            + "    \"id\": \"12345678\",\n"
+            + "    \"createdAt\": \"2023-09-27T20:52:17.000Z\"\n"
+            + "}";
         Body body = Body.fromUtf8(json);
-        assertThrows(SnapshotIndexCreationException.class, () -> SnapshotIndex.fromJson(body));
+        var thrown = assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body));
+        assertThat(thrown.getMessage()).isEqualTo("provided json is missing a property: 'pages'");
+
+    }
+
+    @Test
+    void fromJson_throwExceptionBecauseItIsMalformedJson() {
+        String json = "hello index";
+        Body body = Body.fromUtf8(json);
+        var thrown = assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body));
+        assertThat(thrown.getMessage())
+            .isEqualTo("java.lang.IllegalStateException: "
+                + "Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $");
     }
 
     private static final Url URL_1 = Url.of("https://example.datareplication.io/1");
