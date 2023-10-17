@@ -1,6 +1,7 @@
 package io.datareplication.model.snapshot;
 
 import io.datareplication.model.Body;
+import io.datareplication.model.ContentType;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import lombok.NonNull;
@@ -37,17 +38,22 @@ public class SnapshotIndex {
 
     /**
      * Converts this Snapshot instance to a Body
+     *
      * @return the converted Body
      */
     public @NonNull Body toJson() {
-        return Body.fromUtf8(SnapshotIndexGsonUtil.getInstance().toJson(this));
+        return Body.fromUtf8(
+            SnapshotIndexGsonUtil.getInstance().toJson(this),
+            ContentType.of("application/json")
+        );
     }
 
     /**
      * Parses Tries to parse JSON a SnapshotIndex
-     * @throws SnapshotIndexCreationException if JSON is not a SnapshotIndex
+     *
      * @param json the json representation of a SnapshotIndex
      * @return the parsed SnapshotIndex
+     * @throws SnapshotIndexCreationException if JSON is not a SnapshotIndex
      */
     public static @NonNull SnapshotIndex fromJson(@NonNull Body json) {
         try {

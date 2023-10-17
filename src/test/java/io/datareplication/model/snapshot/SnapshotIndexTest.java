@@ -8,6 +8,7 @@ import com.networknt.schema.SchemaValidatorsConfig;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import io.datareplication.model.Body;
+import io.datareplication.model.ContentType;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.util.ResourceReader;
@@ -72,6 +73,7 @@ class SnapshotIndexTest {
             + "\"https://localhost:12345/snapshot/12345678/3\""
             + "]}"
         );
+        assertThat(snapshotIndexJson.contentType()).isEqualTo(ContentType.of("application/json"));
     }
 
     @Test
