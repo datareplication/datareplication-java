@@ -1,4 +1,4 @@
-package io.datareplication.internal.http;
+package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
@@ -6,6 +6,7 @@ import io.datareplication.internal.multipart.BufferingParser;
 import io.datareplication.internal.multipart.Elem;
 import io.datareplication.internal.multipart.MultipartParser;
 import io.datareplication.model.ContentType;
+import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
@@ -71,6 +72,12 @@ public class PageLoader {
             @Override
             public @NonNull HttpHeaders header() {
                 return pageHeader;
+            }
+
+            @Override
+            public Flow.@NonNull Publisher<@NonNull Entity<HttpHeaders>> toCompleteEntities() {
+                // TODO:
+                throw new RuntimeException("not implemented");
             }
 
             @Override

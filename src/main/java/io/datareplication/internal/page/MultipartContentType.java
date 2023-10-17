@@ -1,4 +1,4 @@
-package io.datareplication.internal.http;
+package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
 import lombok.Value;

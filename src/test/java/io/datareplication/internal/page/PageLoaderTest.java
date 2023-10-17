@@ -1,17 +1,13 @@
-package io.datareplication.internal.http;
+package io.datareplication.internal.page;
 
 import com.github.mizosoft.methanol.Methanol;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.model.ContentType;
-import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
-import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.reactivex.rxjava3.core.Flowable;
-import lombok.NonNull;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
@@ -25,9 +21,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class PageLoaderTest {
     @RegisterExtension

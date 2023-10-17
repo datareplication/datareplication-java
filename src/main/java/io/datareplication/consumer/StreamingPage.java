@@ -64,21 +64,7 @@ public interface StreamingPage<
 
     @NonNull PageHeader header();
 
+    @NonNull Flow.Publisher<@NonNull Entity<EntityHeader>> toCompleteEntities();
+
     @NonNull CompletionStage<@NonNull Page<PageHeader, EntityHeader>> toCompletePage();
-
-    /*class ToCompleteEntities<EntityHeader extends ToHttpHeaders> {
-        public @NonNull Optional<@NonNull Entity<@NonNull EntityHeader>> consumeChunk(@NonNull Chunk<EntityHeader> chunk) {
-
-        }
-    }*/
-
-    // TODO: error handling
-    // TODO: content type and content length are inaccessible
-    /*@NonNull CompletionStage<@NonNull Optional<@NonNull EntityHeader>> next();
-
-    @NonNull CompletionStage<@NonNull Integer> read(@NonNull byte[] buffer);
-
-    @NonNull CompletionStage<@NonNull Optional<@NonNull Entity<@NonNull EntityHeader>>> nextEntity();
-
-    @NonNull CompletionStage<@NonNull Page<PageHeader, EntityHeader>> toCompletePage();*/
 }
