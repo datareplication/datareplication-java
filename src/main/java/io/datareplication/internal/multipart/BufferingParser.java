@@ -21,6 +21,7 @@ public class BufferingParser {
             final ByteBuffer newBuffer = ByteBuffer.allocate(buffer.remaining() + next.remaining());
             newBuffer.put(buffer);
             newBuffer.put(next);
+            newBuffer.position(0);
             buffer = newBuffer;
         }
         return parseAll();
@@ -30,7 +31,7 @@ public class BufferingParser {
         final ArrayList<Elem> parsed = new ArrayList<>();
         while (buffer.hasRemaining()) {
             try {
-                final MultipartParser.Result result = parseFunction.apply(buffer);
+                final MultipartParser.Result result = parseFunction.apply(buffer.slice());
                 parsed.add(result.elem());
                 buffer.position(buffer.position() + result.consumedBytes());
             } catch (RequestInput r) {
