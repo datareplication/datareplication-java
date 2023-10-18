@@ -17,25 +17,25 @@ public interface SnapshotProducer {
 
         private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
         private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
-        private int maxWeightPerPage = 100;
+        private long maxBytesPerPage = 1000L * 1000L;
 
-        public @NonNull SnapshotProducer build(final SnapshotIndexRepository snapshotIndexRepository,
-                                               final SnapshotPageRepository snapshotPageRepository,
-                                               final SnapshotPageUrlBuilder snapshotPageUrlBuilder) {
+        public @NonNull SnapshotProducer build(@NonNull final SnapshotIndexRepository snapshotIndexRepository,
+                                               @NonNull final SnapshotPageRepository snapshotPageRepository,
+                                               @NonNull final SnapshotPageUrlBuilder snapshotPageUrlBuilder) {
             return build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder, Clock.systemUTC());
         }
 
-        public @NonNull SnapshotProducer build(final SnapshotIndexRepository snapshotIndexRepository,
-                                               final SnapshotPageRepository snapshotPageRepository,
-                                               final SnapshotPageUrlBuilder snapshotPageUrlBuilder,
-                                               final Clock clock) {
+        public @NonNull SnapshotProducer build(@NonNull final SnapshotIndexRepository snapshotIndexRepository,
+                                               @NonNull final SnapshotPageRepository snapshotPageRepository,
+                                               @NonNull final SnapshotPageUrlBuilder snapshotPageUrlBuilder,
+                                               @NonNull final Clock clock) {
             return new SnapshotProducerImpl(
                 snapshotPageUrlBuilder,
                 snapshotIndexRepository,
                 snapshotPageRepository,
                 pageIdProvider,
                 snapshotIdProvider,
-                maxWeightPerPage,
+                maxBytesPerPage,
                 clock
             );
         }
@@ -50,8 +50,8 @@ public interface SnapshotProducer {
             return this;
         }
 
-        public Builder maxWeightPerPage(final int maxWeightPerPage) {
-            this.maxWeightPerPage = maxWeightPerPage;
+        public Builder maxBytesPerPage(final long maxBytesPerPage) {
+            this.maxBytesPerPage = maxBytesPerPage;
             return this;
         }
     }

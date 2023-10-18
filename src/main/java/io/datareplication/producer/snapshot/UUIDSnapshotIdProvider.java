@@ -9,7 +9,7 @@ import java.util.UUID;
  * Uses <code>UUID.randomUUID()</code> to create a unique pageId.
  * Will be used when nothing else is specified in the {@link SnapshotProducer}
  */
-public class UUIDSnapshotIdProvider implements SnapshotIdProvider {
+class UUIDSnapshotIdProvider implements SnapshotIdProvider {
     /**
      * @return a <code>UUID.randomUUID()</code> the create a unique pageId
      */

@@ -22,7 +22,7 @@ class SnapshotProducerTest {
             .builder()
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
-            .maxWeightPerPage(2)
+            .maxBytesPerPage(2)
             // TODO: Additional configuration
             .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
 

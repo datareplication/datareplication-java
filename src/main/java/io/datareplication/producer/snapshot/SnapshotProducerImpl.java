@@ -22,7 +22,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
     private final SnapshotPageRepository snapshotPageRepository;
     private final PageIdProvider pageIdProvider;
     private final SnapshotIdProvider snapshotIdProvider;
-    private final int maxWeightPerPage;
+    private final long maxBytesPerPage;
     private final Clock clock;
 
     @Override
