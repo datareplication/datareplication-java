@@ -63,7 +63,7 @@ public class MultipartParser {
      * @return the parsed result
      */
     public @NonNull Result parse(@NonNull ByteBuffer input) {
-        Result result = parseInternal(input);
+        Result result = parseInternal(input.slice());
         offset += result.consumedBytes;
         return result;
     }

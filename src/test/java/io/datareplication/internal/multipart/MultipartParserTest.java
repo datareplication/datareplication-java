@@ -20,7 +20,7 @@ class MultipartParserTest {
     private static List<Elem> parseExactly(MultipartParser parser, ByteBuffer input) {
         final ArrayList<Elem> list = new ArrayList<>();
         while (input.hasRemaining()) {
-            final Result result = parser.parse(input.slice());
+            final Result result = parser.parse(input);
             list.add(result.elem());
             input.position(input.position() + result.consumedBytes());
         }
