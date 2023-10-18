@@ -1,20 +1,23 @@
-package io.datareplication.internal.multipart;
+package io.datareplication.internal.page;
+
+import io.datareplication.internal.multipart.Elem;
+import io.datareplication.internal.multipart.MultipartParser;
+import io.datareplication.internal.multipart.RequestInput;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
-public class BufferingParser {
-    private final Function<ByteBuffer, MultipartParser.Result> parseFunction;
+class ToMultipartElemTransformer {
+    private final MultipartParser parser;
 
     private ByteBuffer buffer = null;
 
-    public BufferingParser(final Function<ByteBuffer, MultipartParser.Result> parseFunction) {
-        this.parseFunction = parseFunction;
+    ToMultipartElemTransformer(final MultipartParser parser) {
+        this.parser = parser;
     }
 
-    public List<Elem> feed(ByteBuffer next) {
+    public List<Elem> transform(ByteBuffer next) {
         if (buffer == null || !buffer.hasRemaining()) {
             buffer = next.slice();
         } else {
@@ -32,7 +35,7 @@ public class BufferingParser {
         while (buffer.hasRemaining()) {
             try {
                 // TODO: why slice?!
-                final MultipartParser.Result result = parseFunction.apply(buffer.slice());
+                final MultipartParser.Result result = parser.parse(buffer.slice());
                 parsed.add(result.elem());
                 buffer.position(buffer.position() + result.consumedBytes());
             } catch (RequestInput r) {

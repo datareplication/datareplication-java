@@ -2,10 +2,7 @@ package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
-import io.datareplication.internal.multipart.BufferingParser;
-import io.datareplication.internal.multipart.Elem;
 import io.datareplication.internal.multipart.MultipartParser;
-import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
@@ -22,9 +19,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 import java.util.stream.Stream;
@@ -59,13 +54,13 @@ public class PageLoader {
                                                                        String boundary,
                                                                        Flow.Publisher<List<ByteBuffer>> input) {
         final MultipartParser multipartParser = new MultipartParser(ByteBuffer.wrap(boundary.getBytes(StandardCharsets.UTF_8)));
-        final BufferingParser bufferingParser = new BufferingParser(multipartParser::parse);
-        final YetAnotherParser anotherParser = new YetAnotherParser();
-        final Flowable<StreamingPage.Chunk<HttpHeaders>> chunkFlowable = Flowable.fromPublisher(FlowAdapters.toPublisher(input))
+        final ToMultipartElemTransformer bytesTransformer = new ToMultipartElemTransformer(multipartParser);
+        final ToStreamingPageChunkTransformer multipartElemTransformer = new ToStreamingPageChunkTransformer();
+        final Flowable<StreamingPage.Chunk<HttpHeaders>> chunkFlowable = Flowable
+            .fromPublisher(FlowAdapters.toPublisher(input))
             .flatMapIterable(list -> list)
-            .map(bufferingParser::feed)
-            .flatMapIterable(list -> list)
-            .map(anotherParser::parse)
+            .flatMapIterable(bytesTransformer::transform)
+            .map(multipartElemTransformer::transform)
             .flatMapMaybe(Maybe::fromOptional);
         final Flow.Publisher<StreamingPage.Chunk<HttpHeaders>> flowPublisher = FlowAdapters.toFlowPublisher(chunkFlowable);
         return new StreamingPage<>() {
@@ -76,8 +71,12 @@ public class PageLoader {
 
             @Override
             public Flow.@NonNull Publisher<@NonNull Entity<HttpHeaders>> toCompleteEntities() {
-                // TODO:
-                throw new RuntimeException("not implemented");
+                final ToCompleteEntitiesTransformer<HttpHeaders> transformer = new ToCompleteEntitiesTransformer<>();
+                final Flowable<Entity<HttpHeaders>> flowable = Flowable
+                    .fromPublisher(FlowAdapters.toPublisher(this))
+                    .map(transformer::transform)
+                    .flatMapMaybe(Maybe::fromOptional);
+                return FlowAdapters.toFlowPublisher(flowable);
             }
 
             @Override
@@ -116,52 +115,5 @@ public class PageLoader {
             .stream()
             .map(entry -> HttpHeader.of(entry.getKey(), entry.getValue()));
         return HttpHeaders.of(x.iterator());
-    }
-
-    private static final class YetAnotherParser {
-        private final List<HttpHeader> headers = new ArrayList<>();
-        private ContentType contentType = null;
-        private long contentLength = 0;
-
-        private Optional<StreamingPage.Chunk<HttpHeaders>> parse(Elem multipartElem) {
-            if (multipartElem instanceof Elem.Continue) {
-                return Optional.empty();
-            } else if (multipartElem instanceof Elem.PartBegin) {
-                headers.clear();
-                contentType = null;
-                contentLength = 0;
-                return Optional.empty();
-            } else if (multipartElem instanceof Elem.Header) {
-                final Elem.Header header = (Elem.Header) multipartElem;
-                if (header.name().equalsIgnoreCase(HttpHeader.CONTENT_TYPE)) {
-                    contentType = ContentType.of(header.value());
-                } else if (header.name().equalsIgnoreCase(HttpHeader.CONTENT_LENGTH)) {
-                    // TODO: error handling
-                    contentLength = Long.parseLong(header.value());
-                } else {
-                    headers.add(HttpHeader.of(header.name(), header.value()));
-                }
-                return Optional.empty();
-            } else if (multipartElem instanceof Elem.DataBegin) {
-                // TODO: error handling
-                if (contentLength == 0) {
-                    throw new RuntimeException("no contentLength");
-                }
-                if (contentType == null) {
-                    throw new RuntimeException("no contentType");
-                }
-                return Optional.of(StreamingPage.Chunk.header(
-                    HttpHeaders.of(headers),
-                    contentLength,
-                    contentType
-                ));
-            } else if (multipartElem instanceof Elem.Data) {
-                final Elem.Data data = (Elem.Data) multipartElem;
-                return Optional.of(StreamingPage.Chunk.bodyChunk(data.data()));
-            } else if (multipartElem instanceof Elem.PartEnd) {
-                return Optional.of(StreamingPage.Chunk.bodyEnd());
-            }
-            throw new IllegalArgumentException(String.format("unknown subclass of Elem %s; bug?", multipartElem));
-        }
     }
 }
