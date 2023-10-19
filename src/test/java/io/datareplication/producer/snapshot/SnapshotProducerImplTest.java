@@ -15,10 +15,14 @@ import org.reactivestreams.FlowAdapters;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +39,8 @@ class SnapshotProducerImplTest {
         final @NonNull SnapshotId id = SnapshotId.of("1234");
         final @NonNull Timestamp createdAt = Timestamp.now();
         when(snapshotIdProvider.newSnapshotId()).thenReturn(id);
+        when(snapshotIndexRepository.save(any(SnapshotIndex.class)))
+            .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = SnapshotProducer
             .builder()
             .pageIdProvider(pageIdProvider)
@@ -52,6 +58,7 @@ class SnapshotProducerImplTest {
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
         assertThat(snapshotIndex)
             .isEqualTo(new SnapshotIndex(id, createdAt, Collections.emptyList()));
-        //TODO: verify Index in Repository
+        verifyNoInteractions(snapshotPageRepository);
+        verify(snapshotIndexRepository).save(snapshotIndex);
     }
 }

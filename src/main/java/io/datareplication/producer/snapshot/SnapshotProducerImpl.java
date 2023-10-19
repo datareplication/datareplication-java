@@ -10,7 +10,6 @@ import lombok.NonNull;
 
 import java.time.Clock;
 import java.util.Collections;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
@@ -32,6 +31,6 @@ class SnapshotProducerImpl implements SnapshotProducer {
         SnapshotId id = snapshotIdProvider.newSnapshotId();
         Timestamp createdAt = Timestamp.of(clock.instant());
         SnapshotIndex snapshotIndex = new SnapshotIndex(id, createdAt, Collections.emptyList());
-        return CompletableFuture.completedFuture(snapshotIndex);
+        return snapshotIndexRepository.save(snapshotIndex).thenApply(unused -> snapshotIndex);
     }
 }
