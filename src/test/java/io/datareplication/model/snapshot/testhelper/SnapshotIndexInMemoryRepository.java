@@ -22,7 +22,7 @@ public class SnapshotIndexInMemoryRepository implements SnapshotIndexRepository 
     }
 
     public Optional<SnapshotIndex> findBy(SnapshotId id) {
-        if (repository.contains(id)) {
+        if (repository.containsKey(id)) {
             return Optional.of(repository.get(id));
         } else {
             return Optional.empty();

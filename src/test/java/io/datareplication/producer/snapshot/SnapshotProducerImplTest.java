@@ -52,5 +52,6 @@ class SnapshotProducerImplTest {
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
         assertThat(snapshotIndex)
             .isEqualTo(new SnapshotIndex(id, createdAt, Collections.emptyList()));
+        //TODO: verify Index in Repository
     }
 }

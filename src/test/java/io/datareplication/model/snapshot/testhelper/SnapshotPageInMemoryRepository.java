@@ -32,7 +32,7 @@ public class SnapshotPageInMemoryRepository implements SnapshotPageRepository {
 
 
     public Optional<Body> findBy(PageId id) {
-        if (repository.contains(id)) {
+        if (repository.containsKey(id)) {
             return Optional.of(repository.get(id).toMultipartBody());
         } else {
             return Optional.empty();
