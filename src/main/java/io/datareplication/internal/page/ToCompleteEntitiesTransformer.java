@@ -16,10 +16,13 @@ class ToCompleteEntitiesTransformer<EntityHeader extends ToHttpHeaders> {
     private ByteArrayOutputStream bodyStream = null;
     private WritableByteChannel bodyChannel = null;
 
+    private static final int INITIAL_BUFFER_SIZE = 4096;
+
     public Optional<Entity<EntityHeader>> transform(StreamingPage.Chunk<EntityHeader> chunk) {
         if (chunk instanceof StreamingPage.Chunk.Header) {
             currentHeader = (StreamingPage.Chunk.Header<EntityHeader>) chunk;
-            bodyStream = new ByteArrayOutputStream((int) currentHeader.contentLength());
+            // TODO: maybe look at content-length header to preallocate the buffer?
+            bodyStream = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
             bodyChannel = Channels.newChannel(bodyStream);
             return Optional.empty();
         } else if (chunk instanceof StreamingPage.Chunk.BodyChunk) {

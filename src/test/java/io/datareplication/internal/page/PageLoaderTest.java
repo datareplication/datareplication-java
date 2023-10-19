@@ -68,7 +68,6 @@ class PageLoaderTest {
                     HttpHeader.of("Content-Transfer-Encoding", "8bit"),
                     HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:11 GMT")
                 ),
-                5,
                 ContentType.of("text/plain")
             ),
             StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap("hello".getBytes(StandardCharsets.UTF_8))),
@@ -79,7 +78,6 @@ class PageLoaderTest {
                     HttpHeader.of("Content-Transfer-Encoding", "8bit"),
                     HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:12 GMT")
                 ),
-                5,
                 ContentType.of("text/plain")
             ),
             StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap("world".getBytes(StandardCharsets.UTF_8))),

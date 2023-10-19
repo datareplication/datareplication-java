@@ -1,5 +1,6 @@
 package io.datareplication.internal.page;
 
+import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.multipart.Token;
 import io.datareplication.model.ContentType;
@@ -10,49 +11,48 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Transform a stream of multipart {@link Token Tokens} into higher-level {@link StreamingPage.Chunk} objects. This
+ * mostly involves collecting headers into {@link HttpHeaders} and returning them as a block.
+ */
 final class ToStreamingPageChunkTransformer {
     private final List<HttpHeader> headers = new ArrayList<>();
-    private ContentType contentType = null;
-    private long contentLength = 0;
+    private Optional<ContentType> contentType = Optional.empty();
+    private int index = 0;
 
-    public Optional<StreamingPage.Chunk<HttpHeaders>> transform(Token multipartElem) {
-        if (multipartElem instanceof Token.Continue) {
+    /**
+     * Consume the given {@link Token} and optionally return a {@link StreamingPage.Chunk}.
+     *
+     * @param multipartToken a token from the multipart parser
+     * @return a Chunk if this token needs one to be emitted
+     */
+    public Optional<StreamingPage.Chunk<HttpHeaders>> transform(Token multipartToken) {
+        if (multipartToken instanceof Token.Continue) {
             return Optional.empty();
-        } else if (multipartElem instanceof Token.PartBegin) {
+        } else if (multipartToken instanceof Token.PartBegin) {
             headers.clear();
-            contentType = null;
-            contentLength = 0;
+            contentType = Optional.empty();
             return Optional.empty();
-        } else if (multipartElem instanceof Token.Header) {
-            final Token.Header header = (Token.Header) multipartElem;
+        } else if (multipartToken instanceof Token.Header) {
+            final Token.Header header = (Token.Header) multipartToken;
             if (header.name().equalsIgnoreCase(HttpHeader.CONTENT_TYPE)) {
-                contentType = ContentType.of(header.value());
-            } else if (header.name().equalsIgnoreCase(HttpHeader.CONTENT_LENGTH)) {
-                // TODO: error handling
-                contentLength = Long.parseLong(header.value());
+                contentType = Optional.of(ContentType.of(header.value()));
             } else {
                 headers.add(HttpHeader.of(header.name(), header.value()));
             }
             return Optional.empty();
-        } else if (multipartElem instanceof Token.DataBegin) {
-            // TODO: error handling
-            if (contentLength == 0) {
-                throw new RuntimeException("no contentLength");
-            }
-            if (contentType == null) {
-                throw new RuntimeException("no contentType");
-            }
+        } else if (multipartToken instanceof Token.DataBegin) {
             return Optional.of(StreamingPage.Chunk.header(
-                HttpHeaders.of(headers),
-                contentLength,
-                contentType
+                    HttpHeaders.of(headers),
+                    contentType.orElseThrow(() -> new PageFormatException.MissingContentTypeInEntity(index))
             ));
-        } else if (multipartElem instanceof Token.Data) {
-            final Token.Data data = (Token.Data) multipartElem;
+        } else if (multipartToken instanceof Token.Data) {
+            final Token.Data data = (Token.Data) multipartToken;
             return Optional.of(StreamingPage.Chunk.bodyChunk(data.data()));
-        } else if (multipartElem instanceof Token.PartEnd) {
+        } else if (multipartToken instanceof Token.PartEnd) {
+            index += 1;
             return Optional.of(StreamingPage.Chunk.bodyEnd());
         }
-        throw new IllegalArgumentException(String.format("unknown subclass of Elem %s; bug?", multipartElem));
+        throw new IllegalArgumentException(String.format("unknown subclass of Token %s; bug?", multipartToken));
     }
 }

@@ -28,7 +28,7 @@ public interface StreamingPage<
         @EqualsAndHashCode(callSuper = false)
         public static class Header<EntityHeader> extends Chunk<EntityHeader> {
             @NonNull EntityHeader header;
-            long contentLength;
+            // TODO: Should content-type be optional? That would require making it optional in Body.
             @NonNull ContentType contentType;
         }
 
@@ -46,10 +46,10 @@ public interface StreamingPage<
             private static final BodyEnd<?> INSTANCE = new BodyEnd<>();
         }
 
-        public static @NonNull <EntityHeader> Header<EntityHeader> header(@NonNull EntityHeader header,
-                                                                          long contentLength,
-                                                                          @NonNull ContentType contentType) {
-            return new Header<>(header, contentLength, contentType);
+        public static @NonNull <EntityHeader> Header<EntityHeader> header(
+            @NonNull EntityHeader header,
+            @NonNull ContentType contentType) {
+            return new Header<>(header, contentType);
         }
 
         public static @NonNull <EntityHeader> BodyChunk<EntityHeader> bodyChunk(@NonNull ByteBuffer data) {

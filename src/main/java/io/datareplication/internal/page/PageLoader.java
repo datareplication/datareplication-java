@@ -56,12 +56,13 @@ public class PageLoader {
                                                                        Flow.Publisher<List<ByteBuffer>> input) {
         final BufferingMultipartParser multipartParser = new BufferingMultipartParser(
             new MultipartParser(ByteBuffer.wrap(boundary.getBytes(StandardCharsets.UTF_8))));
-        final ToStreamingPageChunkTransformer multipartElemTransformer = new ToStreamingPageChunkTransformer();
+        final ToStreamingPageChunkTransformer chunkTransformer = new ToStreamingPageChunkTransformer();
+        // TODO: error handling
         final Flowable<StreamingPage.Chunk<HttpHeaders>> chunkFlowable = Flowable
             .fromPublisher(FlowAdapters.toPublisher(input))
             .flatMapIterable(list -> list)
             .flatMapIterable(multipartParser::parse)
-            .map(multipartElemTransformer::transform)
+            .map(chunkTransformer::transform)
             .flatMapMaybe(Maybe::fromOptional);
         // TODO: have to call multipartParser.isFinished when we run out of input to check for completeness
         final Flow.Publisher<StreamingPage.Chunk<HttpHeaders>> flowPublisher = FlowAdapters.toFlowPublisher(chunkFlowable);
