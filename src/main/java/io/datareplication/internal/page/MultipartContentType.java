@@ -1,19 +1,20 @@
 package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
+import io.datareplication.internal.http.HeaderFieldValue;
 import lombok.Value;
 
 import java.util.Locale;
 
 @Value
-class MultipartContentType {
+public class MultipartContentType {
     private static final String SUPPORTED_MEDIA_TYPE_CATEGORY = "multipart";
     private static final char MULTIPART_TYPE_DELIMITER = '/';
     private static final String BOUNDARY_KEY = "boundary";
     String mediaType;
     String boundary;
 
-    static MultipartContentType parse(String contentType) {
+    public static MultipartContentType parse(String contentType) {
         HeaderFieldValue parsed;
         try {
             parsed = HeaderFieldValue.parse(contentType);

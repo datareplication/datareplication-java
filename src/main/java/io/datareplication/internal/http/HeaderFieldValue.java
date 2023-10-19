@@ -1,4 +1,4 @@
-package io.datareplication.internal.page;
+package io.datareplication.internal.http;
 
 import lombok.AccessLevel;
 import lombok.Getter;

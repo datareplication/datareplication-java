@@ -1,5 +1,6 @@
-package io.datareplication.internal.page;
+package io.datareplication.internal.http;
 
+import io.datareplication.internal.http.HeaderFieldValue;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -12,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class HeaderFieldValueTest {
-    private static Stream<Arguments> validHeaderFieldsValues() {
+    private static Stream<Arguments> validHeaderFieldValues() {
         return Stream.of(
             Arguments.of(
                 "",
@@ -82,7 +83,7 @@ class HeaderFieldValueTest {
     }
 
     @ParameterizedTest
-    @MethodSource("validHeaderFieldsValues")
+    @MethodSource("validHeaderFieldValues")
     void shouldParseValidHeaderFieldValues(String input, HeaderFieldValue expected) {
         assertThat(HeaderFieldValue.parse(input)).isEqualTo(expected);
     }
