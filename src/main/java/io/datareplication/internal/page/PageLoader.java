@@ -83,12 +83,6 @@ public class PageLoader {
             }
 
             @Override
-            public @NonNull CompletionStage<@NonNull Page<HttpHeaders, HttpHeaders>> toCompletePage() {
-                // TODO:
-                throw new RuntimeException("not implemented");
-            }
-
-            @Override
             public void subscribe(final Flow.Subscriber<? super Chunk<HttpHeaders>> subscriber) {
                 flowPublisher.subscribe(subscriber);
             }
