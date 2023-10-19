@@ -11,6 +11,9 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+/**
+ * Parse a multipart document into {@link Token Tokens}.
+ */
 public class MultipartParser {
     private State state;
     private long offset;
@@ -21,11 +24,11 @@ public class MultipartParser {
 
     @Value
     public static class Result {
-        @NonNull Elem elem;
+        @NonNull Token token;
         int consumedBytes;
 
         private static Result data(ByteBuffer data) {
-            return new Result(new Elem.Data(data), data.limit());
+            return new Result(new Token.Data(data), data.limit());
         }
     }
 
@@ -55,9 +58,12 @@ public class MultipartParser {
     }
 
     /**
-     *
-     * @param input the ByteBuffer
-     * @throws RequestInput give me more bytes
+     * Parse the next token from the input
+     * @param input the ByteBuffer; it's sliced before parsing, meaning only bytes between <code>position()</code> and
+     *              <code>limit()</code> are read
+     * @throws RequestInput the input doesn't contain enough bytes to unambiguously determine the next token; parse()
+     *                      must be called again with a buffer that contains additional input as well as the bytes from
+     *                      this call
      * @throws MultipartException something went wrong
      *
      * @return the parsed result
@@ -76,27 +82,27 @@ public class MultipartParser {
                         .parse(input, 0)
                         .map(pos -> {
                             state = State.PART_BEGIN;
-                            return new Result(Elem.Continue.INSTANCE, pos.end());
+                            return new Result(Token.Continue.INSTANCE, pos.end());
                         })
                         .or(() -> Combinators
                                 .scan(Combinators.eol())
                                 .parse(input, 0)
-                                .map(pos -> new Result(Elem.Continue.INSTANCE, pos.end())))
-                        .orElseGet(() -> new Result(Elem.Continue.INSTANCE, input.limit()));
+                                .map(pos -> new Result(Token.Continue.INSTANCE, pos.end())))
+                        .orElseGet(() -> new Result(Token.Continue.INSTANCE, input.limit()));
             case PART_BEGIN:
                 return Combinators
                         .eol()
                         .parse(input, 0)
                         .map(pos -> {
                             state = State.HEADERS;
-                            return new Result(Elem.PartBegin.INSTANCE, pos.end());
+                            return new Result(Token.PartBegin.INSTANCE, pos.end());
                         })
                         .or(() -> Combinators
                                 .tag(CLOSE_DELIMITER)
                                 .parse(input, 0)
                                 .map(pos -> {
                                     state = State.EPILOGUE;
-                                    return new Result(Elem.Continue.INSTANCE, pos.end());
+                                    return new Result(Token.Continue.INSTANCE, pos.end());
                                 }))
                         .orElseThrow(() -> new MultipartException.InvalidDelimiter(offset));
             case HEADERS:
@@ -107,7 +113,7 @@ public class MultipartParser {
                 if (eol.start() == 0) {
                     // immediate newline, go to body
                     state = State.DATA;
-                    return new Result(Elem.DataBegin.INSTANCE, eol.end());
+                    return new Result(Token.DataBegin.INSTANCE, eol.end());
                 } else {
                     final ByteBuffer headerLine = input.slice().limit(eol.start());
                     return new Result(parseHeader(headerLine), eol.end());
@@ -119,7 +125,7 @@ public class MultipartParser {
                         .parse(input, 0)
                         .map(pos -> {
                             state = State.PART_BEGIN;
-                            return new Result(Elem.PartEnd.INSTANCE, pos.end());
+                            return new Result(Token.PartEnd.INSTANCE, pos.end());
                         })
                         .or(() -> Combinators
                                 .scan(Combinators.eol())
@@ -130,13 +136,13 @@ public class MultipartParser {
                                 .map(pos -> Result.data(input.slice().limit(pos.start()))))
                         .orElseGet(() -> Result.data(input.slice()));
             case EPILOGUE:
-                return new Result(Elem.Continue.INSTANCE, input.limit());
+                return new Result(Token.Continue.INSTANCE, input.limit());
             default:
                 throw new IllegalStateException(String.format("unknown state %s; bug in parser?", state));
         }
     }
 
-    private Elem.Header parseHeader(ByteBuffer bytes) {
+    private Token.Header parseHeader(ByteBuffer bytes) {
         final String headerString;
         try {
             headerString = headerDecoder.decode(bytes).toString();
@@ -151,9 +157,13 @@ public class MultipartParser {
         }
         String name = headerString.substring(0, idx).trim();
         String value = headerString.substring(idx + 1).trim();
-        return new Elem.Header(name, value);
+        return new Token.Header(name, value);
     }
 
+    /**
+     * Return true if a closing delimiter has been read, i.e. if the document is considered complete. If this is still
+     * false when you run out of input, your document was incomplete.
+     */
     public boolean isFinished() {
         return state == State.EPILOGUE;
     }

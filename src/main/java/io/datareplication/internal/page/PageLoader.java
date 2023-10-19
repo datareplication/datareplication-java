@@ -2,6 +2,7 @@ package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
+import io.datareplication.internal.multipart.BufferingMultipartParser;
 import io.datareplication.internal.multipart.MultipartParser;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
@@ -53,15 +54,16 @@ public class PageLoader {
     private StreamingPage<HttpHeaders, HttpHeaders> parseMultipartPage(HttpHeaders pageHeader,
                                                                        String boundary,
                                                                        Flow.Publisher<List<ByteBuffer>> input) {
-        final MultipartParser multipartParser = new MultipartParser(ByteBuffer.wrap(boundary.getBytes(StandardCharsets.UTF_8)));
-        final ToMultipartElemTransformer bytesTransformer = new ToMultipartElemTransformer(multipartParser);
+        final BufferingMultipartParser multipartParser = new BufferingMultipartParser(
+            new MultipartParser(ByteBuffer.wrap(boundary.getBytes(StandardCharsets.UTF_8))));
         final ToStreamingPageChunkTransformer multipartElemTransformer = new ToStreamingPageChunkTransformer();
         final Flowable<StreamingPage.Chunk<HttpHeaders>> chunkFlowable = Flowable
             .fromPublisher(FlowAdapters.toPublisher(input))
             .flatMapIterable(list -> list)
-            .flatMapIterable(bytesTransformer::transform)
+            .flatMapIterable(multipartParser::parse)
             .map(multipartElemTransformer::transform)
             .flatMapMaybe(Maybe::fromOptional);
+        // TODO: have to call multipartParser.isFinished when we run out of input to check for completeness
         final Flow.Publisher<StreamingPage.Chunk<HttpHeaders>> flowPublisher = FlowAdapters.toFlowPublisher(chunkFlowable);
         return new StreamingPage<>() {
             @Override
