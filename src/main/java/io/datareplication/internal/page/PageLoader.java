@@ -73,16 +73,6 @@ public class PageLoader {
             }
 
             @Override
-            public Flow.@NonNull Publisher<@NonNull Entity<HttpHeaders>> toCompleteEntities() {
-                final ToCompleteEntitiesTransformer<HttpHeaders> transformer = new ToCompleteEntitiesTransformer<>();
-                final Flowable<Entity<HttpHeaders>> flowable = Flowable
-                    .fromPublisher(FlowAdapters.toPublisher(this))
-                    .map(transformer::transform)
-                    .flatMapMaybe(Maybe::fromOptional);
-                return FlowAdapters.toFlowPublisher(flowable);
-            }
-
-            @Override
             public void subscribe(final Flow.Subscriber<? super Chunk<HttpHeaders>> subscriber) {
                 flowPublisher.subscribe(subscriber);
             }

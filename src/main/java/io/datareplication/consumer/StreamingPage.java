@@ -1,14 +1,18 @@
 package io.datareplication.consumer;
 
+import io.datareplication.internal.page.ToCompleteEntitiesTransformer;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.Page;
 import io.datareplication.model.ToHttpHeaders;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
+import org.reactivestreams.FlowAdapters;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletionStage;
@@ -140,10 +144,11 @@ public interface StreamingPage<
 
         /**
          * Create a new {@link Header}.
-         * @param header the entity's header object
-         * @param contentType the entity's content type
-         * @return a new {@link Header}
+         *
+         * @param header         the entity's header object
+         * @param contentType    the entity's content type
          * @param <EntityHeader> the entity's header
+         * @return a new {@link Header}
          */
         public static @NonNull <EntityHeader> Header<EntityHeader> header(
             @NonNull EntityHeader header,
@@ -153,10 +158,11 @@ public interface StreamingPage<
 
         /**
          * Create a new {@link BodyChunk}.
-         * @param data the data chunk; this buffer <strong>should</strong> be {@link ByteBuffer#slice()}d and not
-         *             shared to avoid ByteBuffer's mutability leaking out and causing problems
-         * @return a new {@link BodyChunk}
+         *
+         * @param data           the data chunk; this buffer <strong>should</strong> be {@link ByteBuffer#slice()}d and not
+         *                       shared to avoid ByteBuffer's mutability leaking out and causing problems
          * @param <EntityHeader> the entity's header
+         * @return a new {@link BodyChunk}
          */
         public static @NonNull <EntityHeader> BodyChunk<EntityHeader> bodyChunk(@NonNull ByteBuffer data) {
             return new BodyChunk<>(data);
@@ -164,8 +170,9 @@ public interface StreamingPage<
 
         /**
          * Return a {@link BodyEnd} marker.
-         * @return a {@link BodyEnd} marker
+         *
          * @param <EntityHeader> the entity's header
+         * @return a {@link BodyEnd} marker
          */
         public static @NonNull <EntityHeader> BodyEnd<EntityHeader> bodyEnd() {
             //noinspection unchecked
@@ -189,7 +196,12 @@ public interface StreamingPage<
      * @return a {@link Flow.Publisher} providing a stream of complete {@link Entity} objects
      */
     default @NonNull Flow.Publisher<@NonNull Entity<EntityHeader>> toCompleteEntities() {
-        throw new RuntimeException("not yet implemented");
+        final ToCompleteEntitiesTransformer<EntityHeader> transformer = new ToCompleteEntitiesTransformer<>();
+        final Flowable<Entity<EntityHeader>> flowable = Flowable
+            .fromPublisher(FlowAdapters.toPublisher(this))
+            .map(transformer::transform)
+            .flatMapMaybe(Maybe::fromOptional);
+        return FlowAdapters.toFlowPublisher(flowable);
     }
 
     /**
@@ -203,6 +215,13 @@ public interface StreamingPage<
      * @return a {@link Page} containing the complete contents of this page
      */
     default @NonNull CompletionStage<@NonNull Page<PageHeader, EntityHeader>> toCompletePage() {
-        throw new RuntimeException("not yet implemented");
+        return Flowable
+            .fromPublisher(FlowAdapters.toPublisher(toCompleteEntities()))
+            .toList()
+            // TODO: boundary -- picking a new random one sucks, is there a way to pipe through the actual boundary
+            //       from the actual page?
+            .map(entities -> new Page<>(header(),
+                                        entities))
+            .toCompletionStage();
     }
 }
