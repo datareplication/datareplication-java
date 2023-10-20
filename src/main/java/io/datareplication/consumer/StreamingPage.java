@@ -56,6 +56,7 @@ public interface StreamingPage<
      *
      * @param <EntityHeader> the type of the entity headers; see {@link Entity}
      */
+    @SuppressWarnings("unused")
     class Chunk<EntityHeader> {
         private Chunk() {
         }
@@ -186,6 +187,11 @@ public interface StreamingPage<
     @NonNull PageHeader header();
 
     /**
+     * The boundary string for the page's multipart representation.
+     */
+    @NonNull String boundary();
+
+    /**
      * <p>Wrap this page in a stream of complete {@link Entity} objects. The returned {@link Flow.Publisher} will
      * collect the full body for an entity and return it all at once. Naturally, this requires buffering the entire
      * body of each entity in memory, which might cause memory pressure for large entities.</p>
@@ -218,10 +224,7 @@ public interface StreamingPage<
         return Flowable
             .fromPublisher(FlowAdapters.toPublisher(toCompleteEntities()))
             .toList()
-            // TODO: boundary -- picking a new random one sucks, is there a way to pipe through the actual boundary
-            //       from the actual page?
-            .map(entities -> new Page<>(header(),
-                                        entities))
+            .map(entities -> new Page<>(header(), boundary(), entities))
             .toCompletionStage();
     }
 }

@@ -4,10 +4,8 @@ import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.multipart.BufferingMultipartParser;
 import io.datareplication.internal.multipart.MultipartParser;
-import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Page;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -70,6 +68,11 @@ public class PageLoader {
             @Override
             public @NonNull HttpHeaders header() {
                 return pageHeader;
+            }
+
+            @Override
+            public @NonNull String boundary() {
+                return boundary;
             }
 
             @Override

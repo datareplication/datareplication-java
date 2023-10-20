@@ -9,7 +9,6 @@ import io.datareplication.model.Page;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.FlowAdapters;
 
@@ -17,7 +16,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Flow;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,16 +31,25 @@ class StreamingPageTest {
 
     private static final class TestStreamingPage implements StreamingPage<HttpHeaders, HttpHeaders> {
         private final HttpHeaders pageHeader;
+        private final String boundary;
         private final List<Chunk<HttpHeaders>> chunks;
 
-        private TestStreamingPage(final HttpHeaders pageHeader, final List<Chunk<HttpHeaders>> chunks) {
+        private TestStreamingPage(final HttpHeaders pageHeader,
+                                  final String boundary,
+                                  final List<Chunk<HttpHeaders>> chunks) {
             this.pageHeader = pageHeader;
+            this.boundary = boundary;
             this.chunks = chunks;
         }
 
         @Override
         public @NonNull HttpHeaders header() {
             return pageHeader;
+        }
+
+        @Override
+        public @NonNull String boundary() {
+            return boundary;
         }
 
         @Override
@@ -54,7 +61,7 @@ class StreamingPageTest {
 
     @Test
     void shouldStreamCompleteEntities() {
-        final TestStreamingPage streamingPage = new TestStreamingPage(HttpHeaders.EMPTY, List.of(
+        final TestStreamingPage streamingPage = new TestStreamingPage(HttpHeaders.EMPTY, "", List.of(
             StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
             StreamingPage.Chunk.bodyChunk(utf8("abc")),
             StreamingPage.Chunk.bodyChunk(utf8("def")),
@@ -70,11 +77,9 @@ class StreamingPageTest {
                          Body.fromBytes("abcdef".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)));
     }
 
-    // TODO: doesn't work because right now the code picks a random boundary which sucks and it probably shouldn't
     @Test
-    @Disabled
     void shouldGetCompletePage() {
-        final TestStreamingPage streamingPage = new TestStreamingPage(HttpHeaders.EMPTY, List.of(
+        final TestStreamingPage streamingPage = new TestStreamingPage(HttpHeaders.EMPTY, "_---_bnd", List.of(
             StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
             StreamingPage.Chunk.bodyChunk(utf8("abc")),
             StreamingPage.Chunk.bodyChunk(utf8("def")),
@@ -91,9 +96,9 @@ class StreamingPageTest {
 
         assertThat(result).isEqualTo(new Page<>(
             HttpHeaders.EMPTY,
-            List.of(
+            "_---_bnd", List.of(
                 new Entity<>(HEADERS_1, Body.fromBytes("abcdef".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)),
-                new Entity<>(HEADERS_2, Body.fromBytes("12345678".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)))
+                new Entity<>(HEADERS_2, Body.fromBytes("12345678".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_2)))
         ));
     }
 }
