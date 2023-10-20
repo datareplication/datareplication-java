@@ -1,5 +1,6 @@
 package io.datareplication.internal.page;
 
+import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.multipart.BufferingMultipartParser;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public class PageLoader {
@@ -90,11 +92,13 @@ public class PageLoader {
     }
 
     private <T> HttpResponse<T> checkResponse(HttpResponse<T> response) {
-        if (response.statusCode() >= 400 && response.statusCode() <= 599) {
-            // TODO: better error
-            throw new RuntimeException("HTTP error");
+        if (response.statusCode() >= 500) {
+            throw new HttpException.ServerError(response.statusCode());
+        } else if (response.statusCode() >= 400) {
+            throw new HttpException.ClientError(response.statusCode());
+        } else {
+            return response;
         }
-        return response;
     }
 
     private HttpHeaders convertHeaders(HttpResponse<?> response) {

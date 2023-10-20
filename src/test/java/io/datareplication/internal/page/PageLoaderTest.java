@@ -2,12 +2,14 @@ package io.datareplication.internal.page;
 
 import com.github.mizosoft.methanol.Methanol;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
@@ -17,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -24,6 +27,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PageLoaderTest {
+    private static final Duration TIMEOUT = Duration.ofSeconds(5);
+
     @RegisterExtension
     static final WireMockExtension wireMock = WireMockExtension
         .newInstance()
@@ -66,7 +71,8 @@ class PageLoaderTest {
                 HttpHeaders.of(
                     HttpHeader.of("Content-Disposition", "inline"),
                     HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                    HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:11 GMT")
+                    HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:11 GMT"),
+                    HttpHeader.of("Content-Length", "5")
                 ),
                 ContentType.of("text/plain")
             ),
@@ -76,12 +82,51 @@ class PageLoaderTest {
                 HttpHeaders.of(
                     HttpHeader.of("Content-Disposition", "inline"),
                     HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                    HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:12 GMT")
+                    HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:12 GMT"),
+                    HttpHeader.of("Content-Length", "5")
                 ),
                 ContentType.of("text/plain")
             ),
             StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap("world".getBytes(StandardCharsets.UTF_8))),
             StreamingPage.Chunk.bodyEnd()
         );
+    }
+
+    @Test
+    void shouldReturnHttpException_whenHttp404() {
+        wireMock.stubFor(
+            get("/page.multipart")
+                .willReturn(
+                    aResponse()
+                        .withStatus(404)
+                        .withBody("this is not the url you're looking for")
+                ));
+
+        final CompletionStage<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
+            .load(Url.of(wireMock.url("/page.multipart")));
+
+        assertThat(result)
+            .failsWithin(TIMEOUT)
+            .withThrowableThat()
+            .withCause(new HttpException.ClientError(404));
+    }
+
+    @Test
+    void shouldReturnHttpException_whenHttp500() {
+        wireMock.stubFor(
+            get("/page.multipart")
+                .willReturn(
+                    aResponse()
+                        .withStatus(500)
+                        .withBody("oops")
+                ));
+
+        final CompletionStage<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
+            .load(Url.of(wireMock.url("/page.multipart")));
+
+        assertThat(result)
+            .failsWithin(TIMEOUT)
+            .withThrowableThat()
+            .withCause(new HttpException.ServerError(500));
     }
 }
