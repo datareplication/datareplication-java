@@ -1,5 +1,6 @@
 package io.datareplication.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -19,11 +20,10 @@ public class HttpHeader {
      * The normalized header name for case-insensitive comparisons.
      */
     @NonNull String name;
-    // TODO: exclude from equals and hashCode?
     /**
      * The header name with its original capitalization for prettier printing.
      */
-    @NonNull String displayName;
+    @EqualsAndHashCode.Exclude @NonNull String displayName;
     @NonNull List<@NonNull String> values;
 
     @NonNull
@@ -54,7 +54,7 @@ public class HttpHeader {
     /**
      * Append a single value to this header.
      *
-      * @param value the new value to append
+     * @param value the new value to append
      * @return a new HttpHeader with the given value appended
      */
     public @NonNull HttpHeader append(@NonNull String value) {

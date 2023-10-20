@@ -35,6 +35,15 @@ class HttpHeaderTest {
     }
 
     @Test
+    void shouldExcludeDisplayNameFromHashCodeAndEquals() {
+        final HttpHeader header1 = HttpHeader.of("header", "value");
+        final HttpHeader header2 = HttpHeader.of("HEADER", "value");
+
+        assertThat(header1).isEqualTo(header2);
+        assertThat(header1).hasSameHashCodeAs(header2);
+    }
+
+    @Test
     void shouldAppendSingleValue() {
         final HttpHeader header = HttpHeader.of("", List.of("v1", "v2"));
 
