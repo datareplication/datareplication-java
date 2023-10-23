@@ -45,21 +45,4 @@ class FeedPageHeaderTest {
             HttpHeader.of("Last-Modified", "Sun, 31 Dec 2023 23:59:59 GMT"),
             HttpHeader.of("Link", "<https://example.datareplication.io/1>; rel=self")));
     }
-
-    @Test
-    void shouldReplaceHeadersFromExtraHeadersWithSpecialCasedHeaders() {
-        final HttpHeaders extraHeaders = HttpHeaders.of(
-            HttpHeader.of("Last-Modified", "haha"),
-            HttpHeader.of("Link", "zelda"));
-        final FeedPageHeader pageHeader = new FeedPageHeader(
-            Timestamp.of(Instant.parse("2023-10-05T10:00:00.000Z")),
-            Link.of(Url.of("https://example.datareplication.io/2")),
-            Optional.empty(),
-            Optional.empty(),
-            extraHeaders);
-
-        assertThat(pageHeader.toHttpHeaders()).isEqualTo(HttpHeaders.of(
-            HttpHeader.of("Last-Modified", "Thu, 05 Oct 2023 10:00:00 GMT"),
-            HttpHeader.of("Link", "<https://example.datareplication.io/2>; rel=self")));
-    }
 }

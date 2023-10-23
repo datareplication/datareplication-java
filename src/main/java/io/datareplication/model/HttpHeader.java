@@ -1,10 +1,12 @@
 package io.datareplication.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -14,7 +16,14 @@ import java.util.Locale;
  */
 @Value
 public class HttpHeader {
+    /**
+     * The normalized header name for case-insensitive comparisons.
+     */
     @NonNull String name;
+    /**
+     * The header name with its original capitalization for prettier printing.
+     */
+    @EqualsAndHashCode.Exclude @NonNull String displayName;
     @NonNull List<@NonNull String> values;
 
     @NonNull
@@ -37,8 +46,33 @@ public class HttpHeader {
         .withZone(ZoneId.of("GMT"));
 
     private HttpHeader(@NonNull String name, @NonNull List<@NonNull String> values) {
-        this.name = name;
+        this.displayName = name;
+        this.name = name.toLowerCase(Locale.ENGLISH);
         this.values = List.copyOf(values);
+    }
+
+    /**
+     * Append a single value to this header.
+     *
+     * @param value the new value to append
+     * @return a new HttpHeader with the given value appended
+     */
+    public @NonNull HttpHeader append(@NonNull String value) {
+        final ArrayList<String> newValues = new ArrayList<>(values);
+        newValues.add(value);
+        return HttpHeader.of(displayName, newValues);
+    }
+
+    /**
+     * Append multiple value to this header.
+     *
+     * @param values the values to append
+     * @return a new HttpHeader with the given values appended
+     */
+    public @NonNull HttpHeader append(@NonNull List<@NonNull String> values) {
+        final ArrayList<String> newValues = new ArrayList<>(this.values);
+        newValues.addAll(values);
+        return HttpHeader.of(displayName, newValues);
     }
 
     /**
