@@ -11,10 +11,11 @@ import java.util.List;
  */
 public class BufferingMultipartParser {
     private final MultipartParser parser;
+    private long offset = 0;
 
     private ByteBuffer buffer = ByteBuffer.allocate(0);
 
-     public BufferingMultipartParser(final MultipartParser parser) {
+    public BufferingMultipartParser(final MultipartParser parser) {
         this.parser = parser;
     }
 
@@ -41,10 +42,32 @@ public class BufferingMultipartParser {
     }
 
     /**
-     * Return true if the parser is finished (i.e. has read the closing delimiter) and the buffered input is exhausted.
+     * Verify that the parser is "at end", i.e. the given input formed a complete multipart document.
+     *
+     * @throws MultipartException.UnexpectedEndOfInput when the document was incomplete
+     * @throws MultipartException In certain cases, parseAll() doesn't throw a parsing error when it encounters a
+     *                            problem. In that case, the next call to parseAll() will throw it. If parseAll() isn't
+     *                            called again, then finish() will throw that exception.
      */
-    public boolean isFinished() {
-        return parser.isFinished() && !buffer.hasRemaining();
+    public void finish() {
+        if (buffer.hasRemaining()) {
+            // finish() being called with input remaining can have one of two reasons:
+            //  - The final input block had a syntax problem and parseAll() returned all tokens that it could
+            //    successfully parse, leaving the problem area in the buffer. In this case, we want to throw the
+            //    actual error rather than the generic end-of-input error.
+            //  - MultipartParser threw RequestInput. In this case we want to throw the generic end-of-input error.
+            // To figure out which case it is, we call parse() once, rethrow any MultipartException, and throw
+            // UnexpectedEndOfInput otherwise.
+            try {
+                parser.parse(buffer);
+            } catch (RequestInput ignored) {
+            }
+            throw new MultipartException.UnexpectedEndOfInput(offset);
+        } else if (!parser.isFinished()) {
+            // If the parser is not in its end state, we throw UnexpectedEndOfInput even if we consumed all the input
+            // we were given. Clearly it was not enough. We needed more.
+            throw new MultipartException.UnexpectedEndOfInput(offset);
+        }
     }
 
     private List<Token> parseAll() {
@@ -53,12 +76,21 @@ public class BufferingMultipartParser {
             try {
                 final MultipartParser.Result result = parser.parse(buffer);
                 parsed.add(result.token());
+                offset += result.consumedBytes();
                 buffer.position(buffer.position() + result.consumedBytes());
+            } catch (MultipartException exc) {
+                // If we have already parsed some tokens, we return those. Since we remember our position, the
+                // exception we swallow here will be thrown when this method is called again or when finish() is
+                // called. This allows us to parse as much as possible even in the face of invalid input.
+                if (parsed.isEmpty()) {
+                    throw exc;
+                } else {
+                    break;
+                }
             } catch (RequestInput r) {
                 break;
             }
         }
-
         return parsed;
     }
 }
