@@ -4,7 +4,6 @@ import com.github.mizosoft.methanol.Methanol;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.HttpException;
-import io.datareplication.consumer.PageFormatException;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
@@ -27,14 +26,7 @@ class HttpClientTest {
         .newInstance()
         .build();
 
-    private final HttpClient httpClient = new HttpClient(
-        Methanol.newBuilder()
-            .requestTimeout(Duration.ofSeconds(3))
-            .headersTimeout(Duration.ofSeconds(3))
-            .readTimeout(Duration.ofSeconds(3))
-            .build(),
-        0
-    );
+    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build(), 0);
 
     @Test
     void shouldGet() {
@@ -175,6 +167,46 @@ class HttpClientTest {
         wireMock.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)
+            ));
+
+        final Single<HttpResponse<Void>> result = httpClient
+            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+
+        result
+            .test()
+            .await()
+            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+    }
+
+    @Test
+    void shouldThrowHttpException_whenHeaderTimeout() throws InterruptedException {
+        final HttpClient httpClient = new HttpClient(
+            Methanol.newBuilder().headersTimeout(Duration.ofMillis(5)).build(),
+            0);
+        wireMock.stubFor(
+            get("/").willReturn(
+                aResponse().withFixedDelay(500)
+            ));
+
+        final Single<HttpResponse<Void>> result = httpClient
+            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+
+        result
+            .test()
+            .await()
+            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+    }
+
+    @Test
+    void shouldThrowHttpException_whenReadTimeout() throws InterruptedException {
+        final HttpClient httpClient = new HttpClient(
+            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build(),
+            0);
+        wireMock.stubFor(
+            get("/").willReturn(
+                aResponse()
+                    .withBody("12345")
+                    .withChunkedDribbleDelay(5, 500)
             ));
 
         final Single<HttpResponse<Void>> result = httpClient

@@ -2,6 +2,7 @@ package io.datareplication.internal.page;
 
 import com.github.mizosoft.methanol.Methanol;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.HttpClient;
@@ -26,19 +27,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PageLoaderTest {
+    private static final Throwable ANY_EXCEPTION = new RuntimeException();
+
     @RegisterExtension
     static final WireMockExtension wireMock = WireMockExtension
         .newInstance()
         .build();
 
-    private final HttpClient httpClient = new HttpClient(
-        Methanol.newBuilder()
-            .requestTimeout(Duration.ofSeconds(3))
-            .headersTimeout(Duration.ofSeconds(3))
-            .readTimeout(Duration.ofSeconds(3))
-            .build(),
-        0
-    );
+    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build(), 0);
     private final PageLoader pageLoader = new PageLoader(httpClient);
 
     @Test
@@ -145,6 +141,35 @@ class PageLoaderTest {
             .test()
             .await()
             .assertError(new PageFormatException.NoBoundaryInContentTypeHeader("multipart/mixed; a=b"));
+    }
+
+    @Test
+    void shouldThrowHttpException_whenReadTimeoutInBody() throws InterruptedException {
+        final HttpClient httpClient = new HttpClient(
+            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build(),
+            0);
+        final PageLoader pageLoader = new PageLoader(httpClient);
+
+        wireMock.stubFor(
+            get("/page.multipart")
+                .willReturn(
+                    aResponse()
+                        .withBodyFile("snapshot/1.content.multipart")
+                        .withChunkedDribbleDelay(5, 500)
+                        .withHeader("Content-Type", "multipart/mixed; boundary=<random-boundary>"))
+        );
+
+        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
+            .load(Url.of(wireMock.url("/page.multipart")));
+
+        result
+            .toFlowable()
+            .map(StreamingPage::toCompleteEntities)
+            .map(FlowAdapters::toPublisher)
+            .flatMap(Flowable::fromPublisher)
+            .test()
+            .await()
+            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
     }
 
     @Test

@@ -5,12 +5,12 @@ import io.datareplication.consumer.HttpException;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
-import lombok.Value;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.util.concurrent.CompletionException;
 
 public class HttpClient {
     private final Methanol httpClient;
@@ -33,7 +33,15 @@ public class HttpClient {
                                              HttpResponse.BodyHandler<T> bodyHandler) {
         return Single
             .fromCompletionStage(httpClient.sendAsync(request, bodyHandler))
-            .onErrorResumeNext(cause -> Single.error(new HttpException.NetworkError(cause)))
+            .onErrorResumeNext(exc -> {
+                if (exc instanceof CompletionException && exc.getCause() instanceof IOException) {
+                    return Single.error(new HttpException.NetworkError(exc.getCause()));
+                } else if (exc instanceof IOException) {
+                    return Single.error(new HttpException.NetworkError(exc));
+                } else {
+                    return Single.error(exc);
+                }
+            })
             .flatMap(this::checkResponse);
         // TODO: retries?
     }

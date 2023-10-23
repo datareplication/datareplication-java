@@ -1,5 +1,6 @@
 package io.datareplication.internal.page;
 
+import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.HttpClient;
@@ -15,6 +16,7 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
 import org.reactivestreams.FlowAdapters;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -59,6 +61,8 @@ public class PageLoader {
             .onErrorResumeNext(exc -> {
                 if (exc instanceof MultipartException) {
                     return Flowable.error(new PageFormatException.InvalidMultipart(exc));
+                } else if (exc instanceof IOException) {
+                    return Flowable.error(new HttpException.NetworkError(exc));
                 } else {
                     return Flowable.error(exc);
                 }

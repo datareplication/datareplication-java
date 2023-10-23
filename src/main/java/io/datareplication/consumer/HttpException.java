@@ -47,8 +47,8 @@ public class HttpException extends ConsumerException {
 
     @EqualsAndHashCode(callSuper = false)
     public static final class NetworkError extends HttpException {
-        public NetworkError(final Throwable cause) {
-            super("network i/o error", cause);
+        public NetworkError(@NonNull final Throwable cause) {
+            super(cause.getMessage(), cause);
         }
     }
 }
