@@ -10,6 +10,7 @@ import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
 import org.reactivestreams.FlowAdapters;
 
@@ -20,9 +21,7 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public class PageLoader {
@@ -32,15 +31,15 @@ public class PageLoader {
         this.httpClient = httpClient;
     }
 
-    public CompletionStage<StreamingPage<HttpHeaders, HttpHeaders>> load(Url url) {
-        final HttpRequest request = newRequest(url).GET().build();
-
-        // TODO: test test test
-
-        return httpClient
-            .sendAsync(request, HttpResponse.BodyHandlers.ofPublisher())
-            .thenApply(this::checkResponse)
-            .thenApply(response -> {
+    public Single<StreamingPage<HttpHeaders, HttpHeaders>> load(Url url) {
+        // TODO: oooooh, retries
+        return Single
+            .fromSupplier(() -> newRequest(url).GET().build())
+            .flatMap(request -> Single
+                .fromCompletionStage(httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofPublisher()))
+                .onErrorResumeNext(cause -> Single.error(new HttpException.NetworkError(cause))))
+            .map(this::checkResponse)
+            .map(response -> {
                 final HttpHeaders pageHeader = convertHeaders(response);
                 final String contentTypeString = response
                     .headers()
@@ -86,9 +85,12 @@ public class PageLoader {
 
     private HttpRequest.Builder newRequest(Url url) {
         // TODO: HTTP timeouts
-        // TODO: error handling
         // TODO: auth & additional headers
-        return HttpRequest.newBuilder(URI.create(url.value()));
+        try {
+            return HttpRequest.newBuilder(URI.create(url.value()));
+        } catch (Exception cause) {
+            throw new HttpException.InvalidUrl(url, cause);
+        }
     }
 
     private <T> HttpResponse<T> checkResponse(HttpResponse<T> response) {

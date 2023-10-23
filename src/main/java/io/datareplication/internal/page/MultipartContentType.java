@@ -6,6 +6,9 @@ import lombok.Value;
 
 import java.util.Locale;
 
+/**
+ * A multipart media type and boundary parameter.
+ */
 @Value
 public class MultipartContentType {
     private static final String SUPPORTED_MEDIA_TYPE_CATEGORY = "multipart";
@@ -14,6 +17,15 @@ public class MultipartContentType {
     String mediaType;
     String boundary;
 
+    /**
+     * Parse a Content-Type header value.
+     *
+     * @param contentType the Content-Type string to parse
+     * @throws PageFormatException.UnparseableContentTypeHeader when the header value can't be parsed at all
+     * @throws PageFormatException.InvalidContentType when the content type is not multipart/*
+     * @throws PageFormatException.NoBoundaryInContentTypeHeader when the boundary parameter is missing
+     * @return the parsed Content-Type
+     */
     public static MultipartContentType parse(String contentType) {
         HeaderFieldValue parsed;
         try {

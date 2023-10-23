@@ -1,6 +1,8 @@
 package io.datareplication.consumer;
 
+import io.datareplication.model.Url;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 public class HttpException extends ConsumerException {
     private HttpException(final String message) {
@@ -9,6 +11,16 @@ public class HttpException extends ConsumerException {
 
     private HttpException(final String message, final Throwable cause) {
         super(message, cause);
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class InvalidUrl extends HttpException {
+        private final Url url;
+
+        public InvalidUrl(@NonNull final Url url, @NonNull final Throwable cause) {
+            super(String.format("invalid URL '%s'", url.value()), cause);
+            this.url = url;
+        }
     }
 
     @EqualsAndHashCode(callSuper = false)
@@ -30,6 +42,13 @@ public class HttpException extends ConsumerException {
         public ServerError(int statusCode) {
             super(String.format("HTTP %s response", statusCode));
             this.statusCode = statusCode;
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class NetworkError extends HttpException {
+        public NetworkError(final Throwable cause) {
+            super("network i/o error", cause);
         }
     }
 }
