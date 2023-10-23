@@ -16,8 +16,7 @@ class EntityTest {
     void shouldReturnHeadersFromHeaderAndBody() {
         final Entity<HttpHeaders> entity = new Entity<>(
             HttpHeaders.of(HttpHeader.of("h1", "v1"),
-                           HttpHeader.of("h2", "v2"),
-                           HttpHeader.contentType(ContentType.of("application/ignored"))),
+                           HttpHeader.of("h2", "v2")),
             Body.fromUtf8("abc", ContentType.of("text/plain")));
 
         final HttpHeaders headers = entity.toHttpHeaders();

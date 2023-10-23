@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,6 +24,41 @@ class HttpHeaderTest {
             .isInstanceOf(UnsupportedOperationException.class);
         values.add("3");
         assertThat(header.values()).containsExactlyElementsOf(original);
+    }
+
+    @Test
+    void shouldLowerCaseName() {
+        final HttpHeader header = HttpHeader.of("Upper-And-Lower-Case", "value");
+
+        assertThat(header.displayName()).isEqualTo("Upper-And-Lower-Case");
+        assertThat(header.name()).isEqualTo("upper-and-lower-case");
+    }
+
+    @Test
+    void shouldExcludeDisplayNameFromHashCodeAndEquals() {
+        final HttpHeader header1 = HttpHeader.of("header", "value");
+        final HttpHeader header2 = HttpHeader.of("HEADER", "value");
+
+        assertThat(header1).isEqualTo(header2);
+        assertThat(header1).hasSameHashCodeAs(header2);
+    }
+
+    @Test
+    void shouldAppendSingleValue() {
+        final HttpHeader header = HttpHeader.of("", List.of("v1", "v2"));
+
+        final HttpHeader result = header.append("v3");
+
+        assertThat(result).isEqualTo(HttpHeader.of("", List.of("v1", "v2", "v3")));
+    }
+
+    @Test
+    void shouldAppendMultipleValues() {
+        final HttpHeader header = HttpHeader.of("", List.of("v1", "v2"));
+
+        final HttpHeader result = header.append(List.of("v2", "v3"));
+
+        assertThat(result).isEqualTo(HttpHeader.of("", List.of("v1", "v2", "v2", "v3")));
     }
 
     @Test
