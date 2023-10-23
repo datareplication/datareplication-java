@@ -102,7 +102,7 @@ public class SnapshotAcceptanceTest {
                     // Truncate to relative path
                     .replace(wm.getRuntimeInfo().getHttpBaseUrl(), ""))
                     .willReturn(
-                        aResponse().withBodyFile(
+                        aResponse().withBody(
                             snapshotPageRepository
                                 .findBy(pageId(url, snapshotIndex.id()))
                                 .map(Body::toUtf8)
