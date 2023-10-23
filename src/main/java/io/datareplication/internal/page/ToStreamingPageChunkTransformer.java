@@ -24,6 +24,7 @@ final class ToStreamingPageChunkTransformer {
      * Consume the given {@link Token} and optionally return a {@link StreamingPage.Chunk}.
      *
      * @param multipartToken a token from the multipart parser
+     * @throws PageFormatException.MissingContentTypeInEntity if an entity doesn't have a content-type header
      * @return a Chunk if this token needs one to be emitted
      */
     public Optional<StreamingPage.Chunk<HttpHeaders>> transform(Token multipartToken) {
