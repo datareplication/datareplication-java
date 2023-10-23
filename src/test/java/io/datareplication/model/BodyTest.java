@@ -135,7 +135,7 @@ class BodyTest {
     void toUtf8_shouldPassThroughIOException() {
         final TestBody body = new TestBody(ThrowingInputStream::new, -1, ANY_CONTENT_TYPE);
 
-        assertThatThrownBy(body::toUtf8).hasCauseInstanceOf(IOException.class);
+        assertThatThrownBy(body::toUtf8).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -143,7 +143,7 @@ class BodyTest {
         final byte[] bytes = new byte[]{-61, 40};
         final TestBody body = new TestBody(() -> new ByteArrayInputStream(bytes), 2, ANY_CONTENT_TYPE);
 
-        assertThatThrownBy(body::toUtf8).hasCauseInstanceOf(CharacterCodingException.class);
+        assertThatThrownBy(body::toUtf8).isInstanceOf(CharacterCodingException.class);
     }
 
     @Test
@@ -151,7 +151,7 @@ class BodyTest {
         final byte[] bytes = new byte[]{-19, -96, -128};
         final TestBody body = new TestBody(() -> new ByteArrayInputStream(bytes), 3, ANY_CONTENT_TYPE);
 
-        assertThatThrownBy(body::toUtf8).hasCauseInstanceOf(CharacterCodingException.class);
+        assertThatThrownBy(body::toUtf8).isInstanceOf(CharacterCodingException.class);
     }
 
     @Test
@@ -159,7 +159,7 @@ class BodyTest {
         final byte[] bytes = new byte[]{-19, -96, -19, -80, -128};
         final TestBody body = new TestBody(() -> new ByteArrayInputStream(bytes), 3, ANY_CONTENT_TYPE);
 
-        assertThatThrownBy(body::toUtf8).hasCauseInstanceOf(CharacterCodingException.class);
+        assertThatThrownBy(body::toUtf8).isInstanceOf(CharacterCodingException.class);
     }
 
     @Test

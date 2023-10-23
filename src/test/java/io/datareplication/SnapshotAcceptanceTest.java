@@ -10,10 +10,10 @@ import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
-import io.datareplication.producer.snapshot.testhelper.SnapshotIndexInMemoryRepository;
-import io.datareplication.producer.snapshot.testhelper.SnapshotPageInMemoryRepository;
 import io.datareplication.producer.snapshot.SnapshotPageUrlBuilder;
 import io.datareplication.producer.snapshot.SnapshotProducer;
+import io.datareplication.producer.snapshot.testhelper.SnapshotIndexInMemoryRepository;
+import io.datareplication.producer.snapshot.testhelper.SnapshotPageInMemoryRepository;
 import io.reactivex.rxjava3.core.Flowable;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
@@ -95,23 +95,20 @@ public class SnapshotAcceptanceTest {
         SnapshotIndex snapshotIndex = maybeSnapshotIndex.get();
         wm.stubFor(get("/" + snapshotId)
             .willReturn(aResponse().withBodyFile(snapshotIndex.toJson().toUtf8())));
-        snapshotIndex
-            .pages()
-            .forEach(url -> {
-                wm.stubFor(get(url.value()
-                    // Truncate to relative path
-                    .replace(wm.getRuntimeInfo().getHttpBaseUrl(), ""))
-                    .willReturn(
-                        aResponse().withBody(
-                            snapshotPageRepository
-                                .findBy(pageId(url, snapshotIndex.id()))
-                                .map(Body::toUtf8)
-                                .orElse("404 Notfound")
-
-                        )
+        for (Url url : snapshotIndex.pages()) {
+            wm.stubFor(get(url.value()
+                // Truncate to relative path
+                .replace(wm.baseUrl(), ""))
+                .willReturn(
+                    aResponse().withBody(
+                        snapshotPageRepository
+                            .findBy(pageId(url, snapshotIndex.id()))
+                            .orElse(Body.fromUtf8("404 Notfound"))
+                            .toUtf8()
                     )
-                );
-            });
+                )
+            );
+        }
     }
 
     private @NonNull Entity<@NonNull SnapshotEntityHeader> toSnapshotEntity(String content) {
