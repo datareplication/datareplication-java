@@ -6,16 +6,7 @@ import lombok.NonNull;
 import lombok.ToString;
 import org.apache.commons.io.input.ReaderInputStream;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.nio.charset.CharacterCodingException;
+import java.io.*;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
@@ -110,10 +101,9 @@ public interface Body extends ToHttpHeaders {
      * </p>
      *
      * @return the content of this Body as UTF-8
-     * @throws IOException              when the InputStream returned by {{@link #newInputStream()}} throws IOException
-     * @throws CharacterCodingException when the underlying bytes are not valid UTF-8
+     * @throws IllegalStateException when the underlying bytes are not valid UTF-8
      */
-    default @NonNull String toUtf8() throws IOException {
+    default @NonNull String toUtf8() {
         try (StringWriter writer = new StringWriter(getBufferSize(this))) {
             try (InputStream input = newInputStream()) {
                 final CharsetDecoder decoder = StandardCharsets.UTF_8
@@ -125,6 +115,8 @@ public interface Body extends ToHttpHeaders {
                 }
             }
             return writer.toString();
+        } catch (IOException e) {
+            throw new IllegalStateException("unexpected " + e.getClass().getSimpleName() + " in toUtf8", e);
         }
     }
 

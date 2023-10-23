@@ -10,8 +10,8 @@ import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
-import io.datareplication.model.snapshot.testhelper.SnapshotIndexInMemoryRepository;
-import io.datareplication.model.snapshot.testhelper.SnapshotPageInMemoryRepository;
+import io.datareplication.producer.snapshot.testhelper.SnapshotIndexInMemoryRepository;
+import io.datareplication.producer.snapshot.testhelper.SnapshotPageInMemoryRepository;
 import io.datareplication.producer.snapshot.SnapshotPageUrlBuilder;
 import io.datareplication.producer.snapshot.SnapshotProducer;
 import io.reactivex.rxjava3.core.Flowable;
@@ -47,7 +47,7 @@ public class SnapshotAcceptanceTest {
         SnapshotPageUrlBuilder snapshotPageUrlBuilder = new SnapshotPageUrlBuilder() {
             @Override
             public @NonNull Url pageUrl(@NonNull final SnapshotId snapshotId, @NonNull final PageId pageId) {
-                return Url.of(wm.getRuntimeInfo().getHttpBaseUrl() + "/" + snapshotId.value() + "/" + pageId.value());
+                return Url.of(wm.url("/" + snapshotId.value() + "/" + pageId.value()));
             }
         };
         SnapshotProducer snapshotProducer = SnapshotProducer
@@ -98,22 +98,19 @@ public class SnapshotAcceptanceTest {
         snapshotIndex
             .pages()
             .forEach(url -> {
-                try {
-                    wm.stubFor(get(url.value()
-                        // Truncate to relative path
-                        .replace(wm.getRuntimeInfo().getHttpBaseUrl(), ""))
-                        .willReturn(
-                            aResponse().withBodyFile(
-                                snapshotPageRepository
-                                    .findBy(pageId(url, snapshotIndex.id()))
-                                    .orElse(Body.fromUtf8("404 Notfound"))
-                                    .toUtf8()
-                            )
+                wm.stubFor(get(url.value()
+                    // Truncate to relative path
+                    .replace(wm.getRuntimeInfo().getHttpBaseUrl(), ""))
+                    .willReturn(
+                        aResponse().withBodyFile(
+                            snapshotPageRepository
+                                .findBy(pageId(url, snapshotIndex.id()))
+                                .map(Body::toUtf8)
+                                .orElse("404 Notfound")
+
                         )
-                    );
-                } catch (IOException e) {
-                    throw new UnfinishedStubbingException(e.getMessage());
-                }
+                    )
+                );
             });
     }
 
@@ -122,12 +119,12 @@ public class SnapshotAcceptanceTest {
     }
 
     private @NonNull Url snapshotUrl(@NonNull SnapshotIndex index) {
-        return Url.of(wm.getRuntimeInfo().getHttpBaseUrl() + "/" + index.id().value());
+        return Url.of(wm.url("/" + index.id().value()));
     }
 
     private @NonNull PageId pageId(@NonNull Url url, @NonNull SnapshotId snapshotId) {
         return PageId.of(url.value()
             // Extract PageId from Url
-            .replace(wm.getRuntimeInfo().getHttpBaseUrl() + "/" + snapshotId.value() + "/", ""));
+            .replace(wm.url("/" + snapshotId.value() + "/"), ""));
     }
 }

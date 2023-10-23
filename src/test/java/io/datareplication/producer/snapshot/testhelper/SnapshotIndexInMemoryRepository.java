@@ -1,4 +1,4 @@
-package io.datareplication.model.snapshot.testhelper;
+package io.datareplication.producer.snapshot.testhelper;
 
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
@@ -22,10 +22,7 @@ public class SnapshotIndexInMemoryRepository implements SnapshotIndexRepository 
     }
 
     public Optional<SnapshotIndex> findBy(SnapshotId id) {
-        if (repository.containsKey(id)) {
-            return Optional.of(repository.get(id));
-        } else {
-            return Optional.empty();
-        }
+        return Optional
+            .ofNullable(repository.get(id));
     }
 }

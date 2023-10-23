@@ -1,4 +1,4 @@
-package io.datareplication.model.snapshot.testhelper;
+package io.datareplication.producer.snapshot.testhelper;
 
 import io.datareplication.model.Body;
 import io.datareplication.model.Page;
@@ -32,10 +32,8 @@ public class SnapshotPageInMemoryRepository implements SnapshotPageRepository {
 
 
     public Optional<Body> findBy(PageId id) {
-        if (repository.containsKey(id)) {
-            return Optional.of(repository.get(id).toMultipartBody());
-        } else {
-            return Optional.empty();
-        }
+        return Optional
+            .ofNullable(repository.get(id))
+            .map(Page::toMultipartBody);
     }
 }
