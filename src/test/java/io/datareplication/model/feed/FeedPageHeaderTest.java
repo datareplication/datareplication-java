@@ -18,9 +18,9 @@ class FeedPageHeaderTest {
         final HttpHeaders extraHeaders = HttpHeaders.of(HttpHeader.of("e1", "v1"));
         final FeedPageHeader pageHeader = new FeedPageHeader(
             Timestamp.of(Instant.parse("2023-10-05T09:58:59.000Z")),
-            Link.of(Url.of("https://example.datareplication.io/2")),
-            Optional.of(Link.of(Url.of("https://example.datareplication.io/1"))),
-            Optional.of(Link.of(Url.of("https://example.datareplication.io/3"))),
+            Link.self(Url.of("https://example.datareplication.io/2")),
+            Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
+            Optional.of(Link.next(Url.of("https://example.datareplication.io/3"))),
             extraHeaders);
 
         assertThat(pageHeader.toHttpHeaders()).isEqualTo(HttpHeaders.of(
@@ -36,7 +36,7 @@ class FeedPageHeaderTest {
     void shouldReturnHttpHeadersWithoutOptionalLinks() {
         final FeedPageHeader pageHeader = new FeedPageHeader(
             Timestamp.of(Instant.parse("2023-12-31T23:59:59.999Z")),
-            Link.of(Url.of("https://example.datareplication.io/1")),
+            Link.self(Url.of("https://example.datareplication.io/1")),
             Optional.empty(),
             Optional.empty(),
             HttpHeaders.EMPTY);

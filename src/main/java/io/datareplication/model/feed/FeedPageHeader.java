@@ -25,26 +25,26 @@ public class FeedPageHeader implements ToHttpHeaders {
      * The stable URL of this page itself. This URL must always resolve to this page, even as new entities are added to
      * the feed.
      */
-    @NonNull Link self;
+    @NonNull Link.Self self;
     /**
      * The URL of the immediately previous (i.e. older) feed page. If this header is missing then there are no older
      * pages and this page marks the start of the feed.
      */
-    @NonNull Optional<@NonNull Link> prev;
+    @NonNull Optional<Link.@NonNull Prev> prev;
     /**
      * The URL of the immediately next (i.e. newer) feed page. If this header is missing then there are no newer
      * pages and this is currently the latest page of the feed.
      */
-    @NonNull Optional<@NonNull Link> next;
+    @NonNull Optional<Link.@NonNull Next> next;
     /**
      * Additional unstructured headers.
      */
     @NonNull HttpHeaders extraHeaders;
 
     public FeedPageHeader(@NonNull final Timestamp lastModified,
-                          @NonNull final Link self,
-                          @NonNull final Optional<@NonNull Link> prev,
-                          @NonNull final Optional<@NonNull Link> next) {
+                          @NonNull final Link.Self self,
+                          @NonNull final Optional<Link.@NonNull Prev> prev,
+                          @NonNull final Optional<Link.@NonNull Next> next) {
         this(lastModified, self, prev, next, HttpHeaders.EMPTY);
     }
 
