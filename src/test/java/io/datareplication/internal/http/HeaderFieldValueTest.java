@@ -1,6 +1,5 @@
 package io.datareplication.internal.http;
 
-import io.datareplication.internal.http.HeaderFieldValue;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

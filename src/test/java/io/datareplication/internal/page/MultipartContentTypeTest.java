@@ -1,7 +1,6 @@
 package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
-import io.datareplication.internal.page.MultipartContentType;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

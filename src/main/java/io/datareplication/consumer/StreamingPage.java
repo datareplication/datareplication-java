@@ -157,8 +157,8 @@ public interface StreamingPage<
         /**
          * Create a new {@link BodyChunk}.
          *
-         * @param data           the data chunk; this buffer <strong>should</strong> be {@link ByteBuffer#slice()}d and not
-         *                       shared to avoid ByteBuffer's mutability leaking out and causing problems
+         * @param data           the data chunk; this buffer <strong>should</strong> be {@link ByteBuffer#slice()}d
+         *                       and not shared to avoid ByteBuffer's mutability leaking out and causing problems
          * @param <EntityHeader> the entity's header
          * @return a new {@link BodyChunk}
          */

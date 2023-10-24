@@ -22,7 +22,7 @@ class HttpClientTest {
     private static final Throwable ANY_EXCEPTION = new RuntimeException();
 
     @RegisterExtension
-    static final WireMockExtension wireMock = WireMockExtension
+    final WireMockExtension wireMock = WireMockExtension
         .newInstance()
         .build();
 

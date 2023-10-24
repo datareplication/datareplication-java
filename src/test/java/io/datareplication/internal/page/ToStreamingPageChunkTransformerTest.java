@@ -17,8 +17,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ToStreamingPageChunkTransformerTest {
     private final ToStreamingPageChunkTransformer transformer = new ToStreamingPageChunkTransformer();
 
-    private final ByteBuffer BYTES_1 = ByteBuffer.wrap("test1".getBytes(StandardCharsets.UTF_8));
-    private final ByteBuffer BYTES_2 = ByteBuffer.wrap("test2".getBytes(StandardCharsets.UTF_8));
+    private static final ByteBuffer BYTES_1 = ByteBuffer.wrap("test1".getBytes(StandardCharsets.UTF_8));
+    private static final ByteBuffer BYTES_2 = ByteBuffer.wrap("test2".getBytes(StandardCharsets.UTF_8));
 
     @Test
     void shouldTransformStreamOfTokens() {

@@ -16,9 +16,9 @@ public class Token {
     }
 
     /**
-     * <p><code>Continue</code> signals that the parser has consumed some input that didn't contain any token. It's mostly
-     * used to skip over prologue and epilogue (unstructured bytes before the opening delimiter and after the closing
-     * delimiter of the document). Consumers generally want to ignore it and keep going.</p>
+     * <p><code>Continue</code> signals that the parser has consumed some input that didn't contain any token. It's
+     * mostly used to skip over prologue and epilogue (unstructured bytes before the opening delimiter and after the
+     * closing delimiter of the document). Consumers generally want to ignore it and keep going.</p>
      *
      * <p>Can follow anything and be followed by anything.</p>
      */
