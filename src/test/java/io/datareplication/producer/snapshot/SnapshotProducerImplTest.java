@@ -12,10 +12,11 @@ import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
 import io.reactivex.rxjava3.core.Flowable;
-import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.FlowAdapters;
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -41,6 +43,9 @@ class SnapshotProducerImplTest {
     private final PageId pageId1 = PageId.of("page1");
     private final Url page1Url = Url.of("/" + pageId1.value());
     private final Timestamp createdAt = Timestamp.now();
+
+    @Captor
+    ArgumentCaptor<Page<SnapshotPageHeader, SnapshotEntityHeader>> pageArgumentCaptor;
 
     @Test
     @DisplayName("should produce a snapshot without entries")
@@ -80,16 +85,12 @@ class SnapshotProducerImplTest {
                                  @Mock SnapshotIdProvider snapshotIdProvider)
         throws ExecutionException, InterruptedException {
         Entity<SnapshotEntityHeader> firstEntity = entity("there can be only one");
-        Page<SnapshotPageHeader, SnapshotEntityHeader> page1 = new Page<>(
-            new SnapshotPageHeader(HttpHeaders.EMPTY),
-            List.of(firstEntity)
-        );
         when(snapshotIdProvider.newSnapshotId()).thenReturn(id);
         when(pageIdProvider.newPageId()).thenReturn(pageId1);
         when(snapshotIndexRepository.save(any(SnapshotIndex.class)))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         when(snapshotPageUrlBuilder.pageUrl(id, pageId1)).thenReturn(page1Url);
-        when(snapshotPageRepository.save(id, pageId1, page1))
+        when(snapshotPageRepository.save(eq(id), eq(pageId1), any()))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = producer(
             snapshotPageRepository,
@@ -103,17 +104,13 @@ class SnapshotProducerImplTest {
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flowable.just(firstEntity)));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex)
-            .isEqualTo(new SnapshotIndex(id, createdAt, List.of(page1Url)));
-        verify(snapshotPageRepository).save(
-            id,
-            pageId1,
-            new Page<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>(
-                new SnapshotPageHeader(HttpHeaders.EMPTY),
-                List.of(firstEntity)
-            )
-        );
+        assertThat(snapshotIndex).isEqualTo(new SnapshotIndex(id, createdAt, List.of(page1Url)));
+        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
         verify(snapshotIndexRepository).save(snapshotIndex);
+        var savedPage = pageArgumentCaptor.getValue();
+        assertThat(savedPage.entities()).isEqualTo(List.of(firstEntity));
+        assertThat(savedPage.header()).isEqualTo(new SnapshotPageHeader(HttpHeaders.EMPTY));
+        assertThat(savedPage.boundary()).startsWith("_---_");
     }
 
     private SnapshotProducer producer(SnapshotPageRepository snapshotPageRepository,
