@@ -53,7 +53,7 @@ public class HttpClient {
         Single<HttpRequest.Builder> result;
         try {
             result = Single.just(HttpRequest.newBuilder(new URI(url.value())));
-        } catch (URISyntaxException cause) {
+        } catch (URISyntaxException | IllegalArgumentException cause) {
             result = Single.error(new HttpException.InvalidUrl(url, cause));
         }
         return result;
