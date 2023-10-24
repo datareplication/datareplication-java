@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class BufferingMultipartParser {
     private final MultipartParser parser;
-    private long offset = 0;
+    private long offset;
 
     private ByteBuffer buffer = ByteBuffer.allocate(0);
 
@@ -27,9 +27,7 @@ public class BufferingMultipartParser {
      * @return all tokens that could be fully parsed
      */
     public List<Token> parse(ByteBuffer next) {
-        if (!buffer.hasRemaining()) {
-            buffer = next.slice();
-        } else {
+        if (buffer.hasRemaining()) {
             // NB: we probably have to allocate a new buffer each time: since ByteBuffer is mutable, reusing an existing
             // buffer likely breaks references to input we handed out previously (i.e. Elem.Data)
             final ByteBuffer newBuffer = ByteBuffer.allocate(buffer.remaining() + next.remaining());
@@ -37,6 +35,8 @@ public class BufferingMultipartParser {
             newBuffer.put(next.slice());
             newBuffer.position(0);
             buffer = newBuffer;
+        } else {
+            buffer = next.slice();
         }
         return parseAll();
     }

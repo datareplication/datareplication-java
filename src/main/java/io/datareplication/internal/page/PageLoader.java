@@ -87,12 +87,12 @@ public class PageLoader {
     }
 
     private HttpHeaders convertHeaders(HttpResponse<?> response) {
-        final Stream<HttpHeader> x = response
+        final Stream<HttpHeader> headers = response
             .headers()
             .map()
             .entrySet()
             .stream()
             .map(entry -> HttpHeader.of(entry.getKey(), entry.getValue()));
-        return HttpHeaders.of(x.iterator());
+        return HttpHeaders.of(headers.iterator());
     }
 }

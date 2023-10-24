@@ -52,7 +52,7 @@ final class ToStreamingPageChunkTransformer {
             final Token.Data data = (Token.Data) multipartToken;
             return Optional.of(StreamingPage.Chunk.bodyChunk(data.data()));
         } else if (multipartToken instanceof Token.PartEnd) {
-            index += 1;
+            index++;
             return Optional.of(StreamingPage.Chunk.bodyEnd());
         }
         throw new IllegalArgumentException(String.format("unknown subclass of Token %s; bug?", multipartToken));

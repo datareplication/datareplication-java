@@ -22,7 +22,7 @@ class SnapshotConsumerIntegrationTest {
     private Url snapshotUrl;
 
     @RegisterExtension
-    static WireMockExtension wm = WireMockExtension.newInstance()
+    final WireMockExtension wm = WireMockExtension.newInstance()
         .options(wireMockConfig().httpsPort(8443))
         .build();
 

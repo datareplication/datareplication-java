@@ -18,10 +18,10 @@ import java.util.Optional;
  * @param <EntityHeader> the header type for the entities; this is just passed through
  */
 public class ToCompleteEntitiesTransformer<EntityHeader extends ToHttpHeaders> {
-    // only null on construction, gets initialized when we start our first entity
-    private StreamingPage.Chunk.Header<EntityHeader> currentHeader = null;
-    private ByteArrayOutputStream bodyStream = null;
-    private WritableByteChannel bodyChannel = null;
+    // these fields are null on construction, but they get initialized when we start our first entity
+    private StreamingPage.Chunk.Header<EntityHeader> currentHeader;
+    private ByteArrayOutputStream bodyStream;
+    private WritableByteChannel bodyChannel;
 
     private static final int INITIAL_BUFFER_SIZE = 4096;
 
