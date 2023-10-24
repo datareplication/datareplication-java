@@ -51,12 +51,10 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
     public @NonNull Flow.Publisher<
         @NonNull Entity<@NonNull SnapshotEntityHeader>
         > streamEntities(@NonNull final SnapshotIndex snapshotIndex) {
-        // TODO: implement
-        /*final Flowable<Entity<SnapshotEntityHeader>> flowable = streamPagesInternal(snapshotIndex, NETWORK_CONCURRENCY)
+        final var flowable = streamPagesInternal(snapshotIndex, NETWORK_CONCURRENCY)
             .map(page -> FlowAdapters.toPublisher(page.toCompleteEntities()))
             .flatMap(Flowable::fromPublisher, NETWORK_CONCURRENCY);
-        return FlowAdapters.toFlowPublisher(flowable);*/
-        throw new RuntimeException("not implemented");
+        return FlowAdapters.toFlowPublisher(flowable);
     }
 
     private Flowable<

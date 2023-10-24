@@ -145,7 +145,7 @@ public interface Body extends ToHttpHeaders {
      * @return the byte contents of this Body
      * @throws IOException when the InputStream returned by {{@link #newInputStream()}} throws an IOException
      */
-    default byte[] toBytes() throws IOException {
+    default byte @NonNull [] toBytes() throws IOException {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream(getBufferSize(this))) {
             try (InputStream input = newInputStream()) {
                 input.transferTo(output);
@@ -232,7 +232,7 @@ public interface Body extends ToHttpHeaders {
      * @param contentType the content type for the created Body
      * @return a Body of the array's bytes
      */
-    static @NonNull Body fromBytes(@NonNull byte[] bytes, @NonNull ContentType contentType) {
+    static @NonNull Body fromBytes(byte @NonNull [] bytes, @NonNull ContentType contentType) {
         @EqualsAndHashCode
         @ToString
         @AllArgsConstructor
@@ -256,7 +256,7 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public @NonNull byte[] toBytes() {
+            public byte @NonNull [] toBytes() {
                 return bytes.clone();
             }
         }
@@ -276,7 +276,7 @@ public interface Body extends ToHttpHeaders {
      * @param bytes the byte array
      * @return a Body of the array's bytes
      */
-    static @NonNull Body fromBytes(@NonNull byte[] bytes) {
+    static @NonNull Body fromBytes(byte @NonNull [] bytes) {
         return fromBytes(bytes, ContentType.of("application/octet-stream"));
     }
 
@@ -290,7 +290,7 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public void write(final byte[] b, final int off, final int len) {
+            public void write(final byte @NonNull [] b, final int off, final int len) {
                 count += len;
             }
 

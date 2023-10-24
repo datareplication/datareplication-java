@@ -6,7 +6,9 @@ import io.datareplication.consumer.TestStreamingPage;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.http.TestHttpResponse;
 import io.datareplication.internal.page.PageLoader;
+import io.datareplication.model.Body;
 import io.datareplication.model.ContentType;
+import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
@@ -19,6 +21,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.FlowAdapters;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -182,7 +184,7 @@ class SnapshotConsumerImplTest {
             .assertNoValues();
     }
 
-    /*@Test
+    @Test
     void streamEntities_shouldLoadAllPagesAndStreamAllEntities() throws InterruptedException {
         final Url url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
         final Url url2 = Url.of("https://example.datareplication.io/snapshotpage/2");
@@ -223,10 +225,30 @@ class SnapshotConsumerImplTest {
             .toList()
             .blockingGet();
 
-        assertThat(entities).containsExactlyInAnyOrder(
-            new Entity<>(new SnapshotEntityHeader(headers1), Body.fromUtf8("abcdef")),
-            new Entity<>(new SnapshotEntityHeader(headers2), Body.fromUtf8("1234")),
-            new Entity<>(new SnapshotEntityHeader(headers3), Body.fromUtf8("testtesttest"))
-        );
-    }*/
+        assertThat(entities)
+            .usingRecursiveFieldByFieldElementComparator(RecursiveComparisonConfiguration
+                                                             .builder()
+                                                             .withEqualsForType(this::compareBodies, Body.class)
+                                                             .build())
+            .containsExactlyInAnyOrder(
+                new Entity<>(new SnapshotEntityHeader(headers1),
+                             Body.fromUtf8("abcdef", ContentType.of("text/plain"))),
+                new Entity<>(new SnapshotEntityHeader(headers2),
+                             Body.fromUtf8("1234", ContentType.of("audio/mp3"))),
+                new Entity<>(new SnapshotEntityHeader(headers3),
+                             Body.fromUtf8("testtesttest", ContentType.of("audio/ogg")))
+            );
+    }
+
+    private boolean compareBodies(final Body a, final Body b) {
+        try (var in1 = a.newInputStream()) {
+            try (var in2 = b.newInputStream()) {
+                return IOUtils.contentEquals(in1, in2)
+                    && a.contentLength() == b.contentLength()
+                    && a.contentType().equals(b.contentType());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("IOException when comparing Body", e);
+        }
+    }
 }
