@@ -14,6 +14,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class FeedPageHeaderTest {
     @Test
+    void shouldDefaultToEmptyExtraHeaders() {
+        final FeedPageHeader header = new FeedPageHeader(
+            Timestamp.of(Instant.now()),
+            Link.self(Url.of("https://example.datareplication.io/page")),
+            Optional.empty(),
+            Optional.empty());
+
+        assertThat(header.extraHeaders()).isEqualTo(HttpHeaders.EMPTY);
+    }
+
+    @Test
     void shouldReturnHttpHeaders() {
         final HttpHeaders extraHeaders = HttpHeaders.of(HttpHeader.of("e1", "v1"));
         final FeedPageHeader pageHeader = new FeedPageHeader(
