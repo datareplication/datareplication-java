@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.concurrent.Flow;
 import java.util.stream.Stream;
 
+/**
+ * Download a page from a URL, parse its multipart body, and return it as a {@link StreamingPage}.
+ */
 public class PageLoader {
     private final HttpClient httpClient;
 
@@ -31,6 +34,15 @@ public class PageLoader {
         this.httpClient = httpClient;
     }
 
+    /**
+     * Load a multipart page from the given URL.
+     * @param url the URL to download
+     * @throws HttpException in case of HTTP errors (invalid URL, HTTP error status codes, network errors/timeouts, ...)
+     * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
+     *                             missing or malformed HTTP Content-Type header since multipart parsing errors will
+     *                             only start happening when we get to {@link StreamingPage})
+     * @return a {@link StreamingPage} for the given URL with unparsed headers
+     */
     public Single<StreamingPage<HttpHeaders, HttpHeaders>> load(Url url) {
         return httpClient
             .get(url, HttpResponse.BodyHandlers.ofPublisher())
