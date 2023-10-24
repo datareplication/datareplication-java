@@ -74,6 +74,7 @@ public interface Body extends ToHttpHeaders {
 
     // TODO: Should the content type be optional? That would allow us to read entities without a content type, which is
     //       maybe a bad idea, but not particularly objectionable.
+
     /**
      * Return the content type of the underlying data. This should be a MIME type suitable for use in a
      * <code>Content-Type</code> header.
@@ -144,7 +145,7 @@ public interface Body extends ToHttpHeaders {
      * @return the byte contents of this Body
      * @throws IOException when the InputStream returned by {{@link #newInputStream()}} throws an IOException
      */
-    default @NonNull byte[] toBytes() throws IOException {
+    default byte[] toBytes() throws IOException {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream(getBufferSize(this))) {
             try (InputStream input = newInputStream()) {
                 input.transferTo(output);

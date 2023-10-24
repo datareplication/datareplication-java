@@ -15,7 +15,6 @@ import org.reactivestreams.FlowAdapters;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.Flow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,43 +28,15 @@ class StreamingPageTest {
         return ByteBuffer.wrap(s.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static final class TestStreamingPage implements StreamingPage<HttpHeaders, HttpHeaders> {
-        private final HttpHeaders pageHeader;
-        private final String boundary;
-        private final List<Chunk<HttpHeaders>> chunks;
-
-        private TestStreamingPage(final HttpHeaders pageHeader,
-                                  final String boundary,
-                                  final List<Chunk<HttpHeaders>> chunks) {
-            this.pageHeader = pageHeader;
-            this.boundary = boundary;
-            this.chunks = chunks;
-        }
-
-        @Override
-        public @NonNull HttpHeaders header() {
-            return pageHeader;
-        }
-
-        @Override
-        public @NonNull String boundary() {
-            return boundary;
-        }
-
-        @Override
-        public void subscribe(final Flow.Subscriber<? super Chunk<HttpHeaders>> subscriber) {
-            final Flowable<Chunk<HttpHeaders>> flowable = Flowable.fromIterable(chunks);
-            FlowAdapters.toFlowPublisher(flowable).subscribe(subscriber);
-        }
-    }
-
     @Test
     void shouldStreamCompleteEntities() {
-        final TestStreamingPage streamingPage = new TestStreamingPage(HttpHeaders.EMPTY, "", List.of(
-            StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
-            StreamingPage.Chunk.bodyChunk(utf8("abc")),
-            StreamingPage.Chunk.bodyChunk(utf8("def")),
-            StreamingPage.Chunk.bodyEnd()));
+        final TestStreamingPage<HttpHeaders, HttpHeaders> streamingPage = new TestStreamingPage<>(
+            HttpHeaders.EMPTY,
+            "",
+            List.of(StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
+                    StreamingPage.Chunk.bodyChunk(utf8("abc")),
+                    StreamingPage.Chunk.bodyChunk(utf8("def")),
+                    StreamingPage.Chunk.bodyEnd()));
 
         final List<@NonNull Entity<HttpHeaders>> result = Flowable
             .fromPublisher(FlowAdapters.toPublisher(streamingPage.toCompleteEntities()))
@@ -79,16 +50,18 @@ class StreamingPageTest {
 
     @Test
     void shouldGetCompletePage() {
-        final TestStreamingPage streamingPage = new TestStreamingPage(HttpHeaders.EMPTY, "_---_bnd", List.of(
-            StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
-            StreamingPage.Chunk.bodyChunk(utf8("abc")),
-            StreamingPage.Chunk.bodyChunk(utf8("def")),
-            StreamingPage.Chunk.bodyEnd(),
-            StreamingPage.Chunk.header(HEADERS_2, CONTENT_TYPE_2),
-            StreamingPage.Chunk.bodyChunk(utf8("123")),
-            StreamingPage.Chunk.bodyChunk(utf8("456")),
-            StreamingPage.Chunk.bodyChunk(utf8("78")),
-            StreamingPage.Chunk.bodyEnd()));
+        final TestStreamingPage<HttpHeaders, HttpHeaders> streamingPage = new TestStreamingPage<>(
+            HttpHeaders.EMPTY,
+            "_---_bnd",
+            List.of(StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
+                    StreamingPage.Chunk.bodyChunk(utf8("abc")),
+                    StreamingPage.Chunk.bodyChunk(utf8("def")),
+                    StreamingPage.Chunk.bodyEnd(),
+                    StreamingPage.Chunk.header(HEADERS_2, CONTENT_TYPE_2),
+                    StreamingPage.Chunk.bodyChunk(utf8("123")),
+                    StreamingPage.Chunk.bodyChunk(utf8("456")),
+                    StreamingPage.Chunk.bodyChunk(utf8("78")),
+                    StreamingPage.Chunk.bodyEnd()));
 
         final Page<HttpHeaders, HttpHeaders> result = Single
             .fromCompletionStage(streamingPage.toCompletePage())
@@ -97,8 +70,8 @@ class StreamingPageTest {
         assertThat(result).isEqualTo(new Page<>(
             HttpHeaders.EMPTY,
             "_---_bnd", List.of(
-                new Entity<>(HEADERS_1, Body.fromBytes("abcdef".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)),
-                new Entity<>(HEADERS_2, Body.fromBytes("12345678".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_2)))
+            new Entity<>(HEADERS_1, Body.fromBytes("abcdef".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)),
+            new Entity<>(HEADERS_2, Body.fromBytes("12345678".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_2)))
         ));
     }
 }
