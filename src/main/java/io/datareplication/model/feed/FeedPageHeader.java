@@ -4,6 +4,7 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.ToHttpHeaders;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
  * This class represents the headers of a snapshot page.
  */
 @Value
+@AllArgsConstructor
 public class FeedPageHeader implements ToHttpHeaders {
     /**
      * The page's timestamp. This is equal to the timestamp of the page's final entity.
@@ -38,6 +40,13 @@ public class FeedPageHeader implements ToHttpHeaders {
      * Additional unstructured headers.
      */
     @NonNull HttpHeaders extraHeaders;
+
+    public FeedPageHeader(@NonNull final Timestamp lastModified,
+                          @NonNull final Link self,
+                          @NonNull final Optional<@NonNull Link> prev,
+                          @NonNull final Optional<@NonNull Link> next) {
+        this(lastModified, self, prev, next, HttpHeaders.EMPTY);
+    }
 
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {
