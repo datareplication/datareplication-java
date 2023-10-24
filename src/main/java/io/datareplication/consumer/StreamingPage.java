@@ -74,7 +74,6 @@ public interface StreamingPage<
          *     <li>{@link BodyEnd}: if the entity's body is empty (length 0), no body chunks are emitted and the
          *     header is immediately followed by {@link BodyEnd}</li>
          * </ul>
-         * </p>
          *
          * @param <EntityHeader> the type of the entity headers; see {@link Entity}
          */
@@ -104,7 +103,6 @@ public interface StreamingPage<
          *     <li>{@link BodyChunk}: further body bytes</li>
          *     <li>{@link BodyEnd}: when the end of the entity's body is reached</li>
          * </ul>
-         * </p>
          *
          * @param <EntityHeader> the type of the entity headers; see {@link Entity}
          */
@@ -132,9 +130,8 @@ public interface StreamingPage<
          *     <li>{@link Header}: begin a new entity</li>
          *     <li>nothing: after the {@link BodyEnd} for the final entity on the page, the stream will terminate</li>
          * </ul>
-         * </p>
          *
-         * @param <EntityHeader>
+         * @param <EntityHeader> the type of the entity headers; see {@link Entity}
          */
         @Value
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -182,12 +179,12 @@ public interface StreamingPage<
     }
 
     /**
-     * The page's headers.
+     * @return the page's headers
      */
     @NonNull PageHeader header();
 
     /**
-     * The boundary string for the page's multipart representation.
+     * @return the boundary string for the page's multipart representation
      */
     @NonNull String boundary();
 

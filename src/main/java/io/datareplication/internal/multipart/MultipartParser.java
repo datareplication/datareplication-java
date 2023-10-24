@@ -163,6 +163,8 @@ public class MultipartParser {
     /**
      * Return true if a closing delimiter has been read, i.e. if the document is considered complete. If this is still
      * false when you run out of input, your document was incomplete.
+     *
+     * @return true if the parser is in its end state, false otherwise
      */
     public boolean isFinished() {
         return state == State.EPILOGUE;
