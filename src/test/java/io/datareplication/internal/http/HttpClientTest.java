@@ -86,14 +86,15 @@ class HttpClientTest {
                     .withStatus(404)
                     .withBody("this is not the url you're looking for")
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.ClientError(404));
+            .assertError(new HttpException.ClientError(url, 404));
     }
 
     @Test
@@ -104,14 +105,15 @@ class HttpClientTest {
                     .withStatus(500)
                     .withBody("oops")
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.ServerError(500));
+            .assertError(new HttpException.ServerError(url, 500));
     }
 
     @Test
@@ -120,14 +122,15 @@ class HttpClientTest {
             get("/").willReturn(
                 aResponse().withFault(Fault.EMPTY_RESPONSE)
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 
     @Test
@@ -136,14 +139,15 @@ class HttpClientTest {
             get("/").willReturn(
                 aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 
     @Test
@@ -152,14 +156,15 @@ class HttpClientTest {
             get("/").willReturn(
                 aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE)
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 
     @Test
@@ -168,14 +173,15 @@ class HttpClientTest {
             get("/").willReturn(
                 aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 
     @Test
@@ -186,14 +192,15 @@ class HttpClientTest {
             get("/").willReturn(
                 aResponse().withFixedDelay(500)
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 
     @Test
@@ -206,13 +213,14 @@ class HttpClientTest {
                     .withBody("12345")
                     .withChunkedDribbleDelay(5, 500)
             ));
+        final var url = Url.of(wireMock.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.discarding());
+            .get(url, HttpResponse.BodyHandlers.discarding());
 
         result
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 }

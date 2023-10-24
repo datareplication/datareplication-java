@@ -153,9 +153,10 @@ class PageLoaderTest {
                     .withChunkedDribbleDelay(5, 500)
                     .withHeader("Content-Type", "multipart/mixed; boundary=<random-boundary>")
             ));
+        final var url = Url.of(wireMock.url("/page.multipart"));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(url);
 
         result
             .toFlowable()
@@ -164,7 +165,7 @@ class PageLoaderTest {
             .flatMap(Flowable::fromPublisher)
             .test()
             .await()
-            .assertError(new HttpException.NetworkError(ANY_EXCEPTION));
+            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
     }
 
     @Test

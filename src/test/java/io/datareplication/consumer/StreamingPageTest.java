@@ -6,6 +6,7 @@ import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
+import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleSource;
@@ -52,7 +53,7 @@ class StreamingPageTest {
 
     @Test
     void toCompleteEntities_shouldPassThroughExceptionFromPage() throws InterruptedException {
-        final var expectedException = new HttpException.NetworkError(new IOException("whoops"));
+        final var expectedException = new HttpException.NetworkError(Url.of(""), new IOException("whoops"));
         final var streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "",
@@ -101,7 +102,7 @@ class StreamingPageTest {
 
     @Test
     void toCompletePage_shouldPassThroughExceptionFromPage() throws InterruptedException {
-        final var expectedException = new HttpException.NetworkError(new IOException("whoops"));
+        final var expectedException = new HttpException.NetworkError(Url.of(""), new IOException("whoops"));
         final var streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "",

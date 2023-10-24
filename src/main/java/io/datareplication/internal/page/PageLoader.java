@@ -53,11 +53,12 @@ public class PageLoader {
                     .firstValue(HttpHeader.CONTENT_TYPE)
                     .orElseThrow(PageFormatException.MissingContentTypeHeader::new);
                 final MultipartContentType multipartContentType = MultipartContentType.parse(contentTypeString);
-                return parseMultipartPage(pageHeader, multipartContentType.boundary(), response.body());
+                return parseMultipartPage(url, pageHeader, multipartContentType.boundary(), response.body());
             });
     }
 
-    private StreamingPage<HttpHeaders, HttpHeaders> parseMultipartPage(HttpHeaders pageHeader,
+    private StreamingPage<HttpHeaders, HttpHeaders> parseMultipartPage(Url url,
+                                                                       HttpHeaders pageHeader,
                                                                        String boundary,
                                                                        Flow.Publisher<List<ByteBuffer>> input) {
         final BufferingMultipartParser multipartParser = new BufferingMultipartParser(
@@ -74,7 +75,7 @@ public class PageLoader {
                 if (exc instanceof MultipartException) {
                     return Flowable.error(new PageFormatException.InvalidMultipart(exc));
                 } else if (exc instanceof IOException) {
-                    return Flowable.error(new HttpException.NetworkError(exc));
+                    return Flowable.error(new HttpException.NetworkError(url, exc));
                 } else {
                     return Flowable.error(exc);
                 }

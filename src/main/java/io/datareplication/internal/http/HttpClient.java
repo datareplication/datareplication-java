@@ -28,23 +28,24 @@ public class HttpClient {
                                            @NonNull HttpResponse.BodyHandler<T> bodyHandler) {
         return newRequest(url)
             .map(req -> req.GET().build())
-            .flatMap(request -> send(request, bodyHandler));
+            .flatMap(request -> send(url, request, bodyHandler));
     }
 
-    private <T> Single<HttpResponse<T>> send(HttpRequest request,
+    private <T> Single<HttpResponse<T>> send(Url url,
+                                             HttpRequest request,
                                              HttpResponse.BodyHandler<T> bodyHandler) {
         return Single
             .fromCompletionStage(httpClient.sendAsync(request, bodyHandler))
             .onErrorResumeNext(exc -> {
                 if (exc instanceof CompletionException && exc.getCause() instanceof IOException) {
-                    return Single.error(new HttpException.NetworkError(exc.getCause()));
+                    return Single.error(new HttpException.NetworkError(url, exc.getCause()));
                 } else if (exc instanceof IOException) {
-                    return Single.error(new HttpException.NetworkError(exc));
+                    return Single.error(new HttpException.NetworkError(url, exc));
                 } else {
                     return Single.error(exc);
                 }
             })
-            .flatMap(this::checkResponse);
+            .flatMap(response -> checkResponse(url, response));
         // TODO: retries?
     }
 
@@ -59,11 +60,11 @@ public class HttpClient {
         return result;
     }
 
-    private <T> Single<HttpResponse<T>> checkResponse(HttpResponse<T> response) {
+    private <T> Single<HttpResponse<T>> checkResponse(Url url, HttpResponse<T> response) {
         if (response.statusCode() >= SERVER_ERRORS) {
-            return Single.error(new HttpException.ServerError(response.statusCode()));
+            return Single.error(new HttpException.ServerError(url, response.statusCode()));
         } else if (response.statusCode() >= CLIENT_ERRORS) {
-            return Single.error(new HttpException.ClientError(response.statusCode()));
+            return Single.error(new HttpException.ClientError(url, response.statusCode()));
         } else {
             return Single.just(response);
         }

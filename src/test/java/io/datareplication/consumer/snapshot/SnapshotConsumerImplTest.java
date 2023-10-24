@@ -118,7 +118,7 @@ class SnapshotConsumerImplTest {
     @Test
     void loadSnapshotIndex_shouldThrowHttpException_fromUnderlyingHttpClient() throws InterruptedException {
         when(httpClient.get(eq(SOME_URL), any())).thenReturn(
-            Single.error(new HttpException.ClientError(404))
+            Single.error(new HttpException.ClientError(SOME_URL, 404))
         );
 
         Single
@@ -126,7 +126,7 @@ class SnapshotConsumerImplTest {
             .test()
             .await()
             .assertNoValues()
-            .assertError(new HttpException.ClientError(404));
+            .assertError(new HttpException.ClientError(SOME_URL, 404));
     }
 
     @Test
@@ -198,7 +198,7 @@ class SnapshotConsumerImplTest {
 
     @Test
     void streamPages_shouldPassThroughExceptionsFromPageLoader() throws InterruptedException {
-        final var expectedException = new HttpException.NetworkError(new IOException("oops"));
+        final var expectedException = new HttpException.NetworkError(SOME_URL, new IOException("oops"));
         final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
         when(pageLoader.load(url1)).thenReturn(Single.error(expectedException));
         final var snapshotIndex = new SnapshotIndex(
@@ -273,7 +273,7 @@ class SnapshotConsumerImplTest {
 
     @Test
     void streamEntities_shouldPassThroughExceptionsFromPageLoader() throws InterruptedException {
-        final var expectedException = new HttpException.NetworkError(new IOException("oops"));
+        final var expectedException = new HttpException.NetworkError(SOME_URL, new IOException("oops"));
         final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
         when(pageLoader.load(url1)).thenReturn(Single.error(expectedException));
         final var snapshotIndex = new SnapshotIndex(
@@ -291,7 +291,7 @@ class SnapshotConsumerImplTest {
 
     @Test
     void streamEntities_shouldPassThroughExceptionsFromPage() throws InterruptedException {
-        final var expectedException = new HttpException.NetworkError(new IOException("oops"));
+        final var expectedException = new HttpException.NetworkError(SOME_URL, new IOException("oops"));
         final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
         when(pageLoader.load(url1)).thenReturn(Single.just(
             new TestStreamingPage<>(
