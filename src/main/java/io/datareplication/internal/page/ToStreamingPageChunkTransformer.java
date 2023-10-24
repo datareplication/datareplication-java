@@ -36,10 +36,11 @@ final class ToStreamingPageChunkTransformer {
             return Optional.empty();
         } else if (multipartToken instanceof Token.Header) {
             final Token.Header header = (Token.Header) multipartToken;
-            if (header.name().equalsIgnoreCase(HttpHeader.CONTENT_TYPE)) {
+            final HttpHeader httpHeader = HttpHeader.of(header.name(), header.value());
+            if (httpHeader.nameEquals(HttpHeader.CONTENT_TYPE)) {
                 contentType = Optional.of(ContentType.of(header.value()));
             } else {
-                headers.add(HttpHeader.of(header.name(), header.value()));
+                headers.add(httpHeader);
             }
             return Optional.empty();
         } else if (multipartToken instanceof Token.DataBegin) {

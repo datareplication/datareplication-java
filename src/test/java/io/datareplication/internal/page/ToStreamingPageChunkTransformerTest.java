@@ -67,4 +67,20 @@ class ToStreamingPageChunkTransformerTest {
         assertThatThrownBy(() -> transformer.transform(Token.DataBegin.INSTANCE))
             .isEqualTo(new PageFormatException.MissingContentTypeInEntity(1));
     }
+
+    @Test
+    void shouldCompareContentTypeHeaderNameIgnoringCapitalization() {
+        transformer.transform(Token.PartBegin.INSTANCE);
+        transformer.transform(new Token.Header("Content-Type", "text/plain"));
+        assertThat(transformer.transform(Token.DataBegin.INSTANCE))
+            .contains(StreamingPage.Chunk.header(HttpHeaders.EMPTY,
+                                                 ContentType.of("text/plain")));
+        transformer.transform(Token.PartEnd.INSTANCE);
+
+        transformer.transform(Token.PartBegin.INSTANCE);
+        transformer.transform(new Token.Header("cONTenT-tYpE", "audio/mp3"));
+        assertThat(transformer.transform(Token.DataBegin.INSTANCE))
+            .contains(StreamingPage.Chunk.header(HttpHeaders.EMPTY,
+                                                 ContentType.of("audio/mp3")));
+    }
 }
