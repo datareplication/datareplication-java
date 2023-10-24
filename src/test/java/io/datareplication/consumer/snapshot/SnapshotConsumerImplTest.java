@@ -66,6 +66,18 @@ class SnapshotConsumerImplTest {
         }
     }
 
+    private static boolean compareBodies(final Body a, final Body b) {
+        try (var in1 = a.newInputStream()) {
+            try (var in2 = b.newInputStream()) {
+                return IOUtils.contentEquals(in1, in2)
+                    && a.contentLength() == b.contentLength()
+                    && a.contentType().equals(b.contentType());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("IOException when comparing Body", e);
+        }
+    }
+
     @Test
     void loadSnapshotIndex_shouldLoadSnapshotIndex() throws InterruptedException {
         final var snapshotIndexJson = resourceAsString("__files/snapshot/index.json");
@@ -185,7 +197,25 @@ class SnapshotConsumerImplTest {
     }
 
     @Test
-    void streamEntities_shouldLoadAllPagesAndStreamAllEntities() throws InterruptedException {
+    void streamPages_shouldPassThroughExceptionsFromPageLoader() throws InterruptedException {
+        final var expectedException = new HttpException.NetworkError(new IOException("oops"));
+        final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
+        when(pageLoader.load(url1)).thenReturn(Single.error(expectedException));
+        final var snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("doesn't matter"),
+            Timestamp.now(),
+            List.of(url1));
+
+        Flowable
+            .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamPages(snapshotIndex)))
+            .test()
+            .await()
+            .assertNoValues()
+            .assertError(expectedException);
+    }
+
+    @Test
+    void streamEntities_shouldLoadAllPagesAndStreamAllEntities() {
         final Url url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
         final Url url2 = Url.of("https://example.datareplication.io/snapshotpage/2");
         final HttpHeaders headers1 = HttpHeaders.of(HttpHeader.of("h1", "v1"));
@@ -226,10 +256,11 @@ class SnapshotConsumerImplTest {
             .blockingGet();
 
         assertThat(entities)
-            .usingRecursiveFieldByFieldElementComparator(RecursiveComparisonConfiguration
-                                                             .builder()
-                                                             .withEqualsForType(this::compareBodies, Body.class)
-                                                             .build())
+            .usingRecursiveFieldByFieldElementComparator(
+                RecursiveComparisonConfiguration
+                    .builder()
+                    .withEqualsForType(SnapshotConsumerImplTest::compareBodies, Body.class)
+                    .build())
             .containsExactlyInAnyOrder(
                 new Entity<>(new SnapshotEntityHeader(headers1),
                              Body.fromUtf8("abcdef", ContentType.of("text/plain"))),
@@ -240,15 +271,49 @@ class SnapshotConsumerImplTest {
             );
     }
 
-    private boolean compareBodies(final Body a, final Body b) {
-        try (var in1 = a.newInputStream()) {
-            try (var in2 = b.newInputStream()) {
-                return IOUtils.contentEquals(in1, in2)
-                    && a.contentLength() == b.contentLength()
-                    && a.contentType().equals(b.contentType());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("IOException when comparing Body", e);
-        }
+    @Test
+    void streamEntities_shouldPassThroughExceptionsFromPageLoader() throws InterruptedException {
+        final var expectedException = new HttpException.NetworkError(new IOException("oops"));
+        final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
+        when(pageLoader.load(url1)).thenReturn(Single.error(expectedException));
+        final var snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("doesn't matter"),
+            Timestamp.now(),
+            List.of(url1));
+
+        Flowable
+            .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamEntities(snapshotIndex)))
+            .test()
+            .await()
+            .assertNoValues()
+            .assertError(expectedException);
+    }
+
+    @Test
+    void streamEntities_shouldPassThroughExceptionsFromPage() throws InterruptedException {
+        final var expectedException = new HttpException.NetworkError(new IOException("oops"));
+        final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
+        when(pageLoader.load(url1)).thenReturn(Single.just(
+            new TestStreamingPage<>(
+                HttpHeaders.EMPTY,
+                "",
+                Flowable
+                    .<StreamingPage.Chunk<HttpHeaders>>fromArray(
+                        StreamingPage.Chunk.header(HttpHeaders.EMPTY, ContentType.of("text/plain")),
+                        StreamingPage.Chunk.bodyEnd())
+                    .concatWith(Single.error(expectedException))
+            )
+        ));
+        final var snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("doesn't matter"),
+            Timestamp.now(),
+            List.of(url1));
+
+        Flowable
+            .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamEntities(snapshotIndex)))
+            .test()
+            .await()
+            .assertValueCount(1)
+            .assertError(expectedException);
     }
 }

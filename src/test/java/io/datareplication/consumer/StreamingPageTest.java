@@ -8,10 +8,12 @@ import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.core.SingleSource;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.FlowAdapters;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -29,7 +31,7 @@ class StreamingPageTest {
     }
 
     @Test
-    void shouldStreamCompleteEntities() {
+    void toCompleteEntities_shouldStreamEntities() {
         final TestStreamingPage<HttpHeaders, HttpHeaders> streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "",
@@ -49,7 +51,29 @@ class StreamingPageTest {
     }
 
     @Test
-    void shouldGetCompletePage() {
+    void toCompleteEntities_shouldPassThroughExceptionFromPage() throws InterruptedException {
+        final var expectedException = new HttpException.NetworkError(new IOException("whoops"));
+        final var streamingPage = new TestStreamingPage<>(
+            HttpHeaders.EMPTY,
+            "",
+            Flowable
+                .<StreamingPage.Chunk<HttpHeaders>>fromArray(StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
+                                                             StreamingPage.Chunk.bodyChunk(utf8("ab")),
+                                                             StreamingPage.Chunk.bodyEnd())
+                .concatWith(Single.error(expectedException))
+        );
+
+        Flowable
+            .fromPublisher(FlowAdapters.toPublisher(streamingPage.toCompleteEntities()))
+            .test()
+            .await()
+            .assertValues(new Entity<>(HEADERS_1,
+                                       Body.fromBytes("ab".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)))
+            .assertError(expectedException);
+    }
+
+    @Test
+    void toCompletePage_shouldGetPage() {
         final TestStreamingPage<HttpHeaders, HttpHeaders> streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "_---_bnd",
@@ -63,7 +87,7 @@ class StreamingPageTest {
                     StreamingPage.Chunk.bodyChunk(utf8("78")),
                     StreamingPage.Chunk.bodyEnd()));
 
-        final Page<HttpHeaders, HttpHeaders> result = Single
+        final var result = Single
             .fromCompletionStage(streamingPage.toCompletePage())
             .blockingGet();
 
@@ -73,5 +97,22 @@ class StreamingPageTest {
             new Entity<>(HEADERS_1, Body.fromBytes("abcdef".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)),
             new Entity<>(HEADERS_2, Body.fromBytes("12345678".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_2)))
         ));
+    }
+
+    @Test
+    void toCompletePage_shouldPassThroughExceptionFromPage() throws InterruptedException {
+        final var expectedException = new HttpException.NetworkError(new IOException("whoops"));
+        final var streamingPage = new TestStreamingPage<>(
+            HttpHeaders.EMPTY,
+            "",
+            Flowable.error(expectedException)
+        );
+
+        Single
+            .fromCompletionStage(streamingPage.toCompletePage())
+            .test()
+            .await()
+            .assertNoValues()
+            .assertError(expectedException);
     }
 }
