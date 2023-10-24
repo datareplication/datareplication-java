@@ -18,7 +18,7 @@ import java.util.Optional;
 final class ToStreamingPageChunkTransformer {
     private final List<HttpHeader> headers = new ArrayList<>();
     private Optional<ContentType> contentType = Optional.empty();
-    private int index = 0;
+    private int index;
 
     /**
      * Consume the given {@link Token} and optionally return a {@link StreamingPage.Chunk}.
