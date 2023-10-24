@@ -39,6 +39,7 @@ class SnapshotProducerImplTest {
     private static final int MAX_BYTES_PER_PAGE = 1000;
     private final SnapshotId id = SnapshotId.of("1234");
     private final PageId pageId1 = PageId.of("page1");
+    private final Url page1Url = Url.of("/" + pageId1.value());
     private final Timestamp createdAt = Timestamp.now();
 
     @Test
@@ -79,9 +80,16 @@ class SnapshotProducerImplTest {
                                  @Mock SnapshotIdProvider snapshotIdProvider)
         throws ExecutionException, InterruptedException {
         Entity<SnapshotEntityHeader> firstEntity = entity("there can be only one");
+        Page<SnapshotPageHeader, SnapshotEntityHeader> page1 = new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            List.of(firstEntity)
+        );
         when(snapshotIdProvider.newSnapshotId()).thenReturn(id);
         when(pageIdProvider.newPageId()).thenReturn(pageId1);
         when(snapshotIndexRepository.save(any(SnapshotIndex.class)))
+            .thenReturn(CompletableFuture.supplyAsync(() -> null));
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId1)).thenReturn(page1Url);
+        when(snapshotPageRepository.save(id, pageId1, page1))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = producer(
             snapshotPageRepository,
@@ -96,7 +104,7 @@ class SnapshotProducerImplTest {
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
         assertThat(snapshotIndex)
-            .isEqualTo(new SnapshotIndex(id, createdAt, List.of(Url.of("/" + pageId1.value()))));
+            .isEqualTo(new SnapshotIndex(id, createdAt, List.of(page1Url)));
         verify(snapshotPageRepository).save(
             id,
             pageId1,
