@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 /**
  * {@link StreamingPage} impl that wraps a StreamingPage containing generic {@link HttpHeaders} with specialized header
- * types using conversion functions.
+ * types using a conversion function.
  * @param <PageHeader> the page header output type
  * @param <EntityHeader> the entity header output type
  */
@@ -42,12 +42,6 @@ public class WrappedStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader
                 }
             });
         this.mappedPublisher = FlowAdapters.toFlowPublisher(flowable);
-    }
-
-    public WrappedStreamingPage(final StreamingPage<HttpHeaders, HttpHeaders> underlying,
-                                final Function<HttpHeaders, PageHeader> convertPageHeader,
-                                final Function<HttpHeaders, EntityHeader> convertEntityHeader) {
-        this(underlying, convertPageHeader.apply(underlying.header()), convertEntityHeader);
     }
 
     @Override

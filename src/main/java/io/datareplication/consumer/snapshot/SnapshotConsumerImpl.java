@@ -69,9 +69,8 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
     }
 
     private StreamingPage<SnapshotPageHeader, SnapshotEntityHeader> wrap(StreamingPage<HttpHeaders, HttpHeaders> page) {
-        return new WrappedStreamingPage<SnapshotPageHeader, SnapshotEntityHeader>(
-            page,
-            SnapshotPageHeader::new,
-            SnapshotEntityHeader::new);
+        return new WrappedStreamingPage<>(page,
+                                          new SnapshotPageHeader(page.header()),
+                                          SnapshotEntityHeader::new);
     }
 }
