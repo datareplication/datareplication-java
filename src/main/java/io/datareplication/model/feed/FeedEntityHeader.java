@@ -4,6 +4,7 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.ToHttpHeaders;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 
@@ -11,6 +12,7 @@ import lombok.Value;
  * This class represents the headers of a feed entity.
  */
 @Value
+@AllArgsConstructor
 public class FeedEntityHeader implements ToHttpHeaders {
     /**
      * The entity's timestamp.
@@ -30,6 +32,12 @@ public class FeedEntityHeader implements ToHttpHeaders {
      * Additional unstructured headers.
      */
     @NonNull HttpHeaders extraHeaders;
+
+    public FeedEntityHeader(@NonNull final Timestamp lastModified,
+                            @NonNull final OperationType operationType,
+                            @NonNull final ContentId contentId) {
+        this(lastModified, operationType, contentId, HttpHeaders.EMPTY);
+    }
 
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {
