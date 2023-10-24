@@ -34,7 +34,7 @@ class PageLoaderTest {
         .newInstance()
         .build();
 
-    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build(), 0);
+    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build());
     private final PageLoader pageLoader = new PageLoader(httpClient);
 
     @Test
@@ -143,8 +143,7 @@ class PageLoaderTest {
     @Test
     void shouldThrowHttpException_whenReadTimeoutInBody() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
-            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build(),
-            0);
+            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build());
         final PageLoader pageLoader = new PageLoader(httpClient);
 
         wireMock.stubFor(

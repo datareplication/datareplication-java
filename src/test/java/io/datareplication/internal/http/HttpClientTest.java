@@ -26,7 +26,7 @@ class HttpClientTest {
         .newInstance()
         .build();
 
-    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build(), 0);
+    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build());
 
     @Test
     void shouldGet() {
@@ -181,8 +181,7 @@ class HttpClientTest {
     @Test
     void shouldThrowHttpException_whenHeaderTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
-            Methanol.newBuilder().headersTimeout(Duration.ofMillis(5)).build(),
-            0);
+            Methanol.newBuilder().headersTimeout(Duration.ofMillis(5)).build());
         wireMock.stubFor(
             get("/").willReturn(
                 aResponse().withFixedDelay(500)
@@ -200,8 +199,7 @@ class HttpClientTest {
     @Test
     void shouldThrowHttpException_whenReadTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
-            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build(),
-            0);
+            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build());
         wireMock.stubFor(
             get("/").willReturn(
                 aResponse()

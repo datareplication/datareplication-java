@@ -14,11 +14,9 @@ import java.util.concurrent.CompletionException;
 
 public class HttpClient {
     private final Methanol httpClient;
-    private final int retries;
 
-    public HttpClient(final Methanol httpClient, final int retries) {
+    public HttpClient(final Methanol httpClient) {
         this.httpClient = httpClient;
-        this.retries = retries;
     }
 
     @NonNull
