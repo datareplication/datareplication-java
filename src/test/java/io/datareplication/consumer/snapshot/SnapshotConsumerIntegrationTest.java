@@ -5,18 +5,21 @@ import io.datareplication.model.Entity;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
-import io.reactivex.rxjava3.core.Flowable;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
+import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class SnapshotConsumerIntegrationTest {
     private Url snapshotUrl;
@@ -47,12 +50,19 @@ class SnapshotConsumerIntegrationTest {
             .build();
 
         SnapshotIndex snapshotIndex = consumer.loadSnapshotIndex(snapshotUrl).toCompletableFuture().get();
-        Flowable<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
-            Flowable.fromPublisher(FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)));
+        Flux<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
+            Flux.from(FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)));
 
-        entityFlowable
-            .map(entity -> entity.body().toUtf8())
-            .test()
-            .assertValues("Hello", "World", "I", "am", "a", "Snapshot");
+        var entities = entityFlowable
+            .map(entity -> {
+                try {
+                    return entity.body().toUtf8();
+                } catch (IOException e) {
+                    return fail(e);
+                }
+            })
+            .toIterable();
+
+        assertThat(entities).containsExactly("Hello", "World", "I", "am", "a", "Snapshot");
     }
 }
