@@ -10,11 +10,11 @@ import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.reactivestreams.FlowAdapters;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -40,25 +40,24 @@ class SnapshotProducerImpl implements SnapshotProducer {
         SnapshotId id = snapshotIdProvider.newSnapshotId();
         Timestamp createdAt = Timestamp.of(clock.instant());
 
-
-        CompletionStage<SnapshotIndex> completionStage = Flowable
-            .fromPublisher(FlowAdapters.toPublisher(entities))
+        CompletionStage<SnapshotIndex> completionStage = Flux
+            .from(FlowAdapters.toPublisher(entities))
             // TODO: Replace Buffer with correct perPage grouping
             .buffer(2)
             .flatMap(x -> {
                 PageId pageId = pageIdProvider.newPageId();
                 Url pageUrl = snapshotPageUrlBuilder.pageUrl(id, pageId);
-                return Flowable.fromCompletionStage(snapshotPageRepository.save(id, pageId, pageOf(x)).thenApply(unused -> pageUrl));
+                return Mono.fromCompletionStage(snapshotPageRepository.save(id, pageId, pageOf(x)).thenApply(unused -> pageUrl));
             })
             .reduce(new ArrayList<Url>(), (urls, url) -> {
                 urls.add(url);
                 return urls;
             })
             .map(pages -> new SnapshotIndex(id, createdAt, pages))
-            .flatMap(snapshotIndex -> Single.fromCompletionStage(snapshotIndexRepository.save(snapshotIndex).thenApply(
+            .flatMap(snapshotIndex -> Mono.fromCompletionStage(snapshotIndexRepository.save(snapshotIndex).thenApply(
                 unused -> snapshotIndex
             )))
-            .toCompletionStage();
+            .toFuture();
 
         return completionStage;
     }

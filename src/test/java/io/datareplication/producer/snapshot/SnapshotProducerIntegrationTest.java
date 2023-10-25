@@ -12,7 +12,6 @@ import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
-import io.reactivex.rxjava3.core.Flowable;
 import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.FlowAdapters;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.List;
@@ -42,7 +42,7 @@ class SnapshotProducerIntegrationTest {
                                @Mock PageIdProvider pageIdProvider,
                                @Mock SnapshotIdProvider snapshotIdProvider)
         throws ExecutionException, InterruptedException {
-        Flowable<Entity<SnapshotEntityHeader>> entityFlow = Flowable
+        Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux
             .just("Hello", "World", "I", "am", "a", "snapshot")
             .map(this::toSnapshotEntity);
 
