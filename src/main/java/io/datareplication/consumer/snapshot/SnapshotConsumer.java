@@ -46,6 +46,7 @@ public interface SnapshotConsumer {
         // TODO: HTTP timeouts
         private final List<HttpHeader> additionalHeaders;
         private Supplier<Optional<Authorization>> authSupplier;
+        private int networkConcurrency;
 
         public @NonNull Builder additionalHeaders(@NonNull HttpHeader... headers) {
             additionalHeaders.addAll(Arrays.asList(headers));
@@ -61,17 +62,39 @@ public interface SnapshotConsumer {
             return this;
         }
 
+        /**
+         * <p>Set the maximum number of pages to download concurrently. Defaults to 2.</p>
+         *
+         * <p>Setting this to 1 will will perform downloads fully sequentially; this guarantees ordering, i.e. pages
+         * will be returned exactly in the order they are listed in the index. Any value >1 may return entities and
+         * pages out of order to maximize throughput.</p>
+         *
+         * @param networkConcurrency the number of pages to download concurrently
+         * @throws IllegalArgumentException if the argument is <= 0
+         * @return the builder
+         */
+        public @NonNull Builder networkConcurrency(int networkConcurrency) {
+            if (networkConcurrency <= 0) {
+                throw new IllegalArgumentException("networkConcurrency must be >= 1");
+            }
+            this.networkConcurrency = networkConcurrency;
+            return this;
+        }
+
         public @NonNull SnapshotConsumer build() {
             final var httpClient = new HttpClient(Methanol.newBuilder()
                                                       .autoAcceptEncoding(true)
                                                       .build());
             final var pageLoader = new PageLoader(httpClient);
-            return new SnapshotConsumerImpl(httpClient, pageLoader);
+            return new SnapshotConsumerImpl(httpClient,
+                                            pageLoader,
+                                            networkConcurrency);
         }
     }
 
     static @NonNull Builder builder() {
         return new Builder(new ArrayList<>(),
-                           Optional::empty);
+                           Optional::empty,
+                           2);
     }
 }

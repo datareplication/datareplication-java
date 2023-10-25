@@ -22,9 +22,9 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.FlowAdapters;
@@ -34,7 +34,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,8 +48,12 @@ class SnapshotConsumerImplTest {
     private HttpClient httpClient;
     @Mock
     private PageLoader pageLoader;
-    @InjectMocks
     private SnapshotConsumerImpl snapshotConsumer;
+
+    @BeforeEach
+    void setup() {
+        snapshotConsumer = new SnapshotConsumerImpl(httpClient, pageLoader, 1);
+    }
 
     private static final Url SOME_URL = Url.of("https://example.datareplication.io/snapshotindex.json");
 
@@ -85,9 +88,9 @@ class SnapshotConsumerImplTest {
             SnapshotId.of("example"),
             Timestamp.of(Instant.parse("2023-10-07T15:00:00.000Z")),
             List.of(
-                Url.of("https://localhost:8443/1.content.multipart"),
-                Url.of("https://localhost:8443/2.content.multipart"),
-                Url.of("https://localhost:8443/3.content.multipart")
+                Url.of("http://localhost:8443/1.content.multipart"),
+                Url.of("http://localhost:8443/2.content.multipart"),
+                Url.of("http://localhost:8443/3.content.multipart")
             )
         );
         when(httpClient.get(eq(SOME_URL), any())).thenReturn(
@@ -164,7 +167,6 @@ class SnapshotConsumerImplTest {
 
         final var pages = Flowable
             .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamPages(snapshotIndex)))
-            .sorted(Comparator.comparing(StreamingPage::boundary))
             .toList()
             .blockingGet();
 
@@ -261,12 +263,73 @@ class SnapshotConsumerImplTest {
                     .builder()
                     .withEqualsForType(SnapshotConsumerImplTest::compareBodies, Body.class)
                     .build())
-            .containsExactlyInAnyOrder(
+            .containsExactly(
                 new Entity<>(new SnapshotEntityHeader(headers1),
                              Body.fromUtf8("abcdef", ContentType.of("text/plain"))),
                 new Entity<>(new SnapshotEntityHeader(headers2),
                              Body.fromUtf8("1234", ContentType.of("audio/mp3"))),
                 new Entity<>(new SnapshotEntityHeader(headers3),
+                             Body.fromUtf8("testtesttest", ContentType.of("audio/ogg")))
+            );
+    }
+
+    @Test
+    void streamEntities_shouldLoadAllPagesAndStreamAllEntitiesConcurrently() {
+        snapshotConsumer = new SnapshotConsumerImpl(httpClient, pageLoader, 10);
+
+        final Url url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
+        final Url url2 = Url.of("https://example.datareplication.io/snapshotpage/2");
+        final Url url3 = Url.of("https://example.datareplication.io/snapshotpage/3");
+        final Url url4 = Url.of("https://example.datareplication.io/snapshotpage/4");
+        final Url url5 = Url.of("https://example.datareplication.io/snapshotpage/5");
+        final HttpHeaders headers1 = HttpHeaders.of(HttpHeader.of("h1", "v1"));
+        when(pageLoader.load(url1)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    Collections.emptyList())
+        ));
+        when(pageLoader.load(url2)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    Collections.emptyList())
+        ));
+        when(pageLoader.load(url3)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    Collections.emptyList())
+        ));
+        when(pageLoader.load(url4)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    Collections.emptyList())
+        ));
+        when(pageLoader.load(url5)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    List.of(
+                                        StreamingPage.Chunk.header(headers1, ContentType.of("audio/ogg")),
+                                        StreamingPage.Chunk.bodyChunk(utf8("testtesttest")),
+                                        StreamingPage.Chunk.bodyEnd()
+                                    ))
+        ));
+        final SnapshotIndex snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("doesn't matter"),
+            Timestamp.now(),
+            List.of(url1, url2, url3, url4, url5));
+
+        final List<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities = Flowable
+            .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamEntities(snapshotIndex)))
+            .toList()
+            .blockingGet();
+
+        assertThat(entities)
+            .usingRecursiveFieldByFieldElementComparator(
+                RecursiveComparisonConfiguration
+                    .builder()
+                    .withEqualsForType(SnapshotConsumerImplTest::compareBodies, Body.class)
+                    .build())
+            .containsExactly(
+                new Entity<>(new SnapshotEntityHeader(headers1),
                              Body.fromUtf8("testtesttest", ContentType.of("audio/ogg")))
             );
     }

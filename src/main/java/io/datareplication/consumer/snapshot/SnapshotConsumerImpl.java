@@ -22,13 +22,14 @@ import java.util.concurrent.Flow;
 class SnapshotConsumerImpl implements SnapshotConsumer {
     private final HttpClient httpClient;
     private final PageLoader pageLoader;
+    private final int networkConcurrency;
 
-    // TODO: make configurable in some form
-    private static final int NETWORK_CONCURRENCY = 4;
-
-    SnapshotConsumerImpl(final HttpClient httpClient, final PageLoader pageLoader) {
+    SnapshotConsumerImpl(final HttpClient httpClient,
+                         final PageLoader pageLoader,
+                         final int networkConcurrency) {
         this.httpClient = httpClient;
         this.pageLoader = pageLoader;
+        this.networkConcurrency = networkConcurrency;
     }
 
     @Override
@@ -36,6 +37,7 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
         return httpClient
             .get(url, HttpResponse.BodyHandlers.ofByteArray())
             .map(response -> Body.fromBytes(response.body()))
+            // TODO: wrap exception?
             .map(SnapshotIndex::fromJson)
             .toCompletionStage();
     }
@@ -44,16 +46,16 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
     public @NonNull Flow.Publisher<
         @NonNull StreamingPage<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>
         > streamPages(@NonNull final SnapshotIndex snapshotIndex) {
-        return FlowAdapters.toFlowPublisher(streamPagesInternal(snapshotIndex, NETWORK_CONCURRENCY));
+        return FlowAdapters.toFlowPublisher(streamPagesInternal(snapshotIndex, networkConcurrency));
     }
 
     @Override
     public @NonNull Flow.Publisher<
         @NonNull Entity<@NonNull SnapshotEntityHeader>
         > streamEntities(@NonNull final SnapshotIndex snapshotIndex) {
-        final var flowable = streamPagesInternal(snapshotIndex, NETWORK_CONCURRENCY)
+        final var flowable = streamPagesInternal(snapshotIndex, networkConcurrency)
             .map(page -> FlowAdapters.toPublisher(page.toCompleteEntities()))
-            .flatMap(Flowable::fromPublisher, NETWORK_CONCURRENCY);
+            .flatMap(Flowable::fromPublisher, networkConcurrency);
         return FlowAdapters.toFlowPublisher(flowable);
     }
 
