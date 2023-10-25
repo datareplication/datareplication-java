@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
+import java.util.concurrent.atomic.AtomicLong;
 
-// TODO: impl the impl
 @AllArgsConstructor
 class SnapshotProducerImpl implements SnapshotProducer {
     private final SnapshotPageUrlBuilder snapshotPageUrlBuilder;
@@ -37,29 +37,36 @@ class SnapshotProducerImpl implements SnapshotProducer {
     public @NonNull CompletionStage<@NonNull SnapshotIndex> produce(
         final @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities
     ) {
+        AtomicLong currentBytesForPage = new AtomicLong(0L);
         SnapshotId id = snapshotIdProvider.newSnapshotId();
         Timestamp createdAt = Timestamp.of(clock.instant());
 
-        CompletionStage<SnapshotIndex> completionStage = Flux
+        return Flux
             .from(FlowAdapters.toPublisher(entities))
-            // TODO: Replace Buffer with correct perPage grouping
-            .buffer(2)
-            .flatMap(x -> {
+            .bufferUntil(entity -> {
+                long bytes = entity.body().contentLength();
+                if (currentBytesForPage.addAndGet(bytes) > maxBytesPerPage) {
+                    currentBytesForPage.set(bytes);
+                    return true;
+                } else {
+                    return false;
+                }
+            }, true)
+            .flatMap(entityList -> {
                 PageId pageId = pageIdProvider.newPageId();
                 Url pageUrl = snapshotPageUrlBuilder.pageUrl(id, pageId);
-                return Mono.fromCompletionStage(snapshotPageRepository.save(id, pageId, pageOf(x)).thenApply(unused -> pageUrl));
+                return Mono.fromCompletionStage(snapshotPageRepository.save(id, pageId, pageOf(entityList)))
+                    .then(Mono.fromCallable(() -> pageUrl));
             })
             .reduce(new ArrayList<Url>(), (urls, url) -> {
                 urls.add(url);
                 return urls;
             })
             .map(pages -> new SnapshotIndex(id, createdAt, pages))
-            .flatMap(snapshotIndex -> Mono.fromCompletionStage(snapshotIndexRepository.save(snapshotIndex).thenApply(
-                unused -> snapshotIndex
-            )))
+            .flatMap(snapshotIndex -> Mono.fromCompletionStage(snapshotIndexRepository.save(snapshotIndex))
+                .then(Mono.fromCallable(() -> snapshotIndex))
+            )
             .toFuture();
-
-        return completionStage;
     }
 
     private Page<SnapshotPageHeader, SnapshotEntityHeader> pageOf(final List<Entity<SnapshotEntityHeader>> entities) {

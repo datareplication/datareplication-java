@@ -130,7 +130,7 @@ class SnapshotProducerImplTest {
                                @Mock SnapshotIdProvider snapshotIdProvider)
         throws ExecutionException, InterruptedException {
         List<Entity<SnapshotEntityHeader>> entities = Stream
-            .of("Hello", "World", "I", "am", "a", "snapshot").map(this::entity)
+            .of("Hello", "World", "I", "am", "a", "Snapshot").map(this::entity)
             .collect(Collectors.toUnmodifiableList());
         Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(entities);
         when(snapshotIdProvider.newSnapshotId()).thenReturn(id);
@@ -155,16 +155,19 @@ class SnapshotProducerImplTest {
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex)
-            .isEqualTo(new SnapshotIndex(id, createdAt, List.of(page1Url, page2Url, page3Url, page4Url)));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
-        List<Page<SnapshotPageHeader, SnapshotEntityHeader>> allPages = pageArgumentCaptor.getAllValues();
+        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url, page2Url, page3Url, page4Url);
+        assertThat(snapshotIndex.id()).isEqualTo(id);
+        assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
-        assertThat(allPages.get(0).entities()).isEqualTo(List.of(entity("Hello")));
-        assertThat(allPages.get(1).entities()).isEqualTo(List.of(entity("World")));
-        assertThat(allPages.get(2).entities())
+        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
+        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entity("Hello")));
+        verify(snapshotPageRepository).save(eq(id), eq(pageId2), pageArgumentCaptor.capture());
+        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entity("World")));
+        verify(snapshotPageRepository).save(eq(id), eq(pageId3), pageArgumentCaptor.capture());
+        assertThat(pageArgumentCaptor.getValue().entities())
             .isEqualTo(Stream.of("I", "am", "a").map(this::entity).collect(Collectors.toUnmodifiableList()));
-        assertThat(allPages.get(3).entities()).isEqualTo(List.of(entity("Snapshot")));
+        verify(snapshotPageRepository).save(eq(id), eq(pageId4), pageArgumentCaptor.capture());
+        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entity("Snapshot")));
     }
 
     private SnapshotProducer producer(SnapshotPageRepository snapshotPageRepository,
