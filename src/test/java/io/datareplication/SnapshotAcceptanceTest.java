@@ -14,12 +14,12 @@ import io.datareplication.producer.snapshot.SnapshotPageUrlBuilder;
 import io.datareplication.producer.snapshot.SnapshotProducer;
 import io.datareplication.producer.snapshot.testhelper.SnapshotIndexInMemoryRepository;
 import io.datareplication.producer.snapshot.testhelper.SnapshotPageInMemoryRepository;
-import io.reactivex.rxjava3.core.Flowable;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.exceptions.misusing.UnfinishedStubbingException;
 import org.reactivestreams.FlowAdapters;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -29,6 +29,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SnapshotAcceptanceTest {
     @RegisterExtension
@@ -39,7 +40,7 @@ public class SnapshotAcceptanceTest {
     @Test
     void shouldPublishAndConsumeSnapshot() throws ExecutionException, InterruptedException, IOException {
         //region Produce Snapshot
-        Flowable<Entity<SnapshotEntityHeader>> entityFlow = Flowable
+        Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux
             .just("Hello", "World", "I", "am", "a", "snapshot")
             .map(this::toSnapshotEntity);
         SnapshotIndexInMemoryRepository snapshotIndexRepository = new SnapshotIndexInMemoryRepository();
@@ -65,8 +66,8 @@ public class SnapshotAcceptanceTest {
             .builder()
             // TODO: Additional configuration
             .build();
-        Flowable<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
-            Flowable.fromPublisher(
+        Flux<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
+            Flux.from(
                 FlowAdapters.toPublisher(snapshotConsumer.streamEntities(producedSnapshotIndex))
             );
         //endregion
@@ -78,10 +79,16 @@ public class SnapshotAcceptanceTest {
         assertThat(producedSnapshotIndex).isEqualTo(snapshotIndexFromUrl);
         //endregion
         //region Assert consumed entities
-        entityFlowable
-            .map(entity -> entity.body().toUtf8())
-            .test()
-            .assertValues("Hello", "World", "I", "am", "a", "Snapshot");
+        var entities = entityFlowable
+            .map(entity -> {
+                try {
+                    return entity.body().toUtf8();
+                } catch (IOException e) {
+                    return fail(e);
+                }
+            })
+            .toIterable();
+        assertThat(entities).containsExactly("Hello", "World", "I", "am", "a", "Snapshot");
         //endregion
     }
 

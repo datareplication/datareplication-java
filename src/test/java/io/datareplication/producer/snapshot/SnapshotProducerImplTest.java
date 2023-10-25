@@ -3,7 +3,6 @@ package io.datareplication.producer.snapshot;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
-import io.reactivex.rxjava3.core.Flowable;
 import lombok.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.FlowAdapters;
+import reactor.core.publisher.Flux;
 
 import java.time.Clock;
 import java.time.ZoneId;
@@ -53,7 +53,7 @@ class SnapshotProducerImplTest {
                 Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
 
         CompletionStage<@NonNull SnapshotIndex> produce =
-            snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flowable.empty()));
+            snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flux.empty()));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
         assertThat(snapshotIndex)
