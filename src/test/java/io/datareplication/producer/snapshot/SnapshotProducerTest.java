@@ -22,8 +22,8 @@ class SnapshotProducerTest {
             .builder()
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
-            .maxBytesPerPage(2)
-            // TODO: Additional configuration
+            .maxBytesPerPage(5)
+            .maxEntriesPerPage(2)
             .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
 
         assertThat(snapshotProducer).isInstanceOf(SnapshotProducerImpl.class);

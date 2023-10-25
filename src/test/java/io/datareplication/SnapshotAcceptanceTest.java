@@ -41,7 +41,7 @@ public class SnapshotAcceptanceTest {
     void shouldPublishAndConsumeSnapshot() throws ExecutionException, InterruptedException, IOException {
         //region Produce Snapshot
         Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux
-            .just("Hello", "World", "I", "am", "a", "snapshot")
+            .just("Hello", "World", "I", "am", "a", "Snapshot")
             .map(this::toSnapshotEntity);
         SnapshotIndexInMemoryRepository snapshotIndexRepository = new SnapshotIndexInMemoryRepository();
         SnapshotPageInMemoryRepository snapshotPageRepository = new SnapshotPageInMemoryRepository();
@@ -53,7 +53,8 @@ public class SnapshotAcceptanceTest {
         };
         SnapshotProducer snapshotProducer = SnapshotProducer
             .builder()
-            // TODO: Additional configuration
+            .maxEntriesPerPage(2)
+            .maxBytesPerPage(5)
             .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
         SnapshotIndex producedSnapshotIndex = snapshotProducer
             .produce(FlowAdapters.toFlowPublisher(entityFlow))
