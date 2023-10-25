@@ -63,4 +63,14 @@ public class PageFormatException extends ConsumerException {
             this.cause = cause;
         }
     }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class MissingContentTypeInEntity extends PageFormatException {
+        private final int index;
+
+        public MissingContentTypeInEntity(int index) {
+            super(String.format("Content-Type header is missing from entity at index %s", index));
+            this.index = index;
+        }
+    }
 }

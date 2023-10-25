@@ -29,6 +29,11 @@
             <version>2.14.0</version>
         </dependency>
         <dependency>
+            <groupId>com.github.mizosoft.methanol</groupId>
+            <artifactId>methanol</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>2.0.9</version>

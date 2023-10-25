@@ -40,6 +40,7 @@ public interface SnapshotConsumer {
     class Builder {
         // TODO: threadpool
         // TODO: parallelism setting?
+        // TODO: HTTP timeouts
         private final List<HttpHeader> additionalHeaders;
         private Supplier<Optional<Authorization>> authSupplier;
 

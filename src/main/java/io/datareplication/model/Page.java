@@ -23,20 +23,20 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
      */
     @NonNull PageHeader header;
     /**
-     * The list of entities for this page.
-     */
-    @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities;
-    /**
      * The boundary string for the page's multipart representation.
      */
     @NonNull String boundary;
+    /**
+     * The list of entities for this page.
+     */
+    @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities;
 
     public Page(@NonNull PageHeader header,
-                @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities,
-                @NonNull String boundary) {
+                @NonNull String boundary,
+                @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
         this.header = header;
-        this.entities = List.copyOf(entities);
         this.boundary = boundary;
+        this.entities = List.copyOf(entities);
     }
 
     /**
@@ -47,7 +47,7 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
      */
     public Page(@NonNull PageHeader header,
                 @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
-        this(header, entities, randomBoundary());
+        this(header, randomBoundary(), entities);
     }
 
     private static @NonNull String randomBoundary() {
