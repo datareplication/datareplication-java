@@ -31,6 +31,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
     private final PageIdProvider pageIdProvider;
     private final SnapshotIdProvider snapshotIdProvider;
     private final long maxBytesPerPage;
+    private final long maxEntriesPerPage;
     private final Clock clock;
 
     @Override
@@ -38,6 +39,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
         final @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities
     ) {
         AtomicLong currentBytesForPage = new AtomicLong(0L);
+        AtomicLong currentEntriesPerPage = new AtomicLong(0L);
         SnapshotId id = snapshotIdProvider.newSnapshotId();
         Timestamp createdAt = Timestamp.of(clock.instant());
 
@@ -45,8 +47,10 @@ class SnapshotProducerImpl implements SnapshotProducer {
             .from(FlowAdapters.toPublisher(entities))
             .bufferUntil(entity -> {
                 long bytes = entity.body().contentLength();
-                if (currentBytesForPage.addAndGet(bytes) > maxBytesPerPage) {
+                if (currentBytesForPage.addAndGet(bytes) > maxBytesPerPage
+                    || currentEntriesPerPage.incrementAndGet() > maxEntriesPerPage) {
                     currentBytesForPage.set(bytes);
+                    currentEntriesPerPage.set(1L);
                     return true;
                 } else {
                     return false;
