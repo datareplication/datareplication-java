@@ -1,6 +1,9 @@
 package io.datareplication.consumer.snapshot;
 
+import com.github.mizosoft.methanol.Methanol;
 import io.datareplication.consumer.Authorization;
+import io.datareplication.internal.http.HttpClient;
+import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.Url;
@@ -59,7 +62,11 @@ public interface SnapshotConsumer {
         }
 
         public @NonNull SnapshotConsumer build() {
-            throw new UnsupportedOperationException("not implemented");
+            final var httpClient = new HttpClient(Methanol.newBuilder()
+                                                      .autoAcceptEncoding(true)
+                                                      .build());
+            final var pageLoader = new PageLoader(httpClient);
+            return new SnapshotConsumerImpl(httpClient, pageLoader);
         }
     }
 

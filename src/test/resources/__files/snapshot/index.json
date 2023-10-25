@@ -2,8 +2,8 @@
   "id": "example",
   "createdAt": "2023-10-07T15:00:00.000Z",
   "pages": [
-    "https://localhost:8443/1.content.multipart",
-    "https://localhost:8443/2.content.multipart",
-    "https://localhost:8443/3.content.multipart"
+    "http://localhost:8443/1.content.multipart",
+    "http://localhost:8443/2.content.multipart",
+    "http://localhost:8443/3.content.multipart"
   ]
 }
