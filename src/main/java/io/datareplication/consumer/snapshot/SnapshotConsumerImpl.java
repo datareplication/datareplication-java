@@ -1,5 +1,6 @@
 package io.datareplication.consumer.snapshot;
 
+import io.datareplication.consumer.ConsumerException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.page.PageLoader;
@@ -12,6 +13,9 @@ import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.exceptions.CompositeException;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.reactivestreams.FlowAdapters;
 
@@ -19,18 +23,12 @@ import java.net.http.HttpResponse;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class SnapshotConsumerImpl implements SnapshotConsumer {
     private final HttpClient httpClient;
     private final PageLoader pageLoader;
     private final int networkConcurrency;
-
-    SnapshotConsumerImpl(final HttpClient httpClient,
-                         final PageLoader pageLoader,
-                         final int networkConcurrency) {
-        this.httpClient = httpClient;
-        this.pageLoader = pageLoader;
-        this.networkConcurrency = networkConcurrency;
-    }
+    private final boolean delayErrors;
 
     @Override
     public @NonNull CompletionStage<@NonNull SnapshotIndex> loadSnapshotIndex(@NonNull final Url url) {
@@ -46,7 +44,10 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
     public @NonNull Flow.Publisher<
         @NonNull StreamingPage<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>
         > streamPages(@NonNull final SnapshotIndex snapshotIndex) {
-        return FlowAdapters.toFlowPublisher(streamPagesInternal(snapshotIndex, networkConcurrency));
+        return FlowAdapters.toFlowPublisher(
+            streamPagesInternal(snapshotIndex, networkConcurrency)
+                .onErrorResumeNext(this::rewrapCompositeErrors)
+        );
     }
 
     @Override
@@ -55,7 +56,8 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
         > streamEntities(@NonNull final SnapshotIndex snapshotIndex) {
         final var flowable = streamPagesInternal(snapshotIndex, networkConcurrency)
             .map(page -> FlowAdapters.toPublisher(page.toCompleteEntities()))
-            .flatMap(Flowable::fromPublisher, networkConcurrency);
+            .flatMap(Flowable::fromPublisher, delayErrors, networkConcurrency)
+            .onErrorResumeNext(this::rewrapCompositeErrors);
         return FlowAdapters.toFlowPublisher(flowable);
     }
 
@@ -64,13 +66,23 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
         > streamPagesInternal(final SnapshotIndex snapshotIndex, int networkConcurrency) {
         return Flowable
             .fromIterable(snapshotIndex.pages())
-            .flatMapSingle(pageLoader::load, false, networkConcurrency)
-            .map(this::wrap);
+            .flatMapSingle(pageLoader::load, delayErrors, networkConcurrency)
+            .map(this::wrapPage);
     }
 
-    private StreamingPage<SnapshotPageHeader, SnapshotEntityHeader> wrap(StreamingPage<HttpHeaders, HttpHeaders> page) {
+    private StreamingPage<SnapshotPageHeader, SnapshotEntityHeader> wrapPage(StreamingPage<HttpHeaders, HttpHeaders> page) {
         return new WrappedStreamingPage<>(page,
                                           new SnapshotPageHeader(page.header()),
                                           SnapshotEntityHeader::new);
+    }
+
+    private <T> Flowable<T> rewrapCompositeErrors(Throwable exception) {
+        if (exception instanceof CompositeException) {
+            final var compositeException = (CompositeException) exception;
+            final var rewrapped = new ConsumerException.CollectedErrors(compositeException.getExceptions());
+            return Flowable.error(rewrapped);
+        } else {
+            return Flowable.error(exception);
+        }
     }
 }

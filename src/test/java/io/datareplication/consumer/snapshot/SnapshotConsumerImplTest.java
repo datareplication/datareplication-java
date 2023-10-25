@@ -1,5 +1,6 @@
 package io.datareplication.consumer.snapshot;
 
+import io.datareplication.consumer.ConsumerException;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.consumer.TestStreamingPage;
@@ -52,7 +53,10 @@ class SnapshotConsumerImplTest {
 
     @BeforeEach
     void setup() {
-        snapshotConsumer = new SnapshotConsumerImpl(httpClient, pageLoader, 1);
+        snapshotConsumer = new SnapshotConsumerImpl(httpClient,
+                                                    pageLoader,
+                                                    1,
+                                                    false);
     }
 
     private static final Url SOME_URL = Url.of("https://example.datareplication.io/snapshotindex.json");
@@ -275,7 +279,10 @@ class SnapshotConsumerImplTest {
 
     @Test
     void streamEntities_shouldLoadAllPagesAndStreamAllEntitiesConcurrently() {
-        snapshotConsumer = new SnapshotConsumerImpl(httpClient, pageLoader, 10);
+        snapshotConsumer = new SnapshotConsumerImpl(httpClient,
+                                                    pageLoader,
+                                                    10,
+                                                    false);
 
         final Url url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
         final Url url2 = Url.of("https://example.datareplication.io/snapshotpage/2");
@@ -378,5 +385,86 @@ class SnapshotConsumerImplTest {
             .await()
             .assertValueCount(1)
             .assertError(expectedException);
+    }
+
+    @Test
+    void streamPages_shouldDelayExceptionsFromPageLoader() throws InterruptedException {
+        snapshotConsumer = new SnapshotConsumerImpl(httpClient,
+                                                    pageLoader,
+                                                    1,
+                                                    true);
+
+        final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
+        final var url2 = Url.of("https://example.datareplication.io/snapshotpage/2");
+        final var url3 = Url.of("https://example.datareplication.io/snapshotpage/3");
+        final var exc1 = new HttpException.NetworkError(url1, new IOException("haha"));
+        final var exc2 = new HttpException.NetworkError(url2, new IOException("hehe"));
+        final var exc3 = new HttpException.NetworkError(url3, new IOException("hoho"));
+        final var goodUrl = Url.of("https://example.datareplication.io/snapshotpage/good");
+        when(pageLoader.load(url1)).thenReturn(Single.error(exc1));
+        when(pageLoader.load(url2)).thenReturn(Single.error(exc2));
+        when(pageLoader.load(url3)).thenReturn(Single.error(exc3));
+        when(pageLoader.load(goodUrl)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "good-page-boundary",
+                                    Collections.emptyList())
+        ));
+        final var snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("doesn't matter"),
+            Timestamp.now(),
+            List.of(goodUrl, url1, goodUrl, goodUrl, url2, url3, goodUrl));
+
+        Flowable
+            .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamPages(snapshotIndex)))
+            .test()
+            .await()
+            .assertValueCount(4)
+            .assertError(new ConsumerException.CollectedErrors(List.of(exc1, exc2, exc3)));
+    }
+
+    @Test
+    void streamEntities_shouldDelayExceptionsFromPage() throws InterruptedException {
+        snapshotConsumer = new SnapshotConsumerImpl(httpClient,
+                                                    pageLoader,
+                                                    1,
+                                                    true);
+
+        final var url1 = Url.of("https://example.datareplication.io/snapshotpage/1");
+        final var url2 = Url.of("https://example.datareplication.io/snapshotpage/2");
+        final var url3 = Url.of("https://example.datareplication.io/snapshotpage/3");
+        final var exc1 = new HttpException.NetworkError(url1, new IOException("oops"));
+        final var exc3 = new HttpException.NetworkError(url3, new IOException("whoops"));
+        when(pageLoader.load(url1)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    Flowable.error(exc1))
+        ));
+        when(pageLoader.load(url2)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    List.of(
+                                        StreamingPage.Chunk.header(HttpHeaders.EMPTY, ContentType.of("")),
+                                        StreamingPage.Chunk.bodyEnd()
+                                    ))
+        ));
+        when(pageLoader.load(url3)).thenReturn(Single.just(
+            new TestStreamingPage<>(HttpHeaders.EMPTY,
+                                    "",
+                                    Flowable.<StreamingPage.Chunk<HttpHeaders>>fromArray(
+                                            StreamingPage.Chunk.header(HttpHeaders.EMPTY, ContentType.of("")),
+                                            StreamingPage.Chunk.bodyEnd())
+                                        .concatWith(Single.error(exc3)))
+        ));
+        final SnapshotIndex snapshotIndex = new SnapshotIndex(
+            SnapshotId.of("doesn't matter"),
+            Timestamp.now(),
+            List.of(url1, url2, url3));
+
+        Flowable
+            .fromPublisher(FlowAdapters.toPublisher(snapshotConsumer.streamEntities(snapshotIndex)))
+            .test()
+            .await()
+            .assertValueCount(2)
+            .assertError(new ConsumerException.CollectedErrors(List.of(exc1, exc3)));
     }
 }

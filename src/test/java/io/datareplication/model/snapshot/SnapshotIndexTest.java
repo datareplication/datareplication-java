@@ -47,9 +47,9 @@ class SnapshotIndexTest {
         assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("example"));
         assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-10-07T15:00:00Z")));
         assertThat(snapshotIndex.pages()).contains(
-            Url.of("https://localhost:8443/1.content.multipart"),
-            Url.of("https://localhost:8443/2.content.multipart"),
-            Url.of("https://localhost:8443/3.content.multipart")
+            Url.of("http://localhost:8443/1.content.multipart"),
+            Url.of("http://localhost:8443/2.content.multipart"),
+            Url.of("http://localhost:8443/3.content.multipart")
         );
     }
 

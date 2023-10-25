@@ -47,6 +47,7 @@ public interface SnapshotConsumer {
         private final List<HttpHeader> additionalHeaders;
         private Supplier<Optional<Authorization>> authSupplier;
         private int networkConcurrency;
+        private boolean delayErrors;
 
         public @NonNull Builder additionalHeaders(@NonNull HttpHeader... headers) {
             additionalHeaders.addAll(Arrays.asList(headers));
@@ -70,14 +71,30 @@ public interface SnapshotConsumer {
          * pages out of order to maximize throughput.</p>
          *
          * @param networkConcurrency the number of pages to download concurrently
-         * @throws IllegalArgumentException if the argument is <= 0
          * @return the builder
+         * @throws IllegalArgumentException if the argument is <= 0
          */
         public @NonNull Builder networkConcurrency(int networkConcurrency) {
             if (networkConcurrency <= 0) {
                 throw new IllegalArgumentException("networkConcurrency must be >= 1");
             }
             this.networkConcurrency = networkConcurrency;
+            return this;
+        }
+
+        /**
+         * <p>When enabled, collect all errors and raise them at the end after all other pages/entities have been
+         * consumed. Defaults to false, i.e. any error terminates the stream immediately.</p>
+         *
+         * <p>When this setting is enabled, errors while downloading and parsing pages will be silently collected. Once
+         * all pages have been downloaded and returned, the collected exceptions will be raised on the stream wrapped
+         * in a {@link io.datareplication.consumer.ConsumerException.CollectedErrors} object.</p>
+         *
+         * @param delayErrors when true, delay all errors until the entire snapshot has been processed
+         * @return the builder
+         */
+        public @NonNull Builder delayErrors(boolean delayErrors) {
+            this.delayErrors = delayErrors;
             return this;
         }
 
@@ -88,13 +105,15 @@ public interface SnapshotConsumer {
             final var pageLoader = new PageLoader(httpClient);
             return new SnapshotConsumerImpl(httpClient,
                                             pageLoader,
-                                            networkConcurrency);
+                                            networkConcurrency,
+                                            delayErrors);
         }
     }
 
     static @NonNull Builder builder() {
         return new Builder(new ArrayList<>(),
                            Optional::empty,
-                           2);
+                           2,
+                           false);
     }
 }
