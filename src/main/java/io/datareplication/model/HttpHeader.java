@@ -76,6 +76,17 @@ public class HttpHeader {
     }
 
     /**
+     * Return true if the given header name refers to the same header as this one. Since HTTP header names are
+     * case-insensitive, this performs a case-insensitive comparison between the string and this header's name.
+     *
+     * @param other the string to compare to
+     * @return true if the given string matches this header's name
+     */
+    public boolean nameEquals(@NonNull String other) {
+        return this.name.equalsIgnoreCase(other);
+    }
+
+    /**
      * Create a header with the given name and single value.
      *
      * @param name  the header name

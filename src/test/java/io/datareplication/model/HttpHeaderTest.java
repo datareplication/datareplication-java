@@ -62,6 +62,27 @@ class HttpHeaderTest {
     }
 
     @Test
+    void nameEquals_shouldBeTrueIfNamesAreEqual() {
+        final HttpHeader header = HttpHeader.of("test-header", "value");
+
+        assertThat(header.nameEquals("test-header")).isTrue();
+    }
+
+    @Test
+    void nameEquals_shouldBeTrueIfNamesAreEqualIgnoringCase() {
+        final HttpHeader header = HttpHeader.of("tesT-headeR", "value");
+
+        assertThat(header.nameEquals("Test-Header")).isTrue();
+    }
+
+    @Test
+    void nameEquals_shouldBeFalseIfNamesAreNotEqual() {
+        final HttpHeader header = HttpHeader.of("test1", "value");
+
+        assertThat(header.nameEquals("test2")).isFalse();
+    }
+
+    @Test
     void shouldCreateContentTypeHeader() {
         final HttpHeader header = HttpHeader.contentType(ContentType.of("application/json"));
 

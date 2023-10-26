@@ -42,4 +42,14 @@ public abstract class MultipartException extends RuntimeException {
             this.offset = offset;
         }
     }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class UnexpectedEndOfInput extends MultipartException {
+        private final long offset;
+
+        public UnexpectedEndOfInput(long offset) {
+            super(String.format("unexpected end of input at %d", offset));
+            this.offset = offset;
+        }
+    }
 }

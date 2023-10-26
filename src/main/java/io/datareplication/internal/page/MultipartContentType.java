@@ -1,19 +1,32 @@
-package io.datareplication.internal.http;
+package io.datareplication.internal.page;
 
 import io.datareplication.consumer.PageFormatException;
+import io.datareplication.internal.http.HeaderFieldValue;
 import lombok.Value;
 
 import java.util.Locale;
 
+/**
+ * A multipart media type and boundary parameter.
+ */
 @Value
-class MultipartContentType {
+public class MultipartContentType {
     private static final String SUPPORTED_MEDIA_TYPE_CATEGORY = "multipart";
     private static final char MULTIPART_TYPE_DELIMITER = '/';
     private static final String BOUNDARY_KEY = "boundary";
     String mediaType;
     String boundary;
 
-    static MultipartContentType parse(String contentType) {
+    /**
+     * Parse a Content-Type header value.
+     *
+     * @param contentType the Content-Type string to parse
+     * @throws PageFormatException.UnparseableContentTypeHeader when the header value can't be parsed at all
+     * @throws PageFormatException.InvalidContentType when the content type is not multipart/*
+     * @throws PageFormatException.NoBoundaryInContentTypeHeader when the boundary parameter is missing
+     * @return the parsed Content-Type
+     */
+    public static MultipartContentType parse(String contentType) {
         HeaderFieldValue parsed;
         try {
             parsed = HeaderFieldValue.parse(contentType);
