@@ -30,7 +30,7 @@ class PageLoaderTest {
     private static final Throwable ANY_EXCEPTION = new RuntimeException();
 
     @RegisterExtension
-    static final WireMockExtension wireMock = WireMockExtension
+    static final WireMockExtension WM = WireMockExtension
         .newInstance()
         .build();
 
@@ -39,7 +39,7 @@ class PageLoaderTest {
 
     @Test
     void shouldDownloadAndParseMultipartPage() {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/1.content.multipart")
@@ -48,7 +48,7 @@ class PageLoaderTest {
             ));
 
         final StreamingPage<HttpHeaders, HttpHeaders> page = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")))
+            .load(Url.of(WM.url("/page.multipart")))
             .blockingGet();
 
         assertThat(page.header()).contains(
@@ -88,7 +88,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenNoContentTypeHeader() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/1.content.multipart")
@@ -96,7 +96,7 @@ class PageLoaderTest {
             ));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(Url.of(WM.url("/page.multipart")));
 
         result
             .test()
@@ -106,7 +106,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenNotMultipart() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/1.content.multipart")
@@ -114,7 +114,7 @@ class PageLoaderTest {
             ));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(Url.of(WM.url("/page.multipart")));
 
         result
             .test()
@@ -124,7 +124,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenNoBoundaryInContentType() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/1.content.multipart")
@@ -132,7 +132,7 @@ class PageLoaderTest {
             ));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(Url.of(WM.url("/page.multipart")));
 
         result
             .test()
@@ -146,14 +146,14 @@ class PageLoaderTest {
             Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build());
         final PageLoader pageLoader = new PageLoader(httpClient);
 
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/1.content.multipart")
                     .withChunkedDribbleDelay(5, 500)
                     .withHeader("Content-Type", "multipart/mixed; boundary=<random-boundary>")
             ));
-        final var url = Url.of(wireMock.url("/page.multipart"));
+        final var url = Url.of(WM.url("/page.multipart"));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
             .load(url);
@@ -170,7 +170,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenInvalidMultipart() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBody("--boundary\ncontent-type:blub\n\nbody\n\n--boundary...oops, other things")
@@ -178,7 +178,7 @@ class PageLoaderTest {
             ));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(Url.of(WM.url("/page.multipart")));
 
         result
             .toFlowable()
@@ -193,7 +193,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenIncompleteMultipart() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBody("--boundary\ncontent-type: text/plain\n\nbodybodybody")
@@ -201,7 +201,7 @@ class PageLoaderTest {
             ));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(Url.of(WM.url("/page.multipart")));
 
         result
             .toFlowable()
@@ -216,7 +216,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenNoContentTypeInEntityHeader() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBody("--boundary\nheader: value\n\nbody\n\n--boundary--")
@@ -224,7 +224,7 @@ class PageLoaderTest {
             ));
 
         final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")));
+            .load(Url.of(WM.url("/page.multipart")));
 
         result
             .toFlowable()
@@ -239,7 +239,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenInvalidMultipartInChunkStream() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBody("--boundary\ncontent-type:blub\n\nbody\n--boundary...oops, other things")
@@ -247,7 +247,7 @@ class PageLoaderTest {
             ));
 
         final StreamingPage<HttpHeaders, HttpHeaders> page = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")))
+            .load(Url.of(WM.url("/page.multipart")))
             .blockingGet();
 
         Flowable
@@ -264,7 +264,7 @@ class PageLoaderTest {
 
     @Test
     void shouldThrowPageFormatException_whenInvalidMultipartInCompletePage() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
                     .withBody("--boundary\ncontent-type:blub\n\nbody\n--boundary...oops, other things")
@@ -272,7 +272,7 @@ class PageLoaderTest {
             ));
 
         final StreamingPage<HttpHeaders, HttpHeaders> page = pageLoader
-            .load(Url.of(wireMock.url("/page.multipart")))
+            .load(Url.of(WM.url("/page.multipart")))
             .blockingGet();
 
         Single

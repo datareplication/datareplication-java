@@ -30,54 +30,54 @@ class SnapshotConsumerIntegrationTest {
     private Url allPagesMissingSnapshotUrl;
 
     @RegisterExtension
-    static final WireMockExtension wireMock = WireMockExtension
+    static final WireMockExtension WM = WireMockExtension
         .newInstance()
         .options(wireMockConfig().port(8443))
         .build();
 
     @BeforeEach
     void setUp() {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/index.json").willReturn(
                 aResponse().withBodyFile("snapshot/index.json")
             ));
-        wireMock.stubFor(
+        WM.stubFor(
             get("/1.content.multipart").willReturn(
                 aResponse()
                     .withHeader("Content-Type", PAGE_CONTENT_TYPE)
                     .withBodyFile("snapshot/1.content.multipart")
             ));
-        wireMock.stubFor(
+        WM.stubFor(
             get("/2.content.multipart").willReturn(
                 aResponse()
                     .withHeader("Content-Type", PAGE_CONTENT_TYPE)
                     .withBodyFile("snapshot/2.content.multipart")
             ));
-        wireMock.stubFor(
+        WM.stubFor(
             get("/3.content.multipart").willReturn(
                 aResponse()
                     .withHeader("Content-Type", PAGE_CONTENT_TYPE)
                     .withBodyFile("snapshot/3.content.multipart")
             ));
-        validSnapshotUrl = Url.of(wireMock.url("/index.json"));
+        validSnapshotUrl = Url.of(WM.url("/index.json"));
 
-        wireMock.stubFor(get("/not-found-1.content.multipart").willReturn(aResponse().withStatus(404)));
-        wireMock.stubFor(get("/not-found-2.content.multipart").willReturn(aResponse().withStatus(404)));
-        wireMock.stubFor(get("/not-found-3.content.multipart").willReturn(aResponse().withStatus(404)));
+        WM.stubFor(get("/not-found-1.content.multipart").willReturn(aResponse().withStatus(404)));
+        WM.stubFor(get("/not-found-2.content.multipart").willReturn(aResponse().withStatus(404)));
+        WM.stubFor(get("/not-found-3.content.multipart").willReturn(aResponse().withStatus(404)));
 
-        wireMock.stubFor(
+        WM.stubFor(
             get("/onePageMissingIndex.json").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/onePageMissingIndex.json")
             ));
-        onePageMissingSnapshotUrl = Url.of(wireMock.url("/onePageMissingIndex.json"));
+        onePageMissingSnapshotUrl = Url.of(WM.url("/onePageMissingIndex.json"));
 
-        wireMock.stubFor(
+        WM.stubFor(
             get("/allPagesMissingIndex.json").willReturn(
                 aResponse()
                     .withBodyFile("snapshot/allPagesMissingIndex.json")
             ));
-        allPagesMissingSnapshotUrl = Url.of(wireMock.url("/allPagesMissingIndex.json"));
+        allPagesMissingSnapshotUrl = Url.of(WM.url("/allPagesMissingIndex.json"));
     }
 
     @Test

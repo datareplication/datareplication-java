@@ -3,9 +3,7 @@ package io.datareplication.consumer;
 import io.datareplication.model.ToHttpHeaders;
 import io.reactivex.rxjava3.core.Flowable;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Value;
 import org.reactivestreams.FlowAdapters;
 
 import java.util.List;

@@ -30,7 +30,7 @@ public class ConsumerException extends RuntimeException {
             final var bld = new StringBuilder();
             bld.append("Multiple exceptions occurred:");
             bld.append(System.lineSeparator());
-            for (var exc: exceptions) {
+            for (var exc : exceptions) {
                 bld.append(" * ");
                 bld.append(exc.getClass().getName());
                 bld.append(": ");

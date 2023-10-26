@@ -19,13 +19,13 @@ class ConsumerExceptionCollectedErrorsTest {
         ));
 
         assertThat(collectedErrors.getMessage()).isEqualTo(
-            "Multiple exceptions occurred:" + NEWLINE +
-                " * java.lang.RuntimeException: exception 1" + NEWLINE +
-                "   caused by: java.io.IOException: cause 1" + NEWLINE +
-                " * java.lang.IllegalArgumentException: 123" + NEWLINE +
-                " * java.lang.IllegalStateException: exception 2" + NEWLINE +
-                "   caused by: java.lang.RuntimeException: cause 2" + NEWLINE +
-                "   caused by: java.lang.Exception: cause 3" + NEWLINE
+            "Multiple exceptions occurred:" + NEWLINE
+                + " * java.lang.RuntimeException: exception 1" + NEWLINE
+                + "   caused by: java.io.IOException: cause 1" + NEWLINE
+                + " * java.lang.IllegalArgumentException: 123" + NEWLINE
+                + " * java.lang.IllegalStateException: exception 2" + NEWLINE
+                + "   caused by: java.lang.RuntimeException: cause 2" + NEWLINE
+                + "   caused by: java.lang.Exception: cause 3" + NEWLINE
         );
     }
 }

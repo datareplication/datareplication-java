@@ -22,7 +22,7 @@ class HttpClientTest {
     private static final Throwable ANY_EXCEPTION = new RuntimeException();
 
     @RegisterExtension
-    static final WireMockExtension wireMock = WireMockExtension
+    static final WireMockExtension WM = WireMockExtension
         .newInstance()
         .build();
 
@@ -30,7 +30,7 @@ class HttpClientTest {
 
     @Test
     void shouldGet() {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse()
                     .withStatus(200)
@@ -40,7 +40,7 @@ class HttpClientTest {
         );
 
         final HttpResponse<String> response = httpClient
-            .get(Url.of(wireMock.url("/")), HttpResponse.BodyHandlers.ofString())
+            .get(Url.of(WM.url("/")), HttpResponse.BodyHandlers.ofString())
             .blockingGet();
 
         assertThat(response.statusCode()).isEqualTo(200);
@@ -80,13 +80,13 @@ class HttpClientTest {
 
     @Test
     void shouldThrowHttpException_whenHttp404() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse()
                     .withStatus(404)
                     .withBody("this is not the url you're looking for")
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -99,13 +99,13 @@ class HttpClientTest {
 
     @Test
     void shouldThrowHttpException_whenHttp500() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse()
                     .withStatus(500)
                     .withBody("oops")
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -118,11 +118,11 @@ class HttpClientTest {
 
     @Test
     void shouldThrowHttpException_whenEmptyResponse() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.EMPTY_RESPONSE)
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -135,11 +135,11 @@ class HttpClientTest {
 
     @Test
     void shouldThrowHttpException_whenMalformedResponseChunk() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -152,11 +152,11 @@ class HttpClientTest {
 
     @Test
     void shouldThrowHttpException_whenRandomDataThenClose() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE)
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -169,11 +169,11 @@ class HttpClientTest {
 
     @Test
     void shouldThrowHttpException_whenConnectionResetByPeer() throws InterruptedException {
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -188,11 +188,11 @@ class HttpClientTest {
     void shouldThrowHttpException_whenHeaderTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
             Methanol.newBuilder().headersTimeout(Duration.ofMillis(5)).build());
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse().withFixedDelay(500)
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
@@ -207,13 +207,13 @@ class HttpClientTest {
     void shouldThrowHttpException_whenReadTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
             Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build());
-        wireMock.stubFor(
+        WM.stubFor(
             get("/").willReturn(
                 aResponse()
                     .withBody("12345")
                     .withChunkedDribbleDelay(5, 500)
             ));
-        final var url = Url.of(wireMock.url("/"));
+        final var url = Url.of(WM.url("/"));
 
         final Single<HttpResponse<Void>> result = httpClient
             .get(url, HttpResponse.BodyHandlers.discarding());
