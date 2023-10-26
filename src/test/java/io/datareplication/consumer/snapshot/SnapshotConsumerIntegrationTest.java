@@ -1,6 +1,7 @@
 package io.datareplication.consumer.snapshot;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.datareplication.consumer.Authorization;
 import io.datareplication.consumer.ConsumerException;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.model.Body;
@@ -25,6 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SnapshotConsumerIntegrationTest {
     private static final String PAGE_CONTENT_TYPE = "multipart/mixed; boundary=<random-boundary>";
 
+    private static final String USERNAME = "snapshot-test-user";
+    private static final String PASSWORD = "snapshot-test-password";
+    private static final Authorization AUTH = Authorization.basic(USERNAME, PASSWORD);
+
     private Url validSnapshotUrl;
     private Url onePageMissingSnapshotUrl;
     private Url allPagesMissingSnapshotUrl;
@@ -38,23 +43,23 @@ class SnapshotConsumerIntegrationTest {
     @BeforeEach
     void setUp() {
         WM.stubFor(
-            get("/index.json").willReturn(
+            get("/index.json").withBasicAuth(USERNAME, PASSWORD).willReturn(
                 aResponse().withBodyFile("snapshot/index.json")
             ));
         WM.stubFor(
-            get("/1.content.multipart").willReturn(
+            get("/1.content.multipart").withBasicAuth(USERNAME, PASSWORD).willReturn(
                 aResponse()
                     .withHeader("Content-Type", PAGE_CONTENT_TYPE)
                     .withBodyFile("snapshot/1.content.multipart")
             ));
         WM.stubFor(
-            get("/2.content.multipart").willReturn(
+            get("/2.content.multipart").withBasicAuth(USERNAME, PASSWORD).willReturn(
                 aResponse()
                     .withHeader("Content-Type", PAGE_CONTENT_TYPE)
                     .withBodyFile("snapshot/2.content.multipart")
             ));
         WM.stubFor(
-            get("/3.content.multipart").willReturn(
+            get("/3.content.multipart").withBasicAuth(USERNAME, PASSWORD).willReturn(
                 aResponse()
                     .withHeader("Content-Type", PAGE_CONTENT_TYPE)
                     .withBodyFile("snapshot/3.content.multipart")
@@ -66,14 +71,14 @@ class SnapshotConsumerIntegrationTest {
         WM.stubFor(get("/not-found-3.content.multipart").willReturn(aResponse().withStatus(404)));
 
         WM.stubFor(
-            get("/onePageMissingIndex.json").willReturn(
+            get("/onePageMissingIndex.json").withBasicAuth(USERNAME, PASSWORD).willReturn(
                 aResponse()
                     .withBodyFile("snapshot/onePageMissingIndex.json")
             ));
         onePageMissingSnapshotUrl = Url.of(WM.url("/onePageMissingIndex.json"));
 
         WM.stubFor(
-            get("/allPagesMissingIndex.json").willReturn(
+            get("/allPagesMissingIndex.json").withBasicAuth(USERNAME, PASSWORD).willReturn(
                 aResponse()
                     .withBodyFile("snapshot/allPagesMissingIndex.json")
             ));
@@ -84,7 +89,7 @@ class SnapshotConsumerIntegrationTest {
     void shouldConsumeSnapshot() {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
-            // TODO: additional configuration?
+            .authorization(() -> AUTH)
             .build();
 
         final var entities = Single
@@ -151,6 +156,7 @@ class SnapshotConsumerIntegrationTest {
     void shouldThrowException_whenOnePageIsMissing_delayErrors() throws InterruptedException {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
+            .authorization(AUTH)
             .delayErrors(true)
             .networkConcurrency(1)
             .build();
@@ -171,6 +177,7 @@ class SnapshotConsumerIntegrationTest {
     void shouldThrowException_whenAllPagesAreMissing() throws InterruptedException {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
+            .authorization(AUTH)
             .build();
 
         Single
@@ -187,6 +194,7 @@ class SnapshotConsumerIntegrationTest {
     void shouldThrowException_whenAllPagesAreMissing_delayErrors() throws InterruptedException {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
+            .authorization(AUTH)
             .delayErrors(true)
             .build();
 

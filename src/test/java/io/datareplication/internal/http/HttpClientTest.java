@@ -1,8 +1,8 @@
 package io.datareplication.internal.http;
 
-import com.github.mizosoft.methanol.Methanol;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.datareplication.consumer.Authorization;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Single;
@@ -13,8 +13,10 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,7 +28,7 @@ class HttpClientTest {
         .newInstance()
         .build();
 
-    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build());
+    private final HttpClient httpClient = new HttpClient();
 
     @Test
     void shouldGet() {
@@ -187,7 +189,10 @@ class HttpClientTest {
     @Test
     void shouldThrowHttpException_whenHeaderTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
-            Methanol.newBuilder().headersTimeout(Duration.ofMillis(5)).build());
+            AuthSupplier.none(),
+            Optional.of(Duration.ofMillis(5)),
+            Optional.empty()
+        );
         WM.stubFor(
             get("/").willReturn(
                 aResponse().withFixedDelay(500)
@@ -206,7 +211,10 @@ class HttpClientTest {
     @Test
     void shouldThrowHttpException_whenReadTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
-            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build());
+            AuthSupplier.none(),
+            Optional.empty(),
+            Optional.of(Duration.ofMillis(5))
+        );
         WM.stubFor(
             get("/").willReturn(
                 aResponse()
@@ -222,5 +230,44 @@ class HttpClientTest {
             .test()
             .await()
             .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
+    }
+
+    @Test
+    void shouldCallAuthSupplierForEveryRequest() throws InterruptedException {
+        final HttpClient httpClient = new HttpClient(
+            (url) -> {
+                final var idx = url.value().lastIndexOf('/');
+                return Optional.of(Authorization.of("Test", url.value().substring(idx)));
+            },
+            Optional.empty(),
+            Optional.empty()
+        );
+
+        WM.stubFor(
+            get("/1").withHeader("Authorization", equalTo("Test /1")).willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody("1"))
+        );
+        WM.stubFor(
+            get("/2").withHeader("Authorization", equalTo("Test /2")).willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody("2"))
+        );
+
+        httpClient
+            .get(Url.of(WM.url("/1")), HttpResponse.BodyHandlers.ofString())
+            .map(HttpResponse::body)
+            .test()
+            .await()
+            .assertValue("1");
+
+        httpClient
+            .get(Url.of(WM.url("/2")), HttpResponse.BodyHandlers.ofString())
+            .map(HttpResponse::body)
+            .test()
+            .await()
+            .assertValue("2");
     }
 }

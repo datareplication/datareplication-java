@@ -1,7 +1,7 @@
 package io.datareplication.consumer.snapshot;
 
-import com.github.mizosoft.methanol.Methanol;
 import io.datareplication.consumer.Authorization;
+import io.datareplication.internal.http.AuthSupplier;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Entity;
@@ -39,24 +39,43 @@ public interface SnapshotConsumer {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {
         private final List<HttpHeader> additionalHeaders;
-        private Supplier<Optional<Authorization>> authSupplier;
+        private AuthSupplier authSupplier;
         private int networkConcurrency;
         private boolean delayErrors;
 
         // TODO: HTTP timeouts
-        // TODO: impl headers and auth
+        // TODO: impl headers
 
         public @NonNull Builder additionalHeaders(@NonNull HttpHeader... headers) {
             additionalHeaders.addAll(Arrays.asList(headers));
             return this;
         }
 
+        /**
+         * Use the given {@link Authorization} for every HTTP request made by this consumer.
+         * @param authorization the Authorization to use for HTTP requests
+         * @return this builder
+         */
         public @NonNull Builder authorization(@NonNull Authorization authorization) {
-            return this.authorization(() -> authorization);
+            authSupplier = AuthSupplier.constant(authorization);
+            return this;
         }
 
-        public @NonNull Builder authorization(@NonNull Supplier<@NonNull Authorization> authorization) {
-            authSupplier = () -> Optional.of(authorization.get());
+        /**
+         * <p>Use the given function to get the {@link Authorization} to use for HTTP requests made by this consumer.
+         * The function is called once for each request.</p>
+         *
+         * <p>The given function is expected to return quickly to avoid holding up requests. Because of that, the
+         * function should not perform any network requests. If your service requires a fresh authentication token
+         * periodically, the recommended approach is to perform the refresh out-of-band (e.g. on a separate thread
+         * with a timer) and write the new token to a shared memory location that the supplier function then reads
+         * from.</p>
+         *
+         * @param authorizationSupplier a function returning the Authorization to use for HTTP requests
+         * @return this builder
+         */
+        public @NonNull Builder authorization(@NonNull Supplier<@NonNull Authorization> authorizationSupplier) {
+            authSupplier = AuthSupplier.supplier(authorizationSupplier);
             return this;
         }
 
@@ -96,9 +115,9 @@ public interface SnapshotConsumer {
         }
 
         public @NonNull SnapshotConsumer build() {
-            final var httpClient = new HttpClient(Methanol.newBuilder()
-                                                      .autoAcceptEncoding(true)
-                                                      .build());
+            final var httpClient = new HttpClient(authSupplier,
+                                                  Optional.empty(),
+                                                  Optional.empty());
             final var pageLoader = new PageLoader(httpClient);
             return new SnapshotConsumerImpl(httpClient,
                                             pageLoader,
@@ -109,7 +128,7 @@ public interface SnapshotConsumer {
 
     static @NonNull Builder builder() {
         return new Builder(new ArrayList<>(),
-                           Optional::empty,
+                           AuthSupplier.none(),
                            2,
                            false);
     }

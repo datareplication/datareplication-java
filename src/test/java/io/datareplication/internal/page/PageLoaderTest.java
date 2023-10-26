@@ -1,10 +1,10 @@
 package io.datareplication.internal.page;
 
-import com.github.mizosoft.methanol.Methanol;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
+import io.datareplication.internal.http.AuthSupplier;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.multipart.MultipartException;
 import io.datareplication.model.ContentType;
@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -34,7 +35,7 @@ class PageLoaderTest {
         .newInstance()
         .build();
 
-    private final HttpClient httpClient = new HttpClient(Methanol.newBuilder().build());
+    private final HttpClient httpClient = new HttpClient();
     private final PageLoader pageLoader = new PageLoader(httpClient);
 
     @Test
@@ -143,7 +144,10 @@ class PageLoaderTest {
     @Test
     void shouldThrowHttpException_whenReadTimeoutInBody() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
-            Methanol.newBuilder().readTimeout(Duration.ofMillis(10)).build());
+            AuthSupplier.none(),
+            Optional.empty(),
+            Optional.of(Duration.ofMillis(10))
+        );
         final PageLoader pageLoader = new PageLoader(httpClient);
 
         WM.stubFor(
