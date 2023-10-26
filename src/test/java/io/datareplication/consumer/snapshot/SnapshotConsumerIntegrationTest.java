@@ -1,8 +1,10 @@
 package io.datareplication.consumer.snapshot;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.datareplication.consumer.ConsumerException;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.model.Body;
+import io.datareplication.model.BodyTestUtil;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
@@ -10,14 +12,10 @@ import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.reactivex.rxjava3.core.Single;
-import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
-
-import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -31,23 +29,10 @@ class SnapshotConsumerIntegrationTest {
     private Url onePageMissingSnapshotUrl;
     private Url allPagesMissingSnapshotUrl;
 
-    @RegisterExtension
-    final WireMockExtension wireMock = WireMockExtension
+    @RegisterExtension final WireMockExtension wireMock = WireMockExtension
         .newInstance()
         .options(wireMockConfig().port(8443))
         .build();
-
-    private static boolean compareBodies(final Body a, final Body b) {
-        try (var in1 = a.newInputStream()) {
-            try (var in2 = b.newInputStream()) {
-                return IOUtils.contentEquals(in1, in2)
-                    && a.contentLength() == b.contentLength()
-                    && a.contentType().equals(b.contentType());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("IOException when comparing Body", e);
-        }
-    }
 
     @BeforeEach
     void setUp() {
@@ -75,6 +60,10 @@ class SnapshotConsumerIntegrationTest {
             ));
         validSnapshotUrl = Url.of(wireMock.url("/index.json"));
 
+        wireMock.stubFor(get("/not-found-1.content.multipart").willReturn(aResponse().withStatus(404)));
+        wireMock.stubFor(get("/not-found-2.content.multipart").willReturn(aResponse().withStatus(404)));
+        wireMock.stubFor(get("/not-found-3.content.multipart").willReturn(aResponse().withStatus(404)));
+
         wireMock.stubFor(
             get("/onePageMissingIndex.json").willReturn(
                 aResponse()
@@ -91,10 +80,10 @@ class SnapshotConsumerIntegrationTest {
     }
 
     @Test
-    void shouldConsumeSnapshot() throws InterruptedException {
+    void shouldConsumeSnapshot() {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
-            // TODO: Additional configuration
+            // TODO: additional configuration?
             .build();
 
         final var entities = Single
@@ -104,11 +93,7 @@ class SnapshotConsumerIntegrationTest {
             .blockingGet();
 
         assertThat(entities)
-            .usingRecursiveFieldByFieldElementComparator(
-                RecursiveComparisonConfiguration
-                    .builder()
-                    .withEqualsForType(SnapshotConsumerIntegrationTest::compareBodies, Body.class)
-                    .build())
+            .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
             .containsExactlyInAnyOrder(
                 new Entity<>(
                     new SnapshotEntityHeader(HttpHeaders.of(
@@ -162,10 +147,11 @@ class SnapshotConsumerIntegrationTest {
     }
 
     @Test
-    void shouldThrowException_whenOnePageIsMissing() throws InterruptedException {
+    void shouldThrowException_whenOnePageIsMissing_delayErrors() throws InterruptedException {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
-            // TODO: Additional configuration
+            .delayErrors(true)
+            .networkConcurrency(1)
             .build();
 
         Single
@@ -174,8 +160,9 @@ class SnapshotConsumerIntegrationTest {
             .map(entity -> entity.body().toUtf8())
             .test()
             .await()
+            .assertValues("hello", "world", "I", "am")
             .assertError(new HttpException.ClientError(
-                Url.of("http://localhost:8443/not-found.content.multipart"),
+                Url.of("http://localhost:8443/not-found-1.content.multipart"),
                 404));
     }
 
@@ -183,7 +170,6 @@ class SnapshotConsumerIntegrationTest {
     void shouldThrowException_whenAllPagesAreMissing() throws InterruptedException {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
-            // TODO: Additional configuration
             .build();
 
         Single
@@ -194,5 +180,36 @@ class SnapshotConsumerIntegrationTest {
             .await()
             .assertNoValues()
             .assertError(HttpException.ClientError.class);
+    }
+
+    @Test
+    void shouldThrowException_whenAllPagesAreMissing_delayErrors() throws InterruptedException {
+        SnapshotConsumer consumer = SnapshotConsumer
+            .builder()
+            .delayErrors(true)
+            .build();
+
+        Single
+            .fromCompletionStage(consumer.loadSnapshotIndex(allPagesMissingSnapshotUrl))
+            .flatMapPublisher(snapshotIndex -> FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)))
+            .map(entity -> entity.body().toUtf8())
+            .test()
+            .await()
+            .assertNoValues()
+            .assertError(exc -> {
+                if (!(exc instanceof ConsumerException.CollectedErrors)) {
+                    return false;
+                }
+                final var collectedErrors = (ConsumerException.CollectedErrors) exc;
+                if (collectedErrors.exceptions().size() != 3) {
+                    return false;
+                }
+                for (var inner : collectedErrors.exceptions()) {
+                    if (!(inner instanceof HttpException.ClientError)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
     }
 }

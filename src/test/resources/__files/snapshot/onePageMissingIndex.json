@@ -4,6 +4,6 @@
     "pages": [
         "http://localhost:8443/1.content.multipart",
         "http://localhost:8443/2.content.multipart",
-        "http://localhost:8443/not-found.content.multipart"
+        "http://localhost:8443/not-found-1.content.multipart"
     ]
 }

@@ -8,6 +8,7 @@ import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.http.TestHttpResponse;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Body;
+import io.datareplication.model.BodyTestUtil;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
@@ -22,7 +23,6 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -70,18 +70,6 @@ class SnapshotConsumerImplTest {
             return IOUtils.toString(Objects.requireNonNull(stream), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private static boolean compareBodies(final Body a, final Body b) {
-        try (var in1 = a.newInputStream()) {
-            try (var in2 = b.newInputStream()) {
-                return IOUtils.contentEquals(in1, in2)
-                    && a.contentLength() == b.contentLength()
-                    && a.contentType().equals(b.contentType());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("IOException when comparing Body", e);
         }
     }
 
@@ -262,11 +250,7 @@ class SnapshotConsumerImplTest {
             .blockingGet();
 
         assertThat(entities)
-            .usingRecursiveFieldByFieldElementComparator(
-                RecursiveComparisonConfiguration
-                    .builder()
-                    .withEqualsForType(SnapshotConsumerImplTest::compareBodies, Body.class)
-                    .build())
+            .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
             .containsExactly(
                 new Entity<>(new SnapshotEntityHeader(headers1),
                              Body.fromUtf8("abcdef", ContentType.of("text/plain"))),
@@ -330,11 +314,7 @@ class SnapshotConsumerImplTest {
             .blockingGet();
 
         assertThat(entities)
-            .usingRecursiveFieldByFieldElementComparator(
-                RecursiveComparisonConfiguration
-                    .builder()
-                    .withEqualsForType(SnapshotConsumerImplTest::compareBodies, Body.class)
-                    .build())
+            .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
             .containsExactly(
                 new Entity<>(new SnapshotEntityHeader(headers1),
                              Body.fromUtf8("testtesttest", ContentType.of("audio/ogg")))
