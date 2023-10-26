@@ -64,12 +64,12 @@ public interface SnapshotConsumer {
          * <p>Set the maximum number of pages to download concurrently. Defaults to 2.</p>
          *
          * <p>Setting this to 1 will will perform downloads fully sequentially; this guarantees ordering, i.e. pages
-         * will be returned exactly in the order they are listed in the index. Any value >1 may return entities and
+         * will be returned exactly in the order they are listed in the index. Any value &gt;1 may return entities and
          * pages out of order to maximize throughput.</p>
          *
          * @param networkConcurrency the number of pages to download concurrently
          * @return the builder
-         * @throws IllegalArgumentException if the argument is <= 0
+         * @throws IllegalArgumentException if the argument is &lt;= 0
          */
         public @NonNull Builder networkConcurrency(int networkConcurrency) {
             if (networkConcurrency <= 0) {
