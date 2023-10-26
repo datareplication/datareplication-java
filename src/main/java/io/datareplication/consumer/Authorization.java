@@ -7,6 +7,8 @@ import lombok.Value;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+// TODO: docs/tests
+
 @Value(staticConstructor = "of")
 public class Authorization {
     @NonNull String scheme;

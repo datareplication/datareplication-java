@@ -6,6 +6,7 @@ import lombok.NonNull;
 
 import java.util.List;
 
+// TODO: docs
 public class ConsumerException extends RuntimeException {
     ConsumerException(String message) {
         super(message);
@@ -25,7 +26,6 @@ public class ConsumerException extends RuntimeException {
             this.exceptions = List.copyOf(exceptions);
         }
 
-        // TODO: test
         private static String buildMessage(List<Throwable> exceptions) {
             final var bld = new StringBuilder();
             bld.append("Multiple exceptions occurred:");

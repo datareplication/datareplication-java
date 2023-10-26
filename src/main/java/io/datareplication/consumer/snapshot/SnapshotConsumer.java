@@ -23,14 +23,11 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 import java.util.function.Supplier;
 
+// TODO: docs
+
 public interface SnapshotConsumer {
-    // TODO: CompletionStage?
-    // TODO: error handling
     @NonNull CompletionStage<@NonNull SnapshotIndex> loadSnapshotIndex(@NonNull Url url);
 
-    // TODO: parallelism setting
-
-    // TODO: error handling
     @NonNull Flow.Publisher<
         @NonNull StreamingPage<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>
         > streamPages(@NonNull SnapshotIndex snapshotIndex);
@@ -41,13 +38,13 @@ public interface SnapshotConsumer {
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {
-        // TODO: threadpool
-        // TODO: parallelism setting?
-        // TODO: HTTP timeouts
         private final List<HttpHeader> additionalHeaders;
         private Supplier<Optional<Authorization>> authSupplier;
         private int networkConcurrency;
         private boolean delayErrors;
+
+        // TODO: HTTP timeouts
+        // TODO: impl headers and auth
 
         public @NonNull Builder additionalHeaders(@NonNull HttpHeader... headers) {
             additionalHeaders.addAll(Arrays.asList(headers));

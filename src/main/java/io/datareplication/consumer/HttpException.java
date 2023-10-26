@@ -4,6 +4,7 @@ import io.datareplication.model.Url;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
+// TODO: docs
 public class HttpException extends ConsumerException {
     private HttpException(final String message) {
         super(message);

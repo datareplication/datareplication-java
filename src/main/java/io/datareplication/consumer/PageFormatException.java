@@ -3,6 +3,7 @@ package io.datareplication.consumer;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
+// TODO: docs
 public class PageFormatException extends ConsumerException {
     private PageFormatException(final String message) {
         super(message);

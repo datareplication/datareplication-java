@@ -85,7 +85,6 @@ public interface StreamingPage<
              * The entity's headers.
              */
             @NonNull EntityHeader header;
-            // TODO: Should content-type be optional? That would require making it optional in Body.
             /**
              * The entity's content type.
              */

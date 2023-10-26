@@ -67,14 +67,6 @@ public interface Body extends ToHttpHeaders {
      */
     long contentLength();
 
-    // TODO: Putting the content type on the Body is useful in multiple places, but causes issues when you want all
-    //       headers for a given thing but not the body. That can be solved in those places by having those headers as
-    //       extra fields there, but maybe not having the extra headers in here is a better design. Alternatively: put
-    //       content length and type in an extra class (BodyHeaders?) and return that here.
-
-    // TODO: Should the content type be optional? That would allow us to read entities without a content type, which is
-    //       maybe a bad idea, but not particularly objectionable.
-
     /**
      * Return the content type of the underlying data. This should be a MIME type suitable for use in a
      * <code>Content-Type</code> header.
