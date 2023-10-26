@@ -14,11 +14,12 @@ public interface SnapshotProducer {
         @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities);
 
     class Builder {
-
         private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
         private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
         private long maxBytesPerPage = 1000L * 1000L;
+        public static final long MINIMUM_BYTES_PER_PAGE = 0L;
         private long maxEntriesPerPage = Long.MAX_VALUE;
+        public static final long MINIMUM_ENTRIES_PER_PAGE = 0L;
 
         public @NonNull SnapshotProducer build(@NonNull final SnapshotIndexRepository snapshotIndexRepository,
                                                @NonNull final SnapshotPageRepository snapshotPageRepository,
@@ -53,14 +54,14 @@ public interface SnapshotProducer {
         }
 
         public Builder maxBytesPerPage(final long maxBytesPerPage) {
-            if (maxBytesPerPage > 0L) {
+            if (maxBytesPerPage > MINIMUM_BYTES_PER_PAGE) {
                 this.maxBytesPerPage = maxBytesPerPage;
             }
             return this;
         }
 
         public Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            if (maxEntriesPerPage > 0L) {
+            if (maxEntriesPerPage > MINIMUM_ENTRIES_PER_PAGE) {
                 this.maxEntriesPerPage = maxEntriesPerPage;
             }
             return this;
