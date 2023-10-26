@@ -2,7 +2,9 @@ package io.datareplication.internal.http;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.net.ssl.SSLSession;
 import java.net.URI;
@@ -13,12 +15,27 @@ import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.Optional;
 
-@Value
+@RequiredArgsConstructor
 @AllArgsConstructor
 public class TestHttpResponse<T> implements HttpResponse<T> {
     int statusCode = 200;
     @NonNull HttpHeaders headers = HttpHeaders.of(Collections.emptyMap(), (a, b) -> false);
     @NonNull T body;
+
+    @Override
+    public int statusCode() {
+        return statusCode;
+    }
+
+    @Override
+    public HttpHeaders headers() {
+        return headers;
+    }
+
+    @Override
+    public T body() {
+        return body;
+    }
 
     @Override
     public HttpRequest request() {

@@ -27,23 +27,24 @@ public class ConsumerException extends RuntimeException {
         }
 
         private static String buildMessage(List<Throwable> exceptions) {
-            final var bld = new StringBuilder();
-            bld.append("Multiple exceptions occurred:");
-            bld.append(System.lineSeparator());
+            final var bld = new StringBuilder("Multiple exceptions occurred:")
+                .append(System.lineSeparator());
             for (var exc : exceptions) {
-                bld.append(" * ");
-                bld.append(exc.getClass().getName());
-                bld.append(": ");
-                bld.append(exc.getMessage());
-                bld.append(System.lineSeparator());
+                bld
+                    .append(" * ")
+                    .append(exc.getClass().getName())
+                    .append(": ")
+                    .append(exc.getMessage())
+                    .append(System.lineSeparator());
 
                 var nextCause = exc.getCause();
                 while (nextCause != null) {
-                    bld.append("   caused by: ");
-                    bld.append(nextCause.getClass().getName());
-                    bld.append(": ");
-                    bld.append(nextCause.getMessage());
-                    bld.append(System.lineSeparator());
+                    bld
+                        .append("   caused by: ")
+                        .append(nextCause.getClass().getName())
+                        .append(": ")
+                        .append(nextCause.getMessage())
+                        .append(System.lineSeparator());
                     nextCause = nextCause.getCause();
                 }
             }
