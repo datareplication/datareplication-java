@@ -4,7 +4,6 @@ import lombok.NonNull;
 import lombok.Value;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * The <code>Page</code> class represents a complete feed or snapshot page, both on the producer and consumer side. This
@@ -36,22 +35,7 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
                 @NonNull String boundary) {
         this.header = header;
         this.entities = List.copyOf(entities);
-        this.boundary = boundary;
-    }
-
-    /**
-     * Create a new page with a random boundary.
-     *
-     * @param header   the page header
-     * @param entities the page's entities
-     */
-    public Page(@NonNull PageHeader header,
-                @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
-        this(header, entities, randomBoundary());
-    }
-
-    private static @NonNull String randomBoundary() {
-        return String.format("_---_%s", UUID.randomUUID());
+        this.boundary = String.format("_---_%s", boundary);
     }
 
     /**

@@ -12,8 +12,7 @@ import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.reactivestreams.FlowAdapters;
-import reactor.core.publisher.Flux;
+import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Mono;
 
 import java.time.Clock;
@@ -43,8 +42,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
         SnapshotId id = snapshotIdProvider.newSnapshotId();
         Timestamp createdAt = Timestamp.of(clock.instant());
 
-        return Flux
-            .from(FlowAdapters.toPublisher(entities))
+        return JdkFlowAdapter.flowPublisherToFlux(entities)
             .bufferUntil(entity -> {
                 long bytes = entity.body().contentLength();
                 if (currentBytesForPage.addAndGet(bytes) > maxBytesPerPage
@@ -59,7 +57,8 @@ class SnapshotProducerImpl implements SnapshotProducer {
             .flatMap(entityList -> {
                 PageId pageId = pageIdProvider.newPageId();
                 Url pageUrl = snapshotPageUrlBuilder.pageUrl(id, pageId);
-                return Mono.fromCompletionStage(snapshotPageRepository.save(id, pageId, pageOf(entityList)))
+                return Mono
+                    .fromCompletionStage(snapshotPageRepository.save(id, pageId, pageOf(pageId, entityList)))
                     .then(Mono.fromCallable(() -> pageUrl));
             })
             .reduce(new ArrayList<Url>(), (urls, url) -> {
@@ -73,7 +72,8 @@ class SnapshotProducerImpl implements SnapshotProducer {
             .toFuture();
     }
 
-    private Page<SnapshotPageHeader, SnapshotEntityHeader> pageOf(final List<Entity<SnapshotEntityHeader>> entities) {
-        return new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities);
+    private Page<SnapshotPageHeader, SnapshotEntityHeader> pageOf(PageId pageId,
+                                                                  final List<Entity<SnapshotEntityHeader>> entities) {
+        return new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities, pageId.value());
     }
 }

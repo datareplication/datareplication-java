@@ -17,8 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.FlowAdapters;
@@ -57,8 +55,6 @@ class SnapshotProducerImplTest {
     private final List<Entity<SnapshotEntityHeader>> entities =
         entities("Hello", "World", "I", "am", "a", "Snapshot");
 
-    @Captor
-    private ArgumentCaptor<Page<SnapshotPageHeader, SnapshotEntityHeader>> pageArgumentCaptor;
     @Mock
     private SnapshotPageRepository snapshotPageRepository;
     @Mock
@@ -124,12 +120,9 @@ class SnapshotProducerImplTest {
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
         assertThat(snapshotIndex).isEqualTo(new SnapshotIndex(id, createdAt, List.of(page1Url)));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
+        verify(snapshotPageRepository).save(id, pageId1,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities, pageId1.value()));
         verify(snapshotIndexRepository).save(snapshotIndex);
-        Page<SnapshotPageHeader, SnapshotEntityHeader> savedPage = pageArgumentCaptor.getValue();
-        assertThat(savedPage.entities()).isEqualTo(entities);
-        assertThat(savedPage.header()).isEqualTo(new SnapshotPageHeader(HttpHeaders.EMPTY));
-        assertThat(savedPage.boundary()).startsWith("_---_");
     }
 
     @Test
@@ -162,14 +155,18 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
-        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("Hello"));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId2), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("World"));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId3), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("I", "am", "a"));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId4), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("Snapshot"));
+        verify(snapshotPageRepository).save(id, pageId1,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Hello"), pageId1.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId2,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("World"), pageId2.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId3,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("I", "am", "a"), pageId3.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId4,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Snapshot"), pageId4.value())
+        );
     }
 
     @Test
@@ -201,17 +198,103 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
-        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("Hello", "World"));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId2), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("I", "am"));
-        verify(snapshotPageRepository).save(eq(id), eq(pageId3), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("a", "Snapshot"));
+        verify(snapshotPageRepository).save(id, pageId1,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Hello", "World"), pageId1.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId2,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("I", "am"), pageId2.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId3,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("a", "Snapshot"), pageId3.value())
+        );
+    }
+
+    @Test
+    @DisplayName("should produce a snapshot with multiple entries (buffered by ContentLength and MaxEntries)")
+    void shouldProduceSnapshotContentLengthAndMaxEntries()
+        throws ExecutionException, InterruptedException {
+
+        List<Entity<SnapshotEntityHeader>> entities =
+            entities("Hello World!", "Test", "of", "a", "Snapshot");
+        Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(entities);
+        when(pageIdProvider.newPageId()).thenReturn(pageId1, pageId2, pageId3, pageId4);
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId1)).thenReturn(page1Url);
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId2)).thenReturn(page2Url);
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId3)).thenReturn(page3Url);
+        when(snapshotPageRepository.save(eq(id), any(), any()))
+            .thenReturn(CompletableFuture.supplyAsync(() -> null));
+        SnapshotProducer snapshotProducer = SnapshotProducer
+            .builder()
+            .pageIdProvider(pageIdProvider)
+            .snapshotIdProvider(snapshotIdProvider)
+            .maxBytesPerPage(10)
+            .maxEntriesPerPage(3L)
+            .build(snapshotIndexRepository,
+                snapshotPageRepository,
+                snapshotPageUrlBuilder,
+                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+
+        CompletionStage<SnapshotIndex> produce =
+            snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
+
+        SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
+        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url, page2Url, page3Url);
+        assertThat(snapshotIndex.id()).isEqualTo(id);
+        assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
+
+        verify(snapshotPageRepository).save(id, pageId1,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Hello World!"), pageId1.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId2,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Test", "of", "a"), pageId2.value())
+        );
+        verify(snapshotPageRepository).save(id, pageId3,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Snapshot"), pageId3.value())
+        );
+    }
+
+    @Test
+    @DisplayName("should produce a snapshot with multiple entries with default buffers")
+    void shouldProduceWithDefaultBufferSizes()
+        throws ExecutionException, InterruptedException {
+
+        long pointlessValueForBuffers = -1L;
+
+        Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(entities);
+        when(pageIdProvider.newPageId()).thenReturn(pageId1);
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId1)).thenReturn(page1Url);
+        when(snapshotPageRepository.save(eq(id), any(), any()))
+            .thenReturn(CompletableFuture.supplyAsync(() -> null));
+        SnapshotProducer snapshotProducer = SnapshotProducer
+            .builder()
+            .pageIdProvider(pageIdProvider)
+            .snapshotIdProvider(snapshotIdProvider)
+            .maxBytesPerPage(pointlessValueForBuffers)
+            .maxEntriesPerPage(pointlessValueForBuffers)
+            .build(snapshotIndexRepository,
+                snapshotPageRepository,
+                snapshotPageUrlBuilder,
+                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+
+        CompletionStage<SnapshotIndex> produce =
+            snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
+
+        SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
+        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url);
+        assertThat(snapshotIndex.id()).isEqualTo(id);
+        assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
+
+        verify(snapshotPageRepository).save(id, pageId1,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
+                entities("Hello", "World", "I", "am", "a", "Snapshot"),
+                pageId1.value()
+            )
+        );
     }
 
     @Test
     @DisplayName("should conserve entity headers")
-    void shouldConverserviceEntityHeaders()
+    void shouldConverseEntityHeaders()
         throws ExecutionException, InterruptedException {
 
         Entity<SnapshotEntityHeader>  entity1 = entityWithHeaders(
@@ -250,19 +333,29 @@ class SnapshotProducerImplTest {
 
         snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow)).toCompletableFuture().get();
 
-        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entityWithHeaders(new SnapshotEntityHeader(
-            HttpHeaders.of(
-                HttpHeader.contentLength(123),
-                HttpHeader.contentType(ContentType.of("application/json"))
-            )), "Hello"))
+        verify(snapshotPageRepository).save(id, pageId1,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
+                List.of(
+                    entityWithHeaders(new SnapshotEntityHeader(
+                            HttpHeaders.of(
+                                HttpHeader.contentLength(123),
+                                HttpHeader.contentType(ContentType.of("application/json"))
+                            )), "Hello"
+                    )
+                ), pageId1.value()
+            )
         );
-        verify(snapshotPageRepository).save(eq(id), eq(pageId2), pageArgumentCaptor.capture());
-        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entityWithHeaders(new SnapshotEntityHeader(
-            HttpHeaders.of(
-                HttpHeader.contentLength(456),
-                HttpHeader.contentType(ContentType.of("application/xml"))
-            )), "World"))
+        verify(snapshotPageRepository).save(id, pageId2,
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
+                List.of(
+                    entityWithHeaders(new SnapshotEntityHeader(
+                        HttpHeaders.of(
+                            HttpHeader.contentLength(456),
+                            HttpHeader.contentType(ContentType.of("application/xml"))
+                        )), "World"
+                    )
+                ), pageId2.value()
+            )
         );
     }
 

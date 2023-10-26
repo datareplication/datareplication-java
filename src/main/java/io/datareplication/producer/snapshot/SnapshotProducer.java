@@ -8,7 +8,6 @@ import lombok.NonNull;
 import java.time.Clock;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
-import java.util.stream.Stream;
 
 public interface SnapshotProducer {
     @NonNull CompletionStage<@NonNull SnapshotIndex> produce(
@@ -54,12 +53,16 @@ public interface SnapshotProducer {
         }
 
         public Builder maxBytesPerPage(final long maxBytesPerPage) {
-            this.maxBytesPerPage = maxBytesPerPage;
+            if (maxBytesPerPage > 0L) {
+                this.maxBytesPerPage = maxBytesPerPage;
+            }
             return this;
         }
 
         public Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            this.maxEntriesPerPage = maxEntriesPerPage;
+            if (maxEntriesPerPage > 0L) {
+                this.maxEntriesPerPage = maxEntriesPerPage;
+            }
             return this;
         }
     }
