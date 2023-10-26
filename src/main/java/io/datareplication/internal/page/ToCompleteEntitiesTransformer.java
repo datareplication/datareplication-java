@@ -52,8 +52,12 @@ public class ToCompleteEntitiesTransformer<EntityHeader extends ToHttpHeaders> {
         } else if (chunk instanceof StreamingPage.Chunk.BodyEnd) {
             // TODO: Alternative implementation: keep a List<ByteBuffer> and build a Body impl from that. Doesn't
             //  require a big new allocation, but feels just generally less efficient?
-            final Body body = Body.fromBytes(bodyStream.toByteArray(), currentHeader.contentType());
+            // safety: ok because we're discarding the stream so the Body has the only reference
+            final Body body = Body.fromBytesUnsafe(bodyStream.toByteArray(), currentHeader.contentType());
             final Entity<EntityHeader> entity = new Entity<>(currentHeader.header(), body);
+            // so we hopefully get an NPE if we write to them again before recreating them
+            bodyStream = null;
+            bodyChannel = null;
             return Optional.of(entity);
         }
         throw new IllegalArgumentException(String.format("unknown subclass of StreamingPage.Chunk %s; bug?", chunk));

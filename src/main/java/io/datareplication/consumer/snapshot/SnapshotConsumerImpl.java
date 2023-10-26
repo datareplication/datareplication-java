@@ -6,6 +6,7 @@ import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.internal.page.WrappedStreamingPage;
 import io.datareplication.model.Body;
+import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
@@ -25,6 +26,8 @@ import java.util.concurrent.Flow;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class SnapshotConsumerImpl implements SnapshotConsumer {
+    private static final ContentType APPLICATION_JSON = ContentType.of("application/json");
+
     private final HttpClient httpClient;
     private final PageLoader pageLoader;
     private final int networkConcurrency;
@@ -34,7 +37,8 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
     public @NonNull CompletionStage<@NonNull SnapshotIndex> loadSnapshotIndex(@NonNull final Url url) {
         return httpClient
             .get(url, HttpResponse.BodyHandlers.ofByteArray())
-            .map(response -> Body.fromBytes(response.body()))
+            // safety: ok because we "own" the byte array and aren't modifying it
+            .map(response -> Body.fromBytesUnsafe(response.body(), APPLICATION_JSON))
             // TODO: wrap exception?
             .map(SnapshotIndex::fromJson)
             .toCompletionStage();

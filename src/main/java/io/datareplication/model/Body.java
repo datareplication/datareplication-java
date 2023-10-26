@@ -215,16 +215,17 @@ public interface Body extends ToHttpHeaders {
     /**
      * <p>Return a Body containing the bytes of the given byte array.</p>
      *
-     * <p>The byte array is not copied, therefore you have to make sure that the array is
-     * <strong>NEVER MODIFIED</strong> after being passed to this method. If you can't guarantee that, always clone
-     * the array before passing it to this method.
-     * </p>
+     * <p><strong>SAFETY:</strong> this method does not copy the passed byte array. It is up to the caller to ensure
+     * that the array is <em>NEVER MODIFIED</em> after being passed to this method. Any modifications to the array
+     * will be reflected in the returned Body object, thereby breaking immutability guarantees. If you're not sure that
+     * the array will never be modified again, you can use {@link #fromBytes(byte[], ContentType)} instead with
+     * copies the array.</p>
      *
      * @param bytes       the byte array
      * @param contentType the content type for the created Body
      * @return a Body of the array's bytes
      */
-    static @NonNull Body fromBytes(byte @NonNull [] bytes, @NonNull ContentType contentType) {
+    static @NonNull Body fromBytesUnsafe(byte @NonNull [] bytes, @NonNull ContentType contentType) {
         @EqualsAndHashCode
         @ToString
         @AllArgsConstructor
@@ -260,16 +261,46 @@ public interface Body extends ToHttpHeaders {
      * <code>application/octet-stream</code>
      * </p>
      *
-     * <p>The byte array is not copied, therefore you have to make sure that the array is
-     * <strong>NEVER MODIFIED</strong> after being passed to this method. If you can't guarantee that, always clone
-     * the array before passing it to this method.
+     * <p><strong>SAFETY:</strong> this method does not copy the passed byte array. It is up to the caller to ensure
+     * that the array is <em>NEVER MODIFIED</em> after being passed to this method. Any modifications to the array
+     * will be reflected in the returned Body object, thereby breaking immutability guarantees. If you're not sure that
+     * the array will never be modified again, you can use {@link #fromBytes(byte[])} instead with
+     * copies the array.</p>
+     *
+     * @param bytes the byte array
+     * @return a Body of the array's bytes
+     */
+    static @NonNull Body fromBytesUnsafe(byte @NonNull [] bytes) {
+        return fromBytesUnsafe(bytes, ContentType.of("application/octet-stream"));
+    }
+
+    /**
+     * <p>Return a Body containing the bytes of the given byte array.</p>
+     *
+     * <p>The array is copied so that modifications don't impact the returned Body. If you can guarantee that the
+     * array won't be modified, you can use {@link #fromBytesUnsafe(byte[], ContentType)} which avoids the copy.</p>
+     *
+     * @param bytes       the byte array
+     * @param contentType the content type for the created Body
+     * @return a Body of the array's bytes
+     */
+    static @NonNull Body fromBytes(byte @NonNull [] bytes, @NonNull ContentType contentType) {
+        return fromBytesUnsafe(bytes.clone(), contentType);
+    }
+
+    /**
+     * <p>Return a Body containing the bytes of the given byte array with the default content-type
+     * <code>application/octet-stream</code>
      * </p>
+     *
+     * <p>The array is copied so that modifications don't impact the returned Body. If you can guarantee that the
+     * array won't be modified, you can use {@link #fromBytesUnsafe(byte[])} which avoids the copy.</p>
      *
      * @param bytes the byte array
      * @return a Body of the array's bytes
      */
     static @NonNull Body fromBytes(byte @NonNull [] bytes) {
-        return fromBytes(bytes, ContentType.of("application/octet-stream"));
+        return fromBytesUnsafe(bytes.clone());
     }
 
     private static long countUtf8Bytes(String utf8) {
