@@ -7,8 +7,6 @@ import lombok.Value;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-// TODO: tests
-
 /**
  * The value of an HTTP <code>Authorization</code> header.
  */
