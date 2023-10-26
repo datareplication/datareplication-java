@@ -137,7 +137,6 @@
                     </includes>
                     <excludes>
                         <!-- TODO: Delete when integration is finished -->
-                        <exclude>**/SnapshotConsumerIntegrationTest</exclude>
                         <exclude>**/SnapshotProducerIntegrationTest</exclude>
                         <exclude>**/SnapshotAcceptanceTest</exclude>
                     </excludes>
