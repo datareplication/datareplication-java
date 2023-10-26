@@ -3,8 +3,6 @@ package io.datareplication.internal.http;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.net.ssl.SSLSession;
 import java.net.URI;
