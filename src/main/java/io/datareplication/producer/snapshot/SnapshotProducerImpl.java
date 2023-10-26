@@ -74,6 +74,6 @@ class SnapshotProducerImpl implements SnapshotProducer {
 
     private Page<SnapshotPageHeader, SnapshotEntityHeader> pageOf(PageId pageId,
                                                                   final List<Entity<SnapshotEntityHeader>> entities) {
-        return new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities, pageId.value());
+        return new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId.value(), entities);
     }
 }

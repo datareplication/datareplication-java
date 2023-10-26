@@ -121,7 +121,7 @@ class SnapshotProducerImplTest {
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
         assertThat(snapshotIndex).isEqualTo(new SnapshotIndex(id, createdAt, List.of(page1Url)));
         verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities, pageId1.value()));
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId1.value(), entities));
         verify(snapshotIndexRepository).save(snapshotIndex);
     }
 
@@ -156,16 +156,16 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
         verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Hello"), pageId1.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId1.value(), entities("Hello"))
         );
         verify(snapshotPageRepository).save(id, pageId2,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("World"), pageId2.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId2.value(), entities("World"))
         );
         verify(snapshotPageRepository).save(id, pageId3,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("I", "am", "a"), pageId3.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId3.value(), entities("I", "am", "a"))
         );
         verify(snapshotPageRepository).save(id, pageId4,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Snapshot"), pageId4.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId4.value(), entities("Snapshot"))
         );
     }
 
@@ -199,13 +199,13 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
         verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Hello", "World"), pageId1.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId1.value(), entities("Hello", "World"))
         );
         verify(snapshotPageRepository).save(id, pageId2,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("I", "am"), pageId2.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId2.value(), entities("I", "am"))
         );
         verify(snapshotPageRepository).save(id, pageId3,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("a", "Snapshot"), pageId3.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId3.value(), entities("a", "Snapshot"))
         );
     }
 
@@ -243,13 +243,13 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
         verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Hello World!"), pageId1.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId1.value(), entities("Hello World!"))
         );
         verify(snapshotPageRepository).save(id, pageId2,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Test", "of", "a"), pageId2.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId2.value(), entities("Test", "of", "a"))
         );
         verify(snapshotPageRepository).save(id, pageId3,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), entities("Snapshot"), pageId3.value())
+            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId3.value(), entities("Snapshot"))
         );
     }
 
@@ -286,8 +286,8 @@ class SnapshotProducerImplTest {
 
         verify(snapshotPageRepository).save(id, pageId1,
             new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
-                entities("Hello", "World", "I", "am", "a", "Snapshot"),
-                pageId1.value()
+                pageId1.value(),
+                entities("Hello", "World", "I", "am", "a", "Snapshot")
             )
         );
     }
@@ -335,6 +335,7 @@ class SnapshotProducerImplTest {
 
         verify(snapshotPageRepository).save(id, pageId1,
             new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
+                pageId1.value(),
                 List.of(
                     entityWithHeaders(new SnapshotEntityHeader(
                             HttpHeaders.of(
@@ -342,11 +343,12 @@ class SnapshotProducerImplTest {
                                 HttpHeader.contentType(ContentType.of("application/json"))
                             )), "Hello"
                     )
-                ), pageId1.value()
+                )
             )
         );
         verify(snapshotPageRepository).save(id, pageId2,
             new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
+                pageId2.value(),
                 List.of(
                     entityWithHeaders(new SnapshotEntityHeader(
                         HttpHeaders.of(
@@ -354,7 +356,7 @@ class SnapshotProducerImplTest {
                             HttpHeader.contentType(ContentType.of("application/xml"))
                         )), "World"
                     )
-                ), pageId2.value()
+                )
             )
         );
     }

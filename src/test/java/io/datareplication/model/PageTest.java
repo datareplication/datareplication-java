@@ -33,7 +33,7 @@ class PageTest {
         final ArrayList<Entity<HttpHeaders>> entities = new ArrayList<>(original);
 
         final Page<HttpHeaders, HttpHeaders> page
-            = new Page<>(HttpHeaders.EMPTY, entities, pageIdProvider.newPageId().value());
+            = new Page<>(HttpHeaders.EMPTY, pageIdProvider.newPageId().value(), entities);
 
         assertThat(page.entities()).containsExactlyElementsOf(original);
         assertThatThrownBy(() -> page.entities().add(ENTITY_3))
@@ -46,7 +46,7 @@ class PageTest {
     void shouldPickARandomBoundaryFromARandomUUID() {
         pageIdProvider = new UUIDPageIdProvider();
         final Page<HttpHeaders, HttpHeaders> page
-            = new Page<>(HttpHeaders.EMPTY, Collections.emptyList(), pageIdProvider.newPageId().value());
+            = new Page<>(HttpHeaders.EMPTY, pageIdProvider.newPageId().value(), Collections.emptyList());
 
         assertThat(page.boundary()).matches("_---_[a-f0-9-]{36}");
         final UUID uuidPart = UUID.fromString(page.boundary().substring(5));
