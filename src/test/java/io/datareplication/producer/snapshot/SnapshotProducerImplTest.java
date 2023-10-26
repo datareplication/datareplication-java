@@ -1,7 +1,9 @@
 package io.datareplication.producer.snapshot;
 
 import io.datareplication.model.Body;
+import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
+import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
@@ -207,10 +209,72 @@ class SnapshotProducerImplTest {
         assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(entities("a", "Snapshot"));
     }
 
-    private List<Entity<SnapshotEntityHeader>> entities(String... body) {
+    @Test
+    @DisplayName("should conserve entity headers")
+    void shouldConverserviceEntityHeaders()
+        throws ExecutionException, InterruptedException {
+
+        Entity<SnapshotEntityHeader>  entity1 = entityWithHeaders(
+            new SnapshotEntityHeader(
+                HttpHeaders.of(
+                    HttpHeader.contentLength(123),
+                    HttpHeader.contentType(ContentType.of("application/json"))
+                )),
+            "Hello"
+        );
+        Entity<SnapshotEntityHeader> entity2 = entityWithHeaders(
+            new SnapshotEntityHeader(
+                HttpHeaders.of(
+                    HttpHeader.contentLength(456),
+                    HttpHeader.contentType(ContentType.of("application/xml"))
+                )),
+            "World"
+        );
+
+        Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(List.of(entity1, entity2));
+
+        when(pageIdProvider.newPageId()).thenReturn(pageId1, pageId2);
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId1)).thenReturn(page1Url);
+        when(snapshotPageUrlBuilder.pageUrl(id, pageId2)).thenReturn(page2Url);
+        when(snapshotPageRepository.save(eq(id), any(), any()))
+            .thenReturn(CompletableFuture.supplyAsync(() -> null));
+        SnapshotProducer snapshotProducer = SnapshotProducer
+            .builder()
+            .pageIdProvider(pageIdProvider)
+            .snapshotIdProvider(snapshotIdProvider)
+            .maxBytesPerPage(MAX_BYTES_PER_PAGE)
+            .build(snapshotIndexRepository,
+                snapshotPageRepository,
+                snapshotPageUrlBuilder,
+                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+
+        snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow)).toCompletableFuture().get();
+
+        verify(snapshotPageRepository).save(eq(id), eq(pageId1), pageArgumentCaptor.capture());
+        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entityWithHeaders(new SnapshotEntityHeader(
+            HttpHeaders.of(
+                HttpHeader.contentLength(123),
+                HttpHeader.contentType(ContentType.of("application/json"))
+            )), "Hello"))
+        );
+        verify(snapshotPageRepository).save(eq(id), eq(pageId2), pageArgumentCaptor.capture());
+        assertThat(pageArgumentCaptor.getValue().entities()).isEqualTo(List.of(entityWithHeaders(new SnapshotEntityHeader(
+            HttpHeaders.of(
+                HttpHeader.contentLength(456),
+                HttpHeader.contentType(ContentType.of("application/xml"))
+            )), "World"))
+        );
+    }
+
+    private List<Entity<SnapshotEntityHeader>> entities(String... bodies) {
         return Arrays
-            .stream(body)
-            .map(b -> new Entity<>(new SnapshotEntityHeader(), Body.fromUtf8(b)))
+            .stream(bodies)
+            .map(body -> entityWithHeaders(new SnapshotEntityHeader(), body))
             .collect(Collectors.toUnmodifiableList());
+    }
+
+    private Entity<SnapshotEntityHeader> entityWithHeaders(SnapshotEntityHeader snapshotEntityHeader,
+                                                           String body) {
+        return new Entity<>(snapshotEntityHeader, Body.fromUtf8(body));
     }
 }
