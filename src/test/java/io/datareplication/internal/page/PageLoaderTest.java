@@ -30,7 +30,7 @@ class PageLoaderTest {
     private static final Throwable ANY_EXCEPTION = new RuntimeException();
 
     @RegisterExtension
-    final WireMockExtension wireMock = WireMockExtension
+    static final WireMockExtension wireMock = WireMockExtension
         .newInstance()
         .build();
 

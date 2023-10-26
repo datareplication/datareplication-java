@@ -29,7 +29,8 @@ class SnapshotConsumerIntegrationTest {
     private Url onePageMissingSnapshotUrl;
     private Url allPagesMissingSnapshotUrl;
 
-    @RegisterExtension final WireMockExtension wireMock = WireMockExtension
+    @RegisterExtension
+    static final WireMockExtension wireMock = WireMockExtension
         .newInstance()
         .options(wireMockConfig().port(8443))
         .build();
