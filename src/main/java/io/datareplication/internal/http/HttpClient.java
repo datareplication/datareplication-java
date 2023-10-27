@@ -4,6 +4,7 @@ import com.github.mizosoft.methanol.Methanol;
 import io.datareplication.consumer.Authorization;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.model.HttpHeader;
+import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
@@ -24,7 +25,14 @@ public class HttpClient {
     private static final int CLIENT_ERRORS = 400;
     private static final int SERVER_ERRORS = 500;
 
+    /**
+     * @param authSupplier provides Authorization, is called once per request
+     * @param additionalHeaders additional request headers added to all requests
+     * @param headersTimeout timeout for receiving HTTP headers, infinite if empty
+     * @param readTimeout timeout for reads (network socket reads?), infinite if empty
+     */
     public HttpClient(@NonNull AuthSupplier authSupplier,
+                      @NonNull HttpHeaders additionalHeaders,
                       @NonNull Optional<Duration> headersTimeout,
                       @NonNull Optional<Duration> readTimeout) {
         this.authSupplier = authSupplier;
@@ -32,15 +40,26 @@ public class HttpClient {
             .newBuilder()
             .autoAcceptEncoding(true)
             .followRedirects(java.net.http.HttpClient.Redirect.NORMAL);
+        // Builder methods are side-effecting so ignoring the return value is ok
         headersTimeout.ifPresent(builder::headersTimeout);
         readTimeout.ifPresent(builder::readTimeout);
+        addDefaultHeaders(builder, additionalHeaders);
         this.httpClient = builder.build();
     }
 
     public HttpClient() {
         this(AuthSupplier.none(),
+             HttpHeaders.EMPTY,
              Optional.empty(),
              Optional.empty());
+    }
+
+    private static void addDefaultHeaders(Methanol.Builder builder, HttpHeaders additionalHeaders) {
+        for (var header : additionalHeaders) {
+            for (var value : header.values()) {
+                builder.defaultHeader(header.name(), value);
+            }
+        }
     }
 
     /**
@@ -80,14 +99,15 @@ public class HttpClient {
     }
 
     private HttpRequest.Builder newRequest(Url url) {
-        // TODO: additional headers
+        HttpRequest.Builder req;
         try {
-            final var req = HttpRequest.newBuilder(new URI(url.value()));
-            final var authHeader = authSupplier.apply(url).map(Authorization::toHeader);
-            return addHeader(req, authHeader);
+            req = HttpRequest.newBuilder(new URI(url.value()));
         } catch (URISyntaxException | IllegalArgumentException cause) {
             throw new HttpException.InvalidUrl(url, cause);
         }
+
+        final var authHeader = authSupplier.apply(url).map(Authorization::toHeader);
+        return addHeader(req, authHeader);
     }
 
     private HttpRequest.Builder addHeader(HttpRequest.Builder req, Optional<HttpHeader> maybeHeader) {

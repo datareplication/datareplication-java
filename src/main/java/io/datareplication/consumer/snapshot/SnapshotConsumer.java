@@ -6,6 +6,7 @@ import io.datareplication.internal.http.HttpClient;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
+import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
@@ -116,6 +117,8 @@ public interface SnapshotConsumer {
 
         public @NonNull SnapshotConsumer build() {
             final var httpClient = new HttpClient(authSupplier,
+                                                  // TODO
+                                                  HttpHeaders.EMPTY,
                                                   Optional.empty(),
                                                   Optional.empty());
             final var pageLoader = new PageLoader(httpClient);

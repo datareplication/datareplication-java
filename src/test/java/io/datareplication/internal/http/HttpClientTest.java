@@ -4,6 +4,8 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.Authorization;
 import io.datareplication.consumer.HttpException;
+import io.datareplication.model.HttpHeader;
+import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import java.util.Optional;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.havingExactly;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpClientTest {
@@ -190,6 +193,7 @@ class HttpClientTest {
     void shouldThrowHttpException_whenHeaderTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
+            HttpHeaders.EMPTY,
             Optional.of(Duration.ofMillis(5)),
             Optional.empty()
         );
@@ -212,6 +216,7 @@ class HttpClientTest {
     void shouldThrowHttpException_whenReadTimeout() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
+            HttpHeaders.EMPTY,
             Optional.empty(),
             Optional.of(Duration.ofMillis(5))
         );
@@ -239,6 +244,7 @@ class HttpClientTest {
                 final var idx = url.value().lastIndexOf('/');
                 return Optional.of(Authorization.of("Test", url.value().substring(idx)));
             },
+            HttpHeaders.EMPTY,
             Optional.empty(),
             Optional.empty()
         );
@@ -269,5 +275,38 @@ class HttpClientTest {
             .test()
             .await()
             .assertValue("2");
+    }
+
+    @Test
+    void shouldAddAdditionalHeadersToRequest() throws InterruptedException {
+        final HttpClient httpClient = new HttpClient(
+            AuthSupplier.none(),
+            HttpHeaders.of(
+                HttpHeader.of("h1", "v1"),
+                HttpHeader.of("h2", List.of("v1", "v2")),
+                HttpHeader.of("user-agent", "test")
+            ),
+            Optional.empty(),
+            Optional.empty()
+        );
+
+        WM.stubFor(
+            get("/")
+                .withHeader("h1", equalTo("v1"))
+                .withHeader("h2", havingExactly("v1", "v2"))
+                .withHeader("User-Agent", equalTo("test"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withBody("headers")
+                )
+        );
+
+        httpClient
+            .get(Url.of(WM.url("/")), HttpResponse.BodyHandlers.ofString())
+            .map(HttpResponse::body)
+            .test()
+            .await()
+            .assertValue("headers");
     }
 }

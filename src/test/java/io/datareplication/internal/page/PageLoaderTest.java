@@ -145,6 +145,7 @@ class PageLoaderTest {
     void shouldThrowHttpException_whenReadTimeoutInBody() throws InterruptedException {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
+            HttpHeaders.EMPTY,
             Optional.empty(),
             Optional.of(Duration.ofMillis(10))
         );
