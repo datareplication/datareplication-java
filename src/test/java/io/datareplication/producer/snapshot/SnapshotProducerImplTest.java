@@ -151,7 +151,7 @@ class SnapshotProducerImplTest {
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url, page2Url, page3Url, page4Url);
+        assertThat(snapshotIndex.pages()).containsExactly(page1Url, page2Url, page3Url, page4Url);
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
@@ -194,7 +194,7 @@ class SnapshotProducerImplTest {
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url, page2Url, page3Url);
+        assertThat(snapshotIndex.pages()).containsExactly(page1Url, page2Url, page3Url);
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
@@ -238,7 +238,7 @@ class SnapshotProducerImplTest {
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url, page2Url, page3Url);
+        assertThat(snapshotIndex.pages()).containsExactly(page1Url, page2Url, page3Url);
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
@@ -280,7 +280,7 @@ class SnapshotProducerImplTest {
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
 
         SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex.pages()).containsExactlyInAnyOrder(page1Url);
+        assertThat(snapshotIndex.pages()).containsExactly(page1Url);
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
