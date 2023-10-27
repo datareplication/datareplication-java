@@ -54,7 +54,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
                     return false;
                 }
             }, true)
-            .flatMap(entityList -> {
+            .flatMapSequential(entityList -> {
                 PageId pageId = pageIdProvider.newPageId();
                 Url pageUrl = snapshotPageUrlBuilder.pageUrl(id, pageId);
                 return Mono
