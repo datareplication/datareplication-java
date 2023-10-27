@@ -19,16 +19,17 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SnapshotConsumerIntegrationTest {
     private static final String PAGE_CONTENT_TYPE = "multipart/mixed; boundary=<random-boundary>";
-
     private static final String USERNAME = "snapshot-test-user";
     private static final String PASSWORD = "snapshot-test-password";
     private static final Authorization AUTH = Authorization.basic(USERNAME, PASSWORD);
+    private static final String USER_AGENT = "snapshot-consumer-integration-test";
 
     private Url validSnapshotUrl;
     private Url onePageMissingSnapshotUrl;
@@ -43,27 +44,35 @@ class SnapshotConsumerIntegrationTest {
     @BeforeEach
     void setUp() {
         WM.stubFor(
-            get("/index.json").withBasicAuth(USERNAME, PASSWORD).willReturn(
-                aResponse().withBodyFile("snapshot/index.json")
-            ));
+            get("/index.json")
+                .withBasicAuth(USERNAME, PASSWORD)
+                .withHeader("User-Agent", equalTo(USER_AGENT))
+                .willReturn(aResponse().withBodyFile("snapshot/index.json")
+                ));
         WM.stubFor(
-            get("/1.content.multipart").withBasicAuth(USERNAME, PASSWORD).willReturn(
-                aResponse()
-                    .withHeader("Content-Type", PAGE_CONTENT_TYPE)
-                    .withBodyFile("snapshot/1.content.multipart")
-            ));
+            get("/1.content.multipart")
+                .withBasicAuth(USERNAME, PASSWORD)
+                .withHeader("User-Agent", equalTo(USER_AGENT))
+                .willReturn(aResponse()
+                                .withHeader("Content-Type", PAGE_CONTENT_TYPE)
+                                .withBodyFile("snapshot/1.content.multipart")
+                ));
         WM.stubFor(
-            get("/2.content.multipart").withBasicAuth(USERNAME, PASSWORD).willReturn(
-                aResponse()
-                    .withHeader("Content-Type", PAGE_CONTENT_TYPE)
-                    .withBodyFile("snapshot/2.content.multipart")
-            ));
+            get("/2.content.multipart")
+                .withBasicAuth(USERNAME, PASSWORD)
+                .withHeader("User-Agent", equalTo(USER_AGENT))
+                .willReturn(aResponse()
+                                .withHeader("Content-Type", PAGE_CONTENT_TYPE)
+                                .withBodyFile("snapshot/2.content.multipart")
+                ));
         WM.stubFor(
-            get("/3.content.multipart").withBasicAuth(USERNAME, PASSWORD).willReturn(
-                aResponse()
-                    .withHeader("Content-Type", PAGE_CONTENT_TYPE)
-                    .withBodyFile("snapshot/3.content.multipart")
-            ));
+            get("/3.content.multipart")
+                .withBasicAuth(USERNAME, PASSWORD)
+                .withHeader("User-Agent", equalTo(USER_AGENT))
+                .willReturn(aResponse()
+                                .withHeader("Content-Type", PAGE_CONTENT_TYPE)
+                                .withBodyFile("snapshot/3.content.multipart")
+                ));
         validSnapshotUrl = Url.of(WM.url("/index.json"));
 
         WM.stubFor(get("/not-found-1.content.multipart").willReturn(aResponse().withStatus(404)));
@@ -71,17 +80,21 @@ class SnapshotConsumerIntegrationTest {
         WM.stubFor(get("/not-found-3.content.multipart").willReturn(aResponse().withStatus(404)));
 
         WM.stubFor(
-            get("/onePageMissingIndex.json").withBasicAuth(USERNAME, PASSWORD).willReturn(
-                aResponse()
-                    .withBodyFile("snapshot/onePageMissingIndex.json")
-            ));
+            get("/onePageMissingIndex.json")
+                .withBasicAuth(USERNAME, PASSWORD)
+                .withHeader("User-Agent", equalTo(USER_AGENT))
+                .willReturn(aResponse()
+                                .withBodyFile("snapshot/onePageMissingIndex.json")
+                ));
         onePageMissingSnapshotUrl = Url.of(WM.url("/onePageMissingIndex.json"));
 
         WM.stubFor(
-            get("/allPagesMissingIndex.json").withBasicAuth(USERNAME, PASSWORD).willReturn(
-                aResponse()
-                    .withBodyFile("snapshot/allPagesMissingIndex.json")
-            ));
+            get("/allPagesMissingIndex.json")
+                .withBasicAuth(USERNAME, PASSWORD)
+                .withHeader("User-Agent", equalTo(USER_AGENT))
+                .willReturn(aResponse()
+                                .withBodyFile("snapshot/allPagesMissingIndex.json")
+                ));
         allPagesMissingSnapshotUrl = Url.of(WM.url("/allPagesMissingIndex.json"));
     }
 
@@ -90,6 +103,7 @@ class SnapshotConsumerIntegrationTest {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(() -> AUTH)
+            .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
 
         final var entities = Single
@@ -157,6 +171,7 @@ class SnapshotConsumerIntegrationTest {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(AUTH)
+            .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .delayErrors(true)
             .networkConcurrency(1)
             .build();
@@ -178,6 +193,7 @@ class SnapshotConsumerIntegrationTest {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(AUTH)
+            .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
 
         Single
@@ -195,6 +211,7 @@ class SnapshotConsumerIntegrationTest {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(AUTH)
+            .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .delayErrors(true)
             .build();
 

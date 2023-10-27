@@ -45,8 +45,14 @@ public interface SnapshotConsumer {
         private boolean delayErrors;
 
         // TODO: HTTP timeouts
-        // TODO: impl headers
 
+        /**
+         * Add the given headers to every HTTP request made by this consumer. Calling this method multiple times will
+         * add all the headers from all calls.
+         *
+         * @param headers headers to add to every HTTP request
+         * @return this builder
+         */
         public @NonNull Builder additionalHeaders(@NonNull HttpHeader... headers) {
             additionalHeaders.addAll(Arrays.asList(headers));
             return this;
@@ -117,8 +123,7 @@ public interface SnapshotConsumer {
 
         public @NonNull SnapshotConsumer build() {
             final var httpClient = new HttpClient(authSupplier,
-                                                  // TODO
-                                                  HttpHeaders.EMPTY,
+                                                  HttpHeaders.of(additionalHeaders),
                                                   Optional.empty(),
                                                   Optional.empty());
             final var pageLoader = new PageLoader(httpClient);
