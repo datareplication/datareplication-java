@@ -17,9 +17,9 @@ public interface SnapshotProducer {
         private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
         private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
         private long maxBytesPerPage = 1000L * 1000L;
-        public static final long MINIMUM_BYTES_PER_PAGE = 0L;
+        public static final long MINIMUM_BYTES_PER_PAGE = 1L;
         private long maxEntriesPerPage = Long.MAX_VALUE;
-        public static final long MINIMUM_ENTRIES_PER_PAGE = 0L;
+        public static final long MINIMUM_ENTRIES_PER_PAGE = 1L;
 
         public @NonNull SnapshotProducer build(@NonNull final SnapshotIndexRepository snapshotIndexRepository,
                                                @NonNull final SnapshotPageRepository snapshotPageRepository,
@@ -54,14 +54,14 @@ public interface SnapshotProducer {
         }
 
         public Builder maxBytesPerPage(final long maxBytesPerPage) {
-            if (maxBytesPerPage > MINIMUM_BYTES_PER_PAGE) {
+            if (maxBytesPerPage >= MINIMUM_BYTES_PER_PAGE) {
                 this.maxBytesPerPage = maxBytesPerPage;
             }
             return this;
         }
 
         public Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            if (maxEntriesPerPage > MINIMUM_ENTRIES_PER_PAGE) {
+            if (maxEntriesPerPage >= MINIMUM_ENTRIES_PER_PAGE) {
                 this.maxEntriesPerPage = maxEntriesPerPage;
             }
             return this;
