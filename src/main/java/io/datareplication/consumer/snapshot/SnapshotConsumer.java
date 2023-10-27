@@ -50,7 +50,6 @@ import java.util.function.Supplier;
  *         more fine-grained control over how pages are downloaded, is more difficult to use than the flat
  *         stream of entities.</li>
  * </ul>
- * </p>
  *
  * <p>A snapshot consumer is created using a builder: call the {@link #builder()} method to create a new builder
  * with default settings, call the methods on {@link Builder} to customize the consumer, then call

@@ -107,20 +107,18 @@ public class HttpClient {
         }
 
         final var authHeader = authSupplier.apply(url).map(Authorization::toHeader);
-        return addHeader(req, authHeader);
-    }
-
-    private HttpRequest.Builder addHeader(HttpRequest.Builder req, Optional<HttpHeader> maybeHeader) {
-        return maybeHeader
-            .map(header -> addHeader(req, header))
-            .orElse(req);
-    }
-
-    private HttpRequest.Builder addHeader(HttpRequest.Builder req, HttpHeader header) {
-        for (var value : header.values()) {
-            req = req.header(header.name(), value);
-        }
+        addHeader(req, authHeader);
         return req;
+    }
+
+    private void addHeader(HttpRequest.Builder req, Optional<HttpHeader> maybeHeader) {
+        maybeHeader.ifPresent(header -> addHeader(req, header));
+    }
+
+    private void addHeader(HttpRequest.Builder req, HttpHeader header) {
+        for (var value : header.values()) {
+            req.header(header.name(), value);
+        }
     }
 
     private <T> Single<HttpResponse<T>> checkResponse(Url url, HttpResponse<T> response) {
