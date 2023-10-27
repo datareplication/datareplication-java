@@ -254,45 +254,6 @@ class SnapshotProducerImplTest {
     }
 
     @Test
-    @DisplayName("should produce a snapshot with multiple entries with default buffers")
-    void shouldProduceWithDefaultBufferSizes()
-        throws ExecutionException, InterruptedException {
-
-        long pointlessValueForBuffers = -1L;
-
-        Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(entities);
-        when(pageIdProvider.newPageId()).thenReturn(pageId1);
-        when(snapshotPageUrlBuilder.pageUrl(id, pageId1)).thenReturn(page1Url);
-        when(snapshotPageRepository.save(eq(id), any(), any()))
-            .thenReturn(CompletableFuture.supplyAsync(() -> null));
-        SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
-            .pageIdProvider(pageIdProvider)
-            .snapshotIdProvider(snapshotIdProvider)
-            .maxBytesPerPage(pointlessValueForBuffers)
-            .maxEntriesPerPage(pointlessValueForBuffers)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
-
-        CompletionStage<SnapshotIndex> produce =
-            snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
-
-        SnapshotIndex snapshotIndex = produce.toCompletableFuture().get();
-        assertThat(snapshotIndex.pages()).containsExactly(page1Url);
-        assertThat(snapshotIndex.id()).isEqualTo(id);
-        assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
-
-        verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY),
-                pageId1.value(),
-                entities("Hello", "World", "I", "am", "a", "Snapshot")
-            )
-        );
-    }
-
-    @Test
     @DisplayName("should conserve entity headers")
     void shouldConverseEntityHeaders()
         throws ExecutionException, InterruptedException {

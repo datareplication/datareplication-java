@@ -54,16 +54,18 @@ public interface SnapshotProducer {
         }
 
         public Builder maxBytesPerPage(final long maxBytesPerPage) {
-            if (maxBytesPerPage >= MINIMUM_BYTES_PER_PAGE) {
-                this.maxBytesPerPage = maxBytesPerPage;
+            if (maxBytesPerPage < MINIMUM_BYTES_PER_PAGE) {
+                throw new IllegalArgumentException("maxBytesPerPage must be >= 1");
             }
+            this.maxBytesPerPage = maxBytesPerPage;
             return this;
         }
 
         public Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            if (maxEntriesPerPage >= MINIMUM_ENTRIES_PER_PAGE) {
-                this.maxEntriesPerPage = maxEntriesPerPage;
+            if (maxEntriesPerPage < MINIMUM_ENTRIES_PER_PAGE) {
+                throw new IllegalArgumentException("maxEntriesPerPage must be >= 1");
             }
+            this.maxEntriesPerPage = maxEntriesPerPage;
             return this;
         }
     }
