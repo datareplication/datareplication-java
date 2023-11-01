@@ -34,7 +34,7 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
                 @NonNull String boundary,
                 @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
         this.header = header;
-        this.boundary = String.format("_---_%s", boundary);
+        this.boundary = boundary;
         this.entities = List.copyOf(entities);
     }
 
