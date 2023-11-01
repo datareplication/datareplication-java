@@ -54,8 +54,10 @@ class SnapshotProducerImpl implements SnapshotProducer {
                     return false;
                 }
             }, true)
-            /* TODO: research: flatMapSequential retains the order of the elements, but does it come with a cost?
-                Is it important to us to retain the order of the elements?
+            /*
+                TODO:
+                    Research: flatMapSequential retains the order of the elements, but does it come with a cost?
+                    Is it important to us to retain the order of the elements?
              */
             .flatMapSequential(entityList -> {
                 PageId pageId = pageIdProvider.newPageId();
