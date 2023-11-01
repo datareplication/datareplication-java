@@ -120,8 +120,7 @@ public class MultipartParser {
                 }
             case DATA:
                 return Combinators
-                        .seq(Combinators.seq(Combinators.eol(), Combinators.eol()),
-                             Combinators.tag(dashBoundary))
+                        .seq(Combinators.eol(), Combinators.tag(dashBoundary))
                         .parse(input, 0)
                         .map(pos -> {
                             state = State.PART_BEGIN;
@@ -130,6 +129,9 @@ public class MultipartParser {
                         .or(() -> Combinators
                                 .scan(Combinators.eol())
                                 .parse(input, 0)
+                                // We know that any EOL at index 0 is not a delimiter (because if we're in this branch,
+                                // we already checked for that and didn't find it). This means we can skip past this EOL
+                                // to the next one so we can make some progress.
                                 .flatMap(pos -> pos.start() == 0
                                         ? Combinators.scan(Combinators.eol()).parse(input, pos.end())
                                         : Optional.of(pos))
