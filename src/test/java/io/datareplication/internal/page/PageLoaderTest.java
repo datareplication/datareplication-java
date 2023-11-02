@@ -11,10 +11,8 @@ import io.datareplication.model.ContentType;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
-import io.reactivex.rxjava3.core.Flowable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.reactivestreams.FlowAdapters;
 import reactor.adapter.JdkFlowAdapter;
 import reactor.test.StepVerifier;
 
@@ -59,10 +57,11 @@ class PageLoaderTest {
             HttpHeader.of("test-header", List.of("value1", "value2"))
         );
 
-        final List<StreamingPage.Chunk<HttpHeaders>> chunks = Flowable
-            .fromPublisher(FlowAdapters.toPublisher(page))
-            .toList()
-            .blockingGet();
+        final var chunks = JdkFlowAdapter
+            .flowPublisherToFlux(page)
+            .collectList()
+            .single()
+            .block();
         assertThat(chunks).containsExactly(
             StreamingPage.Chunk.header(
                 HttpHeaders.of(
@@ -90,7 +89,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenNoContentTypeHeader() throws InterruptedException {
+    void shouldThrowPageFormatException_whenNoContentTypeHeader() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -108,7 +107,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenNotMultipart() throws InterruptedException {
+    void shouldThrowPageFormatException_whenNotMultipart() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -126,7 +125,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenNoBoundaryInContentType() throws InterruptedException {
+    void shouldThrowPageFormatException_whenNoBoundaryInContentType() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -144,7 +143,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenReadTimeoutInBody() throws InterruptedException {
+    void shouldThrowHttpException_whenReadTimeoutInBody() {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
             HttpHeaders.EMPTY,
@@ -174,7 +173,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenInvalidMultipart() throws InterruptedException {
+    void shouldThrowPageFormatException_whenInvalidMultipart() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -197,7 +196,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenIncompleteMultipart() throws InterruptedException {
+    void shouldThrowPageFormatException_whenIncompleteMultipart() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -220,7 +219,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenNoContentTypeInEntityHeader() throws InterruptedException {
+    void shouldThrowPageFormatException_whenNoContentTypeInEntityHeader() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -241,7 +240,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenInvalidMultipartInChunkStream() throws InterruptedException {
+    void shouldThrowPageFormatException_whenInvalidMultipartInChunkStream() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
@@ -268,7 +267,7 @@ class PageLoaderTest {
     }
 
     @Test
-    void shouldThrowPageFormatException_whenInvalidMultipartInCompletePage() throws InterruptedException {
+    void shouldThrowPageFormatException_whenInvalidMultipartInCompletePage() {
         WM.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()

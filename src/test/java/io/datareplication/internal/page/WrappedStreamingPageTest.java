@@ -7,9 +7,9 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
-import io.reactivex.rxjava3.core.Flowable;
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
+import reactor.test.StepVerifier;
 
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -63,11 +63,8 @@ class WrappedStreamingPageTest {
             new SnapshotPageHeader(),
             SnapshotEntityHeader::new);
 
-        Flowable
-            .fromPublisher(FlowAdapters.toPublisher(wrappedPage))
-            .test()
-            .await()
-            .assertValues(
+        assertThat(JdkFlowAdapter.flowPublisherToFlux(wrappedPage).collectList().block())
+            .containsExactly(
                 StreamingPage.Chunk.header(new SnapshotEntityHeader(HEADERS_1), CONTENT_TYPE_1),
                 StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap(new byte[]{1, 2, 3})),
                 StreamingPage.Chunk.bodyEnd(),
@@ -99,14 +96,13 @@ class WrappedStreamingPageTest {
                 throw expectedException;
             });
 
-        Flowable
-            .fromPublisher(FlowAdapters.toPublisher(wrappedPage))
-            .test()
-            .await()
-            .assertValues(
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(wrappedPage))
+            .expectNext(
                 StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap(new byte[]{1})),
                 StreamingPage.Chunk.bodyEnd()
             )
-            .assertError(expectedException);
+            .expectErrorMatches(expectedException::equals)
+            .verify();
     }
 }

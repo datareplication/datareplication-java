@@ -7,18 +7,17 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.datareplication.model.Url;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
-import lombok.NonNull;
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,10 +41,11 @@ class StreamingPageTest {
                     StreamingPage.Chunk.bodyChunk(utf8("def")),
                     StreamingPage.Chunk.bodyEnd()));
 
-        final List<@NonNull Entity<HttpHeaders>> result = Flowable
-            .fromPublisher(FlowAdapters.toPublisher(streamingPage.toCompleteEntities()))
-            .toList()
-            .blockingGet();
+        final var result = JdkFlowAdapter
+            .flowPublisherToFlux(streamingPage.toCompleteEntities())
+            .collectList()
+            .single()
+            .block();
 
         assertThat(result).containsExactly(
             new Entity<>(HEADERS_1,
@@ -53,7 +53,7 @@ class StreamingPageTest {
     }
 
     @Test
-    void toCompleteEntities_shouldPassThroughExceptionFromPage() throws InterruptedException {
+    void toCompleteEntities_shouldPassThroughExceptionFromPage() {
         final var expectedException = new HttpException.NetworkError(Url.of(""), new IOException("whoops"));
         final var streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
@@ -67,17 +67,18 @@ class StreamingPageTest {
                 .concatWith(Mono.error(expectedException))
         );
 
-        Flowable
-            .fromPublisher(FlowAdapters.toPublisher(streamingPage.toCompleteEntities()))
-            .test()
-            .await()
-            .assertValues(new Entity<>(HEADERS_1,
-                                       Body.fromBytes("ab".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)))
-            .assertError(expectedException);
+        final var result = JdkFlowAdapter.flowPublisherToFlux(streamingPage.toCompleteEntities());
+
+        StepVerifier
+            .create(result)
+            .expectNext(new Entity<>(HEADERS_1,
+                                     Body.fromBytes("ab".getBytes(StandardCharsets.UTF_8), CONTENT_TYPE_1)))
+            .expectErrorMatches(expectedException::equals)
+            .verify();
     }
 
     @Test
-    void toCompletePage_shouldGetPage() {
+    void toCompletePage_shouldGetPage() throws ExecutionException, InterruptedException {
         final TestStreamingPage<HttpHeaders, HttpHeaders> streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "_---_bnd",
@@ -91,9 +92,10 @@ class StreamingPageTest {
                     StreamingPage.Chunk.bodyChunk(utf8("78")),
                     StreamingPage.Chunk.bodyEnd()));
 
-        final var result = Single
-            .fromCompletionStage(streamingPage.toCompletePage())
-            .blockingGet();
+        final var result = streamingPage
+            .toCompletePage()
+            .toCompletableFuture()
+            .get();
 
         assertThat(result).isEqualTo(new Page<>(
             HttpHeaders.EMPTY,
@@ -104,7 +106,7 @@ class StreamingPageTest {
     }
 
     @Test
-    void toCompletePage_shouldPassThroughExceptionFromPage() throws InterruptedException {
+    void toCompletePage_shouldPassThroughExceptionFromPage() {
         final var expectedException = new HttpException.NetworkError(Url.of(""), new IOException("whoops"));
         final var streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
@@ -112,11 +114,11 @@ class StreamingPageTest {
             Flux.error(expectedException)
         );
 
-        Single
-            .fromCompletionStage(streamingPage.toCompletePage())
-            .test()
-            .await()
-            .assertNoValues()
-            .assertError(expectedException);
+        final var result = Mono.fromCompletionStage(streamingPage.toCompletePage());
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(expectedException::equals)
+            .verify();
     }
 }
