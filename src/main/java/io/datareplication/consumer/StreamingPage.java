@@ -5,14 +5,15 @@ import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.Page;
 import io.datareplication.model.ToHttpHeaders;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Maybe;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletionStage;
@@ -171,8 +172,8 @@ public interface StreamingPage<
          * @param <EntityHeader> the entity's header
          * @return a {@link BodyEnd} marker
          */
+        @SuppressWarnings("unchecked")
         public static @NonNull <EntityHeader> BodyEnd<EntityHeader> bodyEnd() {
-            //noinspection unchecked
             return (BodyEnd<EntityHeader>) BodyEnd.INSTANCE;
         }
     }
@@ -198,12 +199,12 @@ public interface StreamingPage<
      * @return a {@link Flow.Publisher} providing a stream of complete {@link Entity} objects
      */
     default @NonNull Flow.Publisher<@NonNull Entity<EntityHeader>> toCompleteEntities() {
-        final ToCompleteEntitiesTransformer<EntityHeader> transformer = new ToCompleteEntitiesTransformer<>();
-        final Flowable<Entity<EntityHeader>> flowable = Flowable
-            .fromPublisher(FlowAdapters.toPublisher(this))
+        final var transformer = new ToCompleteEntitiesTransformer<EntityHeader>();
+        final var flux = JdkFlowAdapter
+            .flowPublisherToFlux(this)
             .map(transformer::transform)
-            .flatMapMaybe(Maybe::fromOptional);
-        return FlowAdapters.toFlowPublisher(flowable);
+            .flatMap(Mono::justOrEmpty);
+        return FlowAdapters.toFlowPublisher(flux);
     }
 
     /**
@@ -217,10 +218,10 @@ public interface StreamingPage<
      * @return a {@link Page} containing the complete contents of this page
      */
     default @NonNull CompletionStage<@NonNull Page<PageHeader, EntityHeader>> toCompletePage() {
-        return Flowable
-            .fromPublisher(FlowAdapters.toPublisher(toCompleteEntities()))
-            .toList()
+        return JdkFlowAdapter
+            .flowPublisherToFlux(toCompleteEntities())
+            .collectList()
             .map(entities -> new Page<>(header(), boundary(), entities))
-            .toCompletionStage();
+            .toFuture();
     }
 }

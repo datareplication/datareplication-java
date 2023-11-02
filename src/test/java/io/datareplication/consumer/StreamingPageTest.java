@@ -12,6 +12,8 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.FlowAdapters;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -56,11 +58,13 @@ class StreamingPageTest {
         final var streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "",
-            Flowable
-                .<StreamingPage.Chunk<HttpHeaders>>fromArray(StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
-                                                             StreamingPage.Chunk.bodyChunk(utf8("ab")),
-                                                             StreamingPage.Chunk.bodyEnd())
-                .concatWith(Single.error(expectedException))
+            Flux
+                .<StreamingPage.Chunk<HttpHeaders>>fromIterable(List.of(
+                    StreamingPage.Chunk.header(HEADERS_1, CONTENT_TYPE_1),
+                    StreamingPage.Chunk.bodyChunk(utf8("ab")),
+                    StreamingPage.Chunk.bodyEnd()
+                ))
+                .concatWith(Mono.error(expectedException))
         );
 
         Flowable
@@ -105,7 +109,7 @@ class StreamingPageTest {
         final var streamingPage = new TestStreamingPage<>(
             HttpHeaders.EMPTY,
             "",
-            Flowable.error(expectedException)
+            Flux.error(expectedException)
         );
 
         Single

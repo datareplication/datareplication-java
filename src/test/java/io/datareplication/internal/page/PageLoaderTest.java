@@ -12,10 +12,11 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
+import reactor.test.StepVerifier;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -48,9 +49,10 @@ class PageLoaderTest {
                     .withHeader("Test-Header", "value1", "value2")
             ));
 
-        final StreamingPage<HttpHeaders, HttpHeaders> page = pageLoader
+        final var page = pageLoader
             .load(Url.of(WM.url("/page.multipart")))
-            .blockingGet();
+            .single()
+            .block();
 
         assertThat(page.header()).contains(
             HttpHeader.of("content-type", "multipart/mixed; boundary=<random-boundary>"),
@@ -96,13 +98,13 @@ class PageLoaderTest {
                     .withHeader("Content-Type-oops-no", "multipart/mixed; boundary=<random-boundary>")
             ));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
+        final var result = pageLoader
             .load(Url.of(WM.url("/page.multipart")));
 
-        result
-            .test()
-            .await()
-            .assertError(new PageFormatException.MissingContentTypeHeader());
+        StepVerifier
+            .create(result)
+            .expectError(PageFormatException.MissingContentTypeHeader.class)
+            .verify();
     }
 
     @Test
@@ -114,13 +116,13 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "text/plain; boundary=<random-boundary>")
             ));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
+        final var result = pageLoader
             .load(Url.of(WM.url("/page.multipart")));
 
-        result
-            .test()
-            .await()
-            .assertError(new PageFormatException.InvalidContentType("text/plain"));
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new PageFormatException.InvalidContentType("text/plain")::equals)
+            .verify();
     }
 
     @Test
@@ -132,13 +134,13 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "multipart/mixed; a=b")
             ));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
+        final var result = pageLoader
             .load(Url.of(WM.url("/page.multipart")));
 
-        result
-            .test()
-            .await()
-            .assertError(new PageFormatException.NoBoundaryInContentTypeHeader("multipart/mixed; a=b"));
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new PageFormatException.NoBoundaryInContentTypeHeader("multipart/mixed; a=b")::equals)
+            .verify();
     }
 
     @Test
@@ -160,17 +162,15 @@ class PageLoaderTest {
             ));
         final var url = Url.of(WM.url("/page.multipart"));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(url);
+        final var result = pageLoader
+            .load(url)
+            .single()
+            .block();
 
-        result
-            .toFlowable()
-            .map(StreamingPage::toCompleteEntities)
-            .map(FlowAdapters::toPublisher)
-            .flatMap(Flowable::fromPublisher)
-            .test()
-            .await()
-            .assertError(new HttpException.NetworkError(url, ANY_EXCEPTION));
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(result.toCompleteEntities()))
+            .expectErrorMatches(new HttpException.NetworkError(url, ANY_EXCEPTION)::equals)
+            .verify();
     }
 
     @Test
@@ -182,18 +182,18 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(WM.url("/page.multipart")));
+        final var result = pageLoader
+            .load(Url.of(WM.url("/page.multipart")))
+            .single()
+            .block();
 
-        result
-            .toFlowable()
-            .map(StreamingPage::toCompleteEntities)
-            .map(FlowAdapters::toPublisher)
-            .flatMap(Flowable::fromPublisher)
-            .test()
-            .await()
-            .assertValueCount(1)
-            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(46)));
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(result.toCompleteEntities()))
+            .expectNextCount(1)
+            .expectErrorMatches(
+                new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(46))::equals
+            )
+            .verify();
     }
 
     @Test
@@ -205,18 +205,18 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(WM.url("/page.multipart")));
+        final var result = pageLoader
+            .load(Url.of(WM.url("/page.multipart")))
+            .single()
+            .block();
 
-        result
-            .toFlowable()
-            .map(StreamingPage::toCompleteEntities)
-            .map(FlowAdapters::toPublisher)
-            .flatMap(Flowable::fromPublisher)
-            .test()
-            .await()
-            .assertNoValues()
-            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.UnexpectedEndOfInput(49)));
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(result.toCompleteEntities()))
+            .expectNextCount(0)
+            .expectErrorMatches(
+                new PageFormatException.InvalidMultipart(new MultipartException.UnexpectedEndOfInput(49))::equals
+            )
+            .verify();
     }
 
     @Test
@@ -228,18 +228,16 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
-        final Single<StreamingPage<HttpHeaders, HttpHeaders>> result = pageLoader
-            .load(Url.of(WM.url("/page.multipart")));
+        final var result = pageLoader
+            .load(Url.of(WM.url("/page.multipart")))
+            .single()
+            .block();
 
-        result
-            .toFlowable()
-            .map(StreamingPage::toCompleteEntities)
-            .map(FlowAdapters::toPublisher)
-            .flatMap(Flowable::fromPublisher)
-            .test()
-            .await()
-            .assertNoValues()
-            .assertError(new PageFormatException.MissingContentTypeInEntity(0));
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(result.toCompleteEntities()))
+            .expectNextCount(0)
+            .expectErrorMatches(new PageFormatException.MissingContentTypeInEntity(0)::equals)
+            .verify();
     }
 
     @Test
@@ -251,20 +249,22 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
-        final StreamingPage<HttpHeaders, HttpHeaders> page = pageLoader
+        final var page = pageLoader
             .load(Url.of(WM.url("/page.multipart")))
-            .blockingGet();
+            .single()
+            .block();
 
-        Flowable
-            .fromPublisher(FlowAdapters.toPublisher(page))
-            .test()
-            .await()
-            .assertValues(
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(page))
+            .expectNext(
                 StreamingPage.Chunk.header(HttpHeaders.EMPTY, ContentType.of("blub")),
                 StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap("body".getBytes(StandardCharsets.UTF_8))),
                 StreamingPage.Chunk.bodyEnd()
             )
-            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(45)));
+            .expectErrorMatches(
+                new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(45))::equals
+            )
+            .verify();
     }
 
     @Test
@@ -276,14 +276,17 @@ class PageLoaderTest {
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
-        final StreamingPage<HttpHeaders, HttpHeaders> page = pageLoader
+        final var page = pageLoader
             .load(Url.of(WM.url("/page.multipart")))
-            .blockingGet();
+            .single()
+            .block();
 
-        Single
-            .fromCompletionStage(page.toCompletePage())
-            .test()
-            .await()
-            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(45)));
+        StepVerifier
+            .create(JdkFlowAdapter.flowPublisherToFlux(page))
+            .expectNextCount(3)
+            .expectErrorMatches(
+                new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(45))::equals
+            )
+            .verify();
     }
 }

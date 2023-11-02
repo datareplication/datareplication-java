@@ -3,9 +3,8 @@ package io.datareplication.internal.page;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.ToHttpHeaders;
-import io.reactivex.rxjava3.core.Flowable;
 import lombok.NonNull;
-import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
 
 import java.util.concurrent.Flow;
 import java.util.function.Function;
@@ -22,13 +21,14 @@ public class WrappedStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader
     private final String boundary;
     private final Flow.Publisher<StreamingPage.Chunk<EntityHeader>> mappedPublisher;
 
+    @SuppressWarnings("unchecked")
     public WrappedStreamingPage(final StreamingPage<HttpHeaders, HttpHeaders> underlying,
                                 final PageHeader pageHeader,
                                 final Function<HttpHeaders, EntityHeader> convertEntityHeader) {
         this.pageHeader = pageHeader;
         this.boundary = underlying.boundary();
-        var flowable = Flowable
-            .fromPublisher(FlowAdapters.toPublisher(underlying))
+        var flux = JdkFlowAdapter
+            .flowPublisherToFlux(underlying)
             .map(chunk -> {
                 if (chunk instanceof StreamingPage.Chunk.Header) {
                     var header = (StreamingPage.Chunk.Header<HttpHeaders>) chunk;
@@ -37,11 +37,10 @@ public class WrappedStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader
                 } else {
                     // this is ok: the only subclass that uses the type parameter is Header which we explicitly convert
                     // above
-                    //noinspection unchecked
                     return (Chunk<EntityHeader>) chunk;
                 }
             });
-        this.mappedPublisher = FlowAdapters.toFlowPublisher(flowable);
+        this.mappedPublisher = JdkFlowAdapter.publisherToFlowPublisher(flux);
     }
 
     @Override

@@ -13,16 +13,18 @@ import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.exceptions.CompositeException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
+import reactor.core.Exceptions;
+import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
+import java.util.function.Function;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class SnapshotConsumerImpl implements SnapshotConsumer {
@@ -39,18 +41,24 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
             .get(url, HttpResponse.BodyHandlers.ofByteArray())
             // safety: ok because we "own" the byte array and aren't modifying it
             .map(response -> Body.fromBytesUnsafe(response.body(), APPLICATION_JSON))
-            // TODO: wrap exception?
-            .map(SnapshotIndex::fromJson)
-            .toCompletionStage();
+            // TODO: wrap ParsingException?
+            .map(json -> {
+                try {
+                    return SnapshotIndex.fromJson(json);
+                } catch (IOException e) {
+                    throw new IllegalStateException("unexpected IOException thrown by Body; bug?", e);
+                }
+            })
+            .toFuture();
     }
 
     @Override
     public @NonNull Flow.Publisher<
         @NonNull StreamingPage<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader>
         > streamPages(@NonNull final SnapshotIndex snapshotIndex) {
-        return FlowAdapters.toFlowPublisher(
+        return JdkFlowAdapter.publisherToFlowPublisher(
             streamPagesInternal(snapshotIndex, networkConcurrency)
-                .onErrorResumeNext(this::rewrapCompositeErrors)
+                .onErrorResume(this::rewrapCompositeErrors)
         );
     }
 
@@ -58,19 +66,24 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
     public @NonNull Flow.Publisher<
         @NonNull Entity<@NonNull SnapshotEntityHeader>
         > streamEntities(@NonNull final SnapshotIndex snapshotIndex) {
-        final var flowable = streamPagesInternal(snapshotIndex, networkConcurrency)
-            .map(page -> FlowAdapters.toPublisher(page.toCompleteEntities()))
-            .flatMap(Flowable::fromPublisher, delayErrors, networkConcurrency)
-            .onErrorResumeNext(this::rewrapCompositeErrors);
-        return FlowAdapters.toFlowPublisher(flowable);
+        final var entities = streamPagesInternal(snapshotIndex, networkConcurrency)
+            .map(page -> JdkFlowAdapter.flowPublisherToFlux(page.toCompleteEntities()));
+        // TODO: what prefetch?
+        final var flux = (delayErrors
+            ? entities.flatMapDelayError(Function.identity(), networkConcurrency, 1)
+            : entities.flatMap(Function.identity(), networkConcurrency, 1)
+        )
+            .onErrorResume(this::rewrapCompositeErrors);
+        return JdkFlowAdapter.publisherToFlowPublisher(flux);
     }
 
-    private Flowable<
+    private Flux<
         StreamingPage<SnapshotPageHeader, SnapshotEntityHeader>
         > streamPagesInternal(final SnapshotIndex snapshotIndex, int networkConcurrency) {
-        return Flowable
-            .fromIterable(snapshotIndex.pages())
-            .flatMapSingle(pageLoader::load, delayErrors, networkConcurrency)
+        final var pages = Flux.fromIterable(snapshotIndex.pages());
+        return (delayErrors
+            ? pages.flatMapDelayError(pageLoader::load, networkConcurrency, 1)
+            : pages.flatMap(pageLoader::load, networkConcurrency, 1))
             .map(this::wrapPage);
     }
 
@@ -82,13 +95,13 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
                                           SnapshotEntityHeader::new);
     }
 
-    private <T> Flowable<T> rewrapCompositeErrors(Throwable exception) {
-        if (exception instanceof CompositeException) {
-            final var compositeException = (CompositeException) exception;
-            final var rewrapped = new ConsumerException.CollectedErrors(compositeException.getExceptions());
-            return Flowable.error(rewrapped);
+    private <T> Flux<T> rewrapCompositeErrors(Throwable exception) {
+        final var unwrapped = Exceptions.unwrapMultiple(exception);
+        if (unwrapped.size() > 1) {
+            final var rewrapped = new ConsumerException.CollectedErrors(unwrapped);
+            return Flux.error(rewrapped);
         } else {
-            return Flowable.error(exception);
+            return Flux.error(exception);
         }
     }
 }
