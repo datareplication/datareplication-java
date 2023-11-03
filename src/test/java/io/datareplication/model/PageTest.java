@@ -75,14 +75,14 @@ class PageTest {
         assertThat(result.contentType())
             .isEqualTo(ContentType.of("multipart/mixed; boundary=\"_---_boundary-string\""));
         assertThat(result.toUtf8()).isEqualTo(
-            "--_---_boundary-string\r\n" +
-                "Content-Length: 16\r\n" +
-                "Content-Type: text/x-vnd-test\r\n" +
-                "header2: 15\r\n" +
-                "header1: value1\r\n" +
-                "\r\n" +
-                "test entity body\r\n" +
-                "--_---_boundary-string--"
+            "--_---_boundary-string\r\n"
+                + "Content-Length: 16\r\n"
+                + "Content-Type: text/x-vnd-test\r\n"
+                + "header2: 15\r\n"
+                + "header1: value1\r\n"
+                + "\r\n"
+                + "test entity body\r\n"
+                + "--_---_boundary-string--"
         );
         assertThat(result.contentLength()).isEqualTo(149);
     }
@@ -109,35 +109,35 @@ class PageTest {
         assertThat(result.contentType())
             .isEqualTo(ContentType.of("multipart/mixed; boundary=\"cool cool boundary ;)\""));
         assertThat(result.toUtf8()).isEqualTo(
-            "--cool cool boundary ;)\r\n" +
-                "Content-Length: 16\r\n" +
-                "Content-Type: text/x-vnd-test-1\r\n" +
-                "header2: 66\r\n" +
-                "header1: entity 1\r\n" +
-                "\r\n" +
-                "test \n" +
-                "entity \n" +
-                "1\n" +
-                "\r\n" +
-                "--cool cool boundary ;)\r\n" +
-                "Content-Length: 15\r\n" +
-                "Content-Type: text/x-vnd-test-2\r\n" +
-                "header2: 67\r\n" +
-                "header1: entity 2\r\n" +
-                "\r\n" +
-                "test \n" +
-                "entity \n" +
-                "2\r\n" +
-                "--cool cool boundary ;)\r\n" +
-                "Content-Length: 15\r\n" +
-                "Content-Type: text/x-vnd-test-3\r\n" +
-                "header2: 68\r\n" +
-                "header1: entity 3\r\n" +
-                "\r\n" +
-                "test \n" +
-                "entity \n" +
-                "3\r\n" +
-                "--cool cool boundary ;)--"
+            "--cool cool boundary ;)\r\n"
+                + "Content-Length: 16\r\n"
+                + "Content-Type: text/x-vnd-test-1\r\n"
+                + "header2: 66\r\n"
+                + "header1: entity 1\r\n"
+                + "\r\n"
+                + "test \n"
+                + "entity \n"
+                + "1\n"
+                + "\r\n"
+                + "--cool cool boundary ;)\r\n"
+                + "Content-Length: 15\r\n"
+                + "Content-Type: text/x-vnd-test-2\r\n"
+                + "header2: 67\r\n"
+                + "header1: entity 2\r\n"
+                + "\r\n"
+                + "test \n"
+                + "entity \n"
+                + "2\r\n"
+                + "--cool cool boundary ;)\r\n"
+                + "Content-Length: 15\r\n"
+                + "Content-Type: text/x-vnd-test-3\r\n"
+                + "header2: 68\r\n"
+                + "header1: entity 3\r\n"
+                + "\r\n"
+                + "test \n"
+                + "entity \n"
+                + "3\r\n"
+                + "--cool cool boundary ;)--"
         );
         assertThat(result.contentLength()).isEqualTo(413);
     }
@@ -175,12 +175,12 @@ class PageTest {
         assertThat(result.contentType())
             .isEqualTo(ContentType.of("multipart/mixed; boundary=\"bnd\""));
         assertThat(result.toUtf8()).isEqualTo(
-            "--bnd\r\n" +
-                "Content-Length: 4\r\n" +
-                "Content-Type: application/xml\r\n" +
-                "\r\n" +
-                "body\r\n" +
-                "--bnd--"
+            "--bnd\r\n"
+                + "Content-Length: 4\r\n"
+                + "Content-Type: application/xml\r\n"
+                + "\r\n"
+                + "body\r\n"
+                + "--bnd--"
         );
         assertThat(result.contentLength()).isEqualTo(72);
     }
@@ -201,12 +201,12 @@ class PageTest {
         assertThat(result.contentType())
             .isEqualTo(ContentType.of("multipart/mixed; boundary=\" boundary string \""));
         assertThat(result.toUtf8()).isEqualTo(
-            "-- boundary string \r\n" +
-                "Content-Length: 0\r\n" +
-                "Content-Type: application/x-vnd-nothing\r\n" +
-                "\r\n" +
-                "\r\n" +
-                "-- boundary string --"
+            "-- boundary string \r\n"
+                + "Content-Length: 0\r\n"
+                + "Content-Type: application/x-vnd-nothing\r\n"
+                + "\r\n"
+                + "\r\n"
+                + "-- boundary string --"
         );
         assertThat(result.contentLength()).isEqualTo(106);
     }
