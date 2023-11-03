@@ -39,7 +39,8 @@ public class PageLoader {
      *
      * @param url the URL to download
      * @return a {@link StreamingPage} for the given URL with unparsed headers
-     * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes, network errors/timeouts, ...)
+     * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
+     *                             network errors/timeouts, ...)
      * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
      *                             missing or malformed HTTP Content-Type header since multipart parsing errors will
      *                             only start happening when we get to {@link StreamingPage})
