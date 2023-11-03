@@ -129,6 +129,8 @@ class MultipartParserTest {
         assertThat(parser.isFinished()).isTrue();
     }
 
+    // going by the grammar in the RFC, a multipart document has to have at least one part, but we can support empty
+    // ones easy enough
     @Test
     void shouldParseEmptyMultipart() {
         MultipartParser parser = new MultipartParser(utf8("bnd"));

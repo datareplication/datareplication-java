@@ -1,8 +1,15 @@
 package io.datareplication.model;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.Value;
 
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +24,8 @@ import java.util.UUID;
  */
 @Value
 public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders> {
+    private static final Body CRLF = Body.fromUtf8("\r\n");
+
     /**
      * The page's headers. This does not include Content-Length and Content-Type which are included in the return value
      * of {@link #toMultipartBody()}.
@@ -58,8 +67,8 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
      * <p>Return the body of this page as a multipart document.</p>
      *
      * <p>
-     * This function does not allocate a buffer for the entire page body. Instead, it is generated on demand from the
-     * underlying entities.
+     * This function does not allocate a buffer for the entire page body. Instead, the entities' bodies
+     * are directly reused by the returned {@link Body} to avoid having to keep entity bodies in memory twice.
      * </p>
      *
      * <p>
@@ -70,6 +79,67 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
      * @return a Body containing the page's entities as a multipart document
      */
     public @NonNull Body toMultipartBody() {
-        throw new UnsupportedOperationException("not implemented");
+        final var chunks = new ArrayList<Body>();
+        for (var entity : entities) {
+            final var partHeader = new StringBuilder(100)
+                .append("--")
+                .append(boundary)
+                .append("\r\n");
+            for (var header : entity.toHttpHeaders()) {
+                for (var value : header.values()) {
+                    partHeader
+                        .append(header.displayName())
+                        .append(": ")
+                        .append(value)
+                        .append("\r\n");
+                }
+            }
+            partHeader.append("\r\n");
+            chunks.add(Body.fromUtf8(partHeader.toString()));
+            chunks.add(entity.body());
+            chunks.add(CRLF);
+        }
+
+        chunks.add(Body.fromUtf8(String.format("--%s--", boundary)));
+        final var contentType = ContentType.of(String.format("multipart/mixed; boundary=\"%s\"", boundary));
+        return new MultipartBody(contentType, chunks);
+    }
+
+    @EqualsAndHashCode
+    @ToString
+    @AllArgsConstructor
+    private static final class MultipartBody implements Body {
+        private final ContentType contentType;
+        private final List<Body> bodyParts;
+
+        @Override
+        public @NonNull InputStream newInputStream() {
+            final var inputStreamsIterator = bodyParts
+                .stream()
+                .map(Body::newInputStream)
+                .iterator();
+            final var inputStreamsEnumeration = new Enumeration<InputStream>() {
+                @Override
+                public boolean hasMoreElements() {
+                    return inputStreamsIterator.hasNext();
+                }
+
+                @Override
+                public InputStream nextElement() {
+                    return inputStreamsIterator.next();
+                }
+            };
+            return new SequenceInputStream(inputStreamsEnumeration);
+        }
+
+        @Override
+        public long contentLength() {
+            return bodyParts.stream().mapToLong(Body::contentLength).sum();
+        }
+
+        @Override
+        public @NonNull ContentType contentType() {
+            return contentType;
+        }
     }
 }
