@@ -28,6 +28,7 @@
         <exclude name="MissingSerialVersionUID"/>
         <exclude name="DataflowAnomalyAnalysis"/>
         <exclude name="AvoidFieldNameMatchingTypeName"/>
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
     </rule>
     <rule ref="category/java/performance.xml">
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
@@ -100,10 +101,16 @@
         </properties>
     </rule>
 
-
     <rule ref="category/java/design.xml/ExcessiveImports">
         <properties>
             <property name="minimum" value="50"/>
         </properties>
     </rule>
+
+    <rule ref="category/java/errorprone.xml/TestClassWithoutTestCases">
+        <properties>
+            <property name="testClassPattern" value="^(?:.*\.)?.*Test$"/>
+        </properties>
+    </rule>
+
 </ruleset>

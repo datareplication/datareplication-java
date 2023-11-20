@@ -241,7 +241,7 @@ class PageLoaderTest {
         wireMock.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
-                    .withBody("--boundary\ncontent-type:blub\n\nbody\n\n--boundary...oops, other things")
+                    .withBody("--boundary\ncontent-type:blub\n\nbody\n--boundary...oops, other things")
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
@@ -258,7 +258,7 @@ class PageLoaderTest {
                 StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap("body".getBytes(StandardCharsets.UTF_8))),
                 StreamingPage.Chunk.bodyEnd()
             )
-            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(46)));
+            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(45)));
     }
 
     @Test
@@ -266,7 +266,7 @@ class PageLoaderTest {
         wireMock.stubFor(
             get("/page.multipart").willReturn(
                 aResponse()
-                    .withBody("--boundary\ncontent-type:blub\n\nbody\n\n--boundary...oops, other things")
+                    .withBody("--boundary\ncontent-type:blub\n\nbody\n--boundary...oops, other things")
                     .withHeader("Content-Type", "multipart/mixed; boundary=boundary")
             ));
 
@@ -278,6 +278,6 @@ class PageLoaderTest {
             .fromCompletionStage(page.toCompletePage())
             .test()
             .await()
-            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(46)));
+            .assertError(new PageFormatException.InvalidMultipart(new MultipartException.InvalidDelimiter(45)));
     }
 }

@@ -49,16 +49,16 @@ class MultipartParserTest {
                 .isEqualTo(new Result(new Token.Data(utf8("\r\nmore")), 6));
         assertThat(parser.parse(utf8("\ndata")))
                 .isEqualTo(new Result(new Token.Data(utf8("\ndata")), 5));
-        assertThat(parser.parse(utf8("\r\n\n--_---_boundary")))
-                .isEqualTo(new Result(Token.PartEnd.INSTANCE, 18));
+        assertThat(parser.parse(utf8("\r\n--_---_boundary")))
+                .isEqualTo(new Result(Token.PartEnd.INSTANCE, 17));
         assertThat(parser.parse(utf8("\n")))
                 .isEqualTo(new Result(Token.PartBegin.INSTANCE, 1));
         assertThat(parser.parse(utf8("\r\n")))
                 .isEqualTo(new Result(Token.DataBegin.INSTANCE, 2));
         assertThat(parser.parse(utf8("data")))
                 .isEqualTo(new Result(new Token.Data(utf8("data")), 4));
-        assertThat(parser.parse(utf8("\r\n\r\n--_---_boundary")))
-                .isEqualTo(new Result(Token.PartEnd.INSTANCE, 19));
+        assertThat(parser.parse(utf8("\r\n--_---_boundary")))
+                .isEqualTo(new Result(Token.PartEnd.INSTANCE, 17));
         assertThat(parser.parse(utf8("--")))
                 .isEqualTo(new Result(Token.Continue.INSTANCE, 2));
         assertThat(parser.parse(utf8("epilogue")))
@@ -70,7 +70,7 @@ class MultipartParserTest {
     void shouldParseMultipartBody() {
         MultipartParser parser = new MultipartParser(utf8("..."));
 
-        assertThat(parseExactly(parser, utf8("--...\nh1:v1\nh2:v2\n\ndatadatadata\n\n--...--")))
+        assertThat(parseExactly(parser, utf8("--...\nh1:v1\nh2:v2\n\ndatadatadata\n--...--")))
                 .containsExactly(Token.Continue.INSTANCE,
                                  Token.PartBegin.INSTANCE,
                                  new Token.Header("h1", "v1"),
@@ -86,7 +86,7 @@ class MultipartParserTest {
     void shouldSkipPastNotQuiteCorrectDelimiter() {
         MultipartParser parser = new MultipartParser(utf8("_---_boundary"));
 
-        final String multipart = "--_---_boundary\r\n\r\ndata data\r\n\r\n--_---_boundarz\n\n--_---_boundary--";
+        final String multipart = "--_---_boundary\r\n\r\ndata data\r\n\r\n--_---_boundarz\n--_---_boundary--";
         assertThat(parseExactly(parser, utf8(multipart)))
                 .containsExactly(Token.Continue.INSTANCE,
                                  Token.PartBegin.INSTANCE,
@@ -100,20 +100,37 @@ class MultipartParserTest {
     }
 
     @Test
-    void shouldSkipPastDelimiterWithOnlyOneNewline() {
+    void shouldSkipPastDelimiterWithoutNewline() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
-        assertThat(parseExactly(parser, utf8("--_b\n\ndata\n--_b-- other stuff\n\n--_b--")))
+        assertThat(parseExactly(parser, utf8("--_b\n\ndata--_b-- other stuff\n--_b--")))
                 .containsExactly(Token.Continue.INSTANCE,
                                  Token.PartBegin.INSTANCE,
                                  Token.DataBegin.INSTANCE,
-                                 new Token.Data(utf8("data")),
-                                 new Token.Data(utf8("\n--_b-- other stuff")),
+                                 new Token.Data(utf8("data--_b-- other stuff")),
                                  Token.PartEnd.INSTANCE,
                                  Token.Continue.INSTANCE);
         assertThat(parser.isFinished()).isTrue();
     }
 
+    @Test
+    void shouldParseBodyOfNewlines() {
+        MultipartParser parser = new MultipartParser(utf8("_b"));
+
+        assertThat(parseExactly(parser, utf8("--_b\n\r\n\r\n\n\r\n\n--_b--")))
+            .containsExactly(Token.Continue.INSTANCE,
+                             Token.PartBegin.INSTANCE,
+                             Token.DataBegin.INSTANCE,
+                             new Token.Data(utf8("\r\n")),
+                             new Token.Data(utf8("\n")),
+                             new Token.Data(utf8("\r\n")),
+                             Token.PartEnd.INSTANCE,
+                             Token.Continue.INSTANCE);
+        assertThat(parser.isFinished()).isTrue();
+    }
+
+    // going by the grammar in the RFC, a multipart document has to have at least one part, but we can support empty
+    // ones easy enough
     @Test
     void shouldParseEmptyMultipart() {
         MultipartParser parser = new MultipartParser(utf8("bnd"));
@@ -129,7 +146,7 @@ class MultipartParserTest {
     void shouldRequireNewlineAfterPrologue() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
-        assertThat(parseExactly(parser, utf8("fake start: --_b\n\nactual start:\n--_b\n\n\n\n--_b--")))
+        assertThat(parseExactly(parser, utf8("fake start: --_b\n\nactual start:\n--_b\n\n\n--_b--")))
                 .containsExactly(Token.Continue.INSTANCE,
                                  Token.Continue.INSTANCE,
                                  Token.Continue.INSTANCE,
@@ -145,7 +162,7 @@ class MultipartParserTest {
     void shouldTrimHeaderWhitespace() {
         MultipartParser parser = new MultipartParser(utf8("_b"));
 
-        assertThat(parseExactly(parser, utf8("--_b\nh1:v1\n   h2      :    v2    \nh 3: v 3\n\n\n\n--_b--")))
+        assertThat(parseExactly(parser, utf8("--_b\nh1:v1\n   h2      :    v2    \nh 3: v 3\n\n\n--_b--")))
                 .containsExactly(Token.Continue.INSTANCE,
                                  Token.PartBegin.INSTANCE,
                                  new Token.Header("h1", "v1"),

@@ -17,7 +17,7 @@ class BufferingMultipartParserTest {
 
     @Test
     void shouldParseSingleCompleteBuffer() {
-        final ByteBuffer input = utf8("prologue, who cares\n--bb\nheader:value\n\nbodybodybody\n\n--bb--");
+        final ByteBuffer input = utf8("prologue, who cares\n--bb\nheader:value\n\nbodybodybody\n--bb--");
 
         assertThat(parser.parse(input))
             .containsExactly(Token.Continue.INSTANCE,
@@ -48,9 +48,9 @@ class BufferingMultipartParserTest {
         assertThat(parser.parse(utf8("\nbody body body")))
             .containsExactly(Token.DataBegin.INSTANCE,
                              new Token.Data(utf8("body body body")));
-        assertThat(parser.parse(utf8("\n\n--bb")))
+        assertThat(parser.parse(utf8("\n--bb")))
             .containsExactly(Token.PartEnd.INSTANCE);
-        assertThat(parser.parse(utf8("\nh:v\n\n\n\n--bb")))
+        assertThat(parser.parse(utf8("\nh:v\n\n\n--bb")))
             .containsExactly(Token.PartBegin.INSTANCE,
                              new Token.Header("h", "v"),
                              Token.DataBegin.INSTANCE,
@@ -62,7 +62,7 @@ class BufferingMultipartParserTest {
 
     @Test
     void shouldPartiallyParseSingleIncompleteBuffer() {
-        final ByteBuffer input = utf8("--bb\n\nbody\n\n--");
+        final ByteBuffer input = utf8("--bb\n\nbody\n--");
 
         assertThat(parser.parse(input))
             .containsExactly(Token.Continue.INSTANCE,
@@ -75,7 +75,7 @@ class BufferingMultipartParserTest {
 
     @Test
     void shouldPartiallyParseBufferAndThrowException_whenInvalidMultipartDelimiter() {
-        final ByteBuffer input = utf8("--bb\n\nbody\n\n--bb...oops");
+        final ByteBuffer input = utf8("--bb\n\nbody\n--bb...oops");
 
         assertThat(parser.parse(input))
             .containsExactly(Token.Continue.INSTANCE,
@@ -84,12 +84,12 @@ class BufferingMultipartParserTest {
                              new Token.Data(utf8("body")),
                              Token.PartEnd.INSTANCE);
         assertThatThrownBy(parser::finish)
-            .isEqualTo(new MultipartException.InvalidDelimiter(16));
+            .isEqualTo(new MultipartException.InvalidDelimiter(15));
     }
 
     @Test
     void shouldPartiallyParseBufferAndThrowException_whenInputConsumedButNotInTerminationState() {
-        final ByteBuffer input = utf8("--bb\n\nbody\n\n--bb");
+        final ByteBuffer input = utf8("--bb\n\nbody\n--bb");
 
         assertThat(parser.parse(input))
             .containsExactly(Token.Continue.INSTANCE,
@@ -98,6 +98,6 @@ class BufferingMultipartParserTest {
                              new Token.Data(utf8("body")),
                              Token.PartEnd.INSTANCE);
         assertThatThrownBy(parser::finish)
-            .isEqualTo(new MultipartException.UnexpectedEndOfInput(16));
+            .isEqualTo(new MultipartException.UnexpectedEndOfInput(15));
     }
 }
