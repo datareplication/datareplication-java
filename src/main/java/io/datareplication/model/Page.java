@@ -11,7 +11,6 @@ import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * The <code>Page</code> class represents a complete feed or snapshot page, both on the producer and consumer side. This
@@ -46,21 +45,6 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
         this.header = header;
         this.boundary = boundary;
         this.entities = List.copyOf(entities);
-    }
-
-    /**
-     * Create a new page with a random boundary.
-     *
-     * @param header   the page header
-     * @param entities the page's entities
-     */
-    public Page(@NonNull PageHeader header,
-                @NonNull List<@NonNull Entity<@NonNull EntityHeader>> entities) {
-        this(header, randomBoundary(), entities);
-    }
-
-    private static @NonNull String randomBoundary() {
-        return String.format("_---_%s", UUID.randomUUID());
     }
 
     /**
