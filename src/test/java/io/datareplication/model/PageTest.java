@@ -2,16 +2,11 @@ package io.datareplication.model;
 
 import lombok.NonNull;
 import lombok.Value;
-import io.datareplication.producer.snapshot.PageIdProvider;
-import io.datareplication.producer.snapshot.UUIDPageIdProvider;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
