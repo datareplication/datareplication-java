@@ -17,13 +17,6 @@ class PageTest {
     private static final Entity<HttpHeaders> ENTITY_2 = new Entity<>(HttpHeaders.EMPTY, Body.fromUtf8("2"));
     private static final Entity<HttpHeaders> ENTITY_3 = new Entity<>(HttpHeaders.EMPTY, Body.fromUtf8("3"));
 
-    private PageIdProvider pageIdProvider;
-
-    @BeforeEach
-    void setUp() {
-        pageIdProvider = new UUIDPageIdProvider();
-    }
-
     @Test
     void shouldMakeEntitiesListUnmodifiable() {
 
@@ -33,23 +26,12 @@ class PageTest {
         final ArrayList<Entity<HttpHeaders>> entities = new ArrayList<>(original);
 
         final Page<HttpHeaders, HttpHeaders> page
-            = new Page<>(HttpHeaders.EMPTY, pageIdProvider.newPageId().boundary(), entities);
+            = new Page<>(HttpHeaders.EMPTY, "boundary", entities);
 
         assertThat(page.entities()).containsExactlyElementsOf(original);
         assertThatThrownBy(() -> page.entities().add(ENTITY_3))
             .isInstanceOf(UnsupportedOperationException.class);
         entities.add(ENTITY_3);
         assertThat(page.entities()).containsExactlyElementsOf(original);
-    }
-
-    @Test
-    void shouldPickARandomBoundaryFromARandomUUID() {
-        pageIdProvider = new UUIDPageIdProvider();
-        final Page<HttpHeaders, HttpHeaders> page
-            = new Page<>(HttpHeaders.EMPTY, pageIdProvider.newPageId().boundary(), Collections.emptyList());
-
-        assertThat(page.boundary()).matches("_---_[a-f0-9-]{36}");
-        final UUID uuidPart = UUID.fromString(page.boundary().substring(5));
-        assertThat(uuidPart.version()).isEqualTo(4);
     }
 }
