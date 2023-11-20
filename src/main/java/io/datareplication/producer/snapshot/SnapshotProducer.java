@@ -43,9 +43,7 @@ public interface SnapshotProducer {
         private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
         private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
         private long maxBytesPerPage = 1000L * 1000L;
-        public static final long MINIMUM_BYTES_PER_PAGE = 1L;
         private long maxEntriesPerPage = Long.MAX_VALUE;
-        public static final long MINIMUM_ENTRIES_PER_PAGE = 1L;
 
         /**
          * Build a new {@link SnapshotProducer} with the parameters set on this builder.
@@ -119,7 +117,7 @@ public interface SnapshotProducer {
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
         public Builder maxBytesPerPage(final long maxBytesPerPage) {
-            if (maxBytesPerPage < MINIMUM_BYTES_PER_PAGE) {
+            if (maxBytesPerPage <= 0) {
                 throw new IllegalArgumentException("maxBytesPerPage must be >= 1");
             }
             this.maxBytesPerPage = maxBytesPerPage;
@@ -135,7 +133,7 @@ public interface SnapshotProducer {
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
         public Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            if (maxEntriesPerPage < MINIMUM_ENTRIES_PER_PAGE) {
+            if (maxEntriesPerPage <= 0) {
                 throw new IllegalArgumentException("maxEntriesPerPage must be >= 1");
             }
             this.maxEntriesPerPage = maxEntriesPerPage;
