@@ -50,6 +50,11 @@
             <version>3.6.0</version>
         </dependency>
         <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.5.11</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
@@ -135,11 +140,6 @@
                         <include>**/*IntegrationTest</include>
                         <include>**/*AcceptanceTest</include>
                     </includes>
-                    <excludes>
-                        <!-- TODO: Delete when integration is finished -->
-                        <exclude>**/SnapshotProducerIntegrationTest</exclude>
-                        <exclude>**/SnapshotAcceptanceTest</exclude>
-                    </excludes>
                 </configuration>
             </plugin>
             <plugin>

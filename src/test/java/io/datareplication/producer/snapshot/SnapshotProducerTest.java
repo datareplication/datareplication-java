@@ -7,25 +7,72 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class SnapshotProducerTest {
 
+    @Mock
+    SnapshotPageRepository snapshotPageRepository;
+    @Mock
+    SnapshotIndexRepository snapshotIndexRepository;
+    @Mock
+    SnapshotPageUrlBuilder snapshotPageUrlBuilder;
+    @Mock
+    PageIdProvider pageIdProvider;
+    @Mock
+    SnapshotIdProvider snapshotIdProvider;
+
     @Test
     @DisplayName("Should build a SnapshotProducer")
-    void shouldBuildASnapshotProducer(@Mock SnapshotPageRepository snapshotPageRepository,
-                                      @Mock SnapshotIndexRepository snapshotIndexRepository,
-                                      @Mock SnapshotPageUrlBuilder snapshotPageUrlBuilder,
-                                      @Mock PageIdProvider pageIdProvider,
-                                      @Mock SnapshotIdProvider snapshotIdProvider) {
+    void shouldBuildASnapshotProducer() {
         SnapshotProducer snapshotProducer = SnapshotProducer
             .builder()
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
-            .maxBytesPerPage(2)
-            // TODO: Additional configuration
+            .maxBytesPerPage(5)
+            .maxEntriesPerPage(2)
             .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
 
         assertThat(snapshotProducer).isInstanceOf(SnapshotProducerImpl.class);
+    }
+
+    @Test
+    @DisplayName("should throw an error if maxBytesPerPage is below minimum")
+    void shouldThrowErrorWhenMaxBytesPerPageIsBelowMinimum() {
+        long pointlessValueForMaxBytesPerPage = 0L;
+
+        IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
+            SnapshotProducer
+                .builder()
+                .pageIdProvider(pageIdProvider)
+                .snapshotIdProvider(snapshotIdProvider)
+                .maxBytesPerPage(pointlessValueForMaxBytesPerPage)
+                .build(snapshotIndexRepository,
+                    snapshotPageRepository,
+                    snapshotPageUrlBuilder
+                )
+        );
+        assertEquals("maxBytesPerPage must be >= 1", thrownException.getMessage());
+    }
+
+    @Test
+    @DisplayName("should throw an error if maxEntriesPerPage is below minimum")
+    void shouldThrowErrorWhenmaxEntriesPerPageIsBelowMinimum() {
+        long pointlessValueForMaxEntriesPerPage = 0L;
+
+        IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
+            SnapshotProducer
+                .builder()
+                .pageIdProvider(pageIdProvider)
+                .snapshotIdProvider(snapshotIdProvider)
+                .maxEntriesPerPage(pointlessValueForMaxEntriesPerPage)
+                .build(snapshotIndexRepository,
+                    snapshotPageRepository,
+                    snapshotPageUrlBuilder
+                )
+        );
+        assertEquals("maxEntriesPerPage must be >= 1", thrownException.getMessage());
     }
 }
