@@ -243,6 +243,29 @@ class BodyTest {
     }
 
     @Test
+    void fromBytes_shouldCopyArray() throws IOException {
+        final var bytes = new byte[]{1, 2, 3, 4};
+        final var expected = bytes.clone();
+
+        final Body body = Body.fromBytes(bytes);
+        bytes[0] = 50;
+
+        assertThat(body.toBytes()).isEqualTo(expected);
+    }
+
+    @Test
+    void fromBytesUnsafe_shouldNotCopyArray() throws IOException {
+        final var bytes = new byte[]{1, 2, 3, 4};
+        final var expected = bytes.clone();
+
+        final Body body = Body.fromBytesUnsafe(bytes);
+        bytes[0] = 50;
+
+        assertThat(body.toBytes()).isEqualTo(bytes);
+        assertThat(body.toBytes()).isNotEqualTo(expected);
+    }
+
+    @Test
     void fromUtf8_shouldReturnBody_whenAsciiOnly() throws IOException {
         final String s = "this is the test string";
 

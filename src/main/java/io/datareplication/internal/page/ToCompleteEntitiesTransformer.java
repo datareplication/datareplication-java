@@ -15,6 +15,7 @@ import java.util.Optional;
  * Transform a stream of {@link StreamingPage.Chunk} objects into complete {@link Entity Entities}. This class mostly
  * collects body bytes internally until the end of an entity is signaled and then returns the complete entity with its
  * entire body.
+ *
  * @param <EntityHeader> the header type for the entities; this is just passed through
  */
 public class ToCompleteEntitiesTransformer<EntityHeader extends ToHttpHeaders> {
@@ -30,6 +31,7 @@ public class ToCompleteEntitiesTransformer<EntityHeader extends ToHttpHeaders> {
      *
      * <p>NB: feeding chunks out of the expected order (e.g. bytes without a header first) is Not Allowed.
      * Don't Do That. In particular, it might cause NPEs.</p>
+     *
      * @param chunk a {@link StreamingPage.Chunk}
      * @return an {@link Entity} if this chunk finished one
      */
@@ -52,8 +54,13 @@ public class ToCompleteEntitiesTransformer<EntityHeader extends ToHttpHeaders> {
         } else if (chunk instanceof StreamingPage.Chunk.BodyEnd) {
             // TODO: Alternative implementation: keep a List<ByteBuffer> and build a Body impl from that. Doesn't
             //  require a big new allocation, but feels just generally less efficient?
-            final Body body = Body.fromBytes(bodyStream.toByteArray(), currentHeader.contentType());
+            // safety: ok because we're discarding the stream so the Body has the only reference
+            final Body body = Body.fromBytesUnsafe(bodyStream.toByteArray(), currentHeader.contentType());
             final Entity<EntityHeader> entity = new Entity<>(currentHeader.header(), body);
+            // we set the stream to null so that a) no one can touch the internal byte array any more and b) if events
+            // arrive in an unexpected order, we get an NPE rather than silently writing to a stream that should be done
+            bodyStream = null; //NOPMD
+            bodyChannel = null; //NOPMD
             return Optional.of(entity);
         }
         throw new IllegalArgumentException(String.format("unknown subclass of StreamingPage.Chunk %s; bug?", chunk));

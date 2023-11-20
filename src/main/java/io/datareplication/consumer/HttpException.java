@@ -4,6 +4,7 @@ import io.datareplication.model.Url;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
+// TODO: docs
 public class HttpException extends ConsumerException {
     private HttpException(final String message) {
         super(message);
@@ -18,37 +19,44 @@ public class HttpException extends ConsumerException {
         private final Url url;
 
         public InvalidUrl(@NonNull final Url url, @NonNull final Throwable cause) {
-            super(String.format("invalid URL '%s'", url.value()), cause);
+            super(String.format("%s: invalid URL", url.value()), cause);
             this.url = url;
         }
     }
 
     @EqualsAndHashCode(callSuper = false)
     public static final class ClientError extends HttpException {
+        private final Url url;
         // TODO: it might be nice to have the response body (or at least the first n bytes/characters)
         private final int statusCode;
 
-        public ClientError(int statusCode) {
-            super(String.format("HTTP %s response", statusCode));
+        public ClientError(@NonNull Url url, int statusCode) {
+            super(String.format("%s: HTTP %s response", url.value(), statusCode));
+            this.url = url;
             this.statusCode = statusCode;
         }
     }
 
     @EqualsAndHashCode(callSuper = false)
     public static final class ServerError extends HttpException {
+        private final Url url;
         // TODO: it might be nice to have the response body (or at least the first n bytes/characters)
         private final int statusCode;
 
-        public ServerError(int statusCode) {
-            super(String.format("HTTP %s response", statusCode));
+        public ServerError(@NonNull Url url, int statusCode) {
+            super(String.format("%s: HTTP %s response", url.value(), statusCode));
+            this.url = url;
             this.statusCode = statusCode;
         }
     }
 
     @EqualsAndHashCode(callSuper = false)
     public static final class NetworkError extends HttpException {
-        public NetworkError(@NonNull final Throwable cause) {
-            super(cause.getMessage(), cause);
+        private final Url url;
+
+        public NetworkError(@NonNull Url url, @NonNull final Throwable cause) {
+            super(String.format("%s: %s", url.value(), cause.getMessage()), cause);
+            this.url = url;
         }
     }
 }

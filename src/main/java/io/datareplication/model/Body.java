@@ -67,13 +67,6 @@ public interface Body extends ToHttpHeaders {
      */
     long contentLength();
 
-    // TODO: Putting the content type on the Body is useful in multiple places, but causes issues when you want all
-    //       headers for a given thing but not the body. That can be solved in those places by having those headers as
-    //       extra fields there, but maybe not having the extra headers in here is a better design. Alternatively: put
-    //       content length and type in an extra class (BodyHeaders?) and return that here.
-
-    // TODO: Should the content type be optional? That would allow us to read entities without a content type, which is
-    //       maybe a bad idea, but not particularly objectionable.
     /**
      * Return the content type of the underlying data. This should be a MIME type suitable for use in a
      * <code>Content-Type</code> header.
@@ -144,7 +137,7 @@ public interface Body extends ToHttpHeaders {
      * @return the byte contents of this Body
      * @throws IOException when the InputStream returned by {{@link #newInputStream()}} throws an IOException
      */
-    default @NonNull byte[] toBytes() throws IOException {
+    default byte @NonNull [] toBytes() throws IOException {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream(getBufferSize(this))) {
             try (InputStream input = newInputStream()) {
                 input.transferTo(output);
@@ -222,16 +215,17 @@ public interface Body extends ToHttpHeaders {
     /**
      * <p>Return a Body containing the bytes of the given byte array.</p>
      *
-     * <p>The byte array is not copied, therefore you have to make sure that the array is
-     * <strong>NEVER MODIFIED</strong> after being passed to this method. If you can't guarantee that, always clone
-     * the array before passing it to this method.
-     * </p>
+     * <p><strong>SAFETY:</strong> this method does not copy the passed byte array. It is up to the caller to ensure
+     * that the array is <em>NEVER MODIFIED</em> after being passed to this method. Any modifications to the array
+     * will be reflected in the returned Body object, thereby breaking immutability guarantees. If you're not sure that
+     * the array will never be modified again, you can use {@link #fromBytes(byte[], ContentType)} instead with
+     * copies the array.</p>
      *
      * @param bytes       the byte array
      * @param contentType the content type for the created Body
      * @return a Body of the array's bytes
      */
-    static @NonNull Body fromBytes(@NonNull byte[] bytes, @NonNull ContentType contentType) {
+    static @NonNull Body fromBytesUnsafe(byte @NonNull [] bytes, @NonNull ContentType contentType) {
         @EqualsAndHashCode
         @ToString
         @AllArgsConstructor
@@ -255,7 +249,7 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public @NonNull byte[] toBytes() {
+            public byte @NonNull [] toBytes() {
                 return bytes.clone();
             }
         }
@@ -267,16 +261,46 @@ public interface Body extends ToHttpHeaders {
      * <code>application/octet-stream</code>
      * </p>
      *
-     * <p>The byte array is not copied, therefore you have to make sure that the array is
-     * <strong>NEVER MODIFIED</strong> after being passed to this method. If you can't guarantee that, always clone
-     * the array before passing it to this method.
-     * </p>
+     * <p><strong>SAFETY:</strong> this method does not copy the passed byte array. It is up to the caller to ensure
+     * that the array is <em>NEVER MODIFIED</em> after being passed to this method. Any modifications to the array
+     * will be reflected in the returned Body object, thereby breaking immutability guarantees. If you're not sure that
+     * the array will never be modified again, you can use {@link #fromBytes(byte[])} instead with
+     * copies the array.</p>
      *
      * @param bytes the byte array
      * @return a Body of the array's bytes
      */
-    static @NonNull Body fromBytes(@NonNull byte[] bytes) {
-        return fromBytes(bytes, BodyConstants.DEFAULT_BYTES_CONTENT_TYPE);
+    static @NonNull Body fromBytesUnsafe(byte @NonNull [] bytes) {
+        return fromBytesUnsafe(bytes, BodyConstants.DEFAULT_BYTES_CONTENT_TYPE);
+    }
+
+    /**
+     * <p>Return a Body containing the bytes of the given byte array.</p>
+     *
+     * <p>The array is copied so that modifications don't impact the returned Body. If you can guarantee that the
+     * array won't be modified, you can use {@link #fromBytesUnsafe(byte[], ContentType)} which avoids the copy.</p>
+     *
+     * @param bytes       the byte array
+     * @param contentType the content type for the created Body
+     * @return a Body of the array's bytes
+     */
+    static @NonNull Body fromBytes(byte @NonNull [] bytes, @NonNull ContentType contentType) {
+        return fromBytesUnsafe(bytes.clone(), contentType);
+    }
+
+    /**
+     * <p>Return a Body containing the bytes of the given byte array with the default content-type
+     * <code>application/octet-stream</code>
+     * </p>
+     *
+     * <p>The array is copied so that modifications don't impact the returned Body. If you can guarantee that the
+     * array won't be modified, you can use {@link #fromBytesUnsafe(byte[])} which avoids the copy.</p>
+     *
+     * @param bytes the byte array
+     * @return a Body of the array's bytes
+     */
+    static @NonNull Body fromBytes(byte @NonNull [] bytes) {
+        return fromBytesUnsafe(bytes.clone());
     }
 
     private static long countUtf8Bytes(String utf8) {
@@ -289,7 +313,7 @@ public interface Body extends ToHttpHeaders {
             }
 
             @Override
-            public void write(final byte[] b, final int off, final int len) {
+            public void write(final byte @NonNull [] b, final int off, final int len) {
                 count += len;
             }
 

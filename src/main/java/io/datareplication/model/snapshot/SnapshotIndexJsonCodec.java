@@ -35,12 +35,17 @@ final class SnapshotIndexJsonCodec {
         try {
             SnapshotIndex snapshotIndex = GSON.fromJson(json, SnapshotIndex.class);
 
+            // The JSON deserializer leaves fields as null if they're missing from the JSON, despite the @NonNull
+            // annotation. IntelliJ doesn't know this, so we just disable the check here.
+            //noinspection ConstantValue
             if (snapshotIndex.id() == null) {
                 throw new IllegalArgumentException("provided json is missing a property: 'id'");
             }
+            //noinspection ConstantValue
             if (snapshotIndex.createdAt() == null) {
                 throw new IllegalArgumentException("provided json is missing a property: 'createdAt'");
             }
+            //noinspection ConstantValue
             if (snapshotIndex.pages() == null) {
                 throw new IllegalArgumentException("provided json is missing a property: 'pages'");
             }

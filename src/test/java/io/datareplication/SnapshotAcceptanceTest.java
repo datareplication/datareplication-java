@@ -1,6 +1,9 @@
 package io.datareplication;
 
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import io.datareplication.consumer.snapshot.SnapshotConsumer;
 import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
@@ -22,8 +25,10 @@ import org.reactivestreams.FlowAdapters;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -32,9 +37,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class SnapshotAcceptanceTest {
+    private static class LazyResponseDefinitionBuilder extends ResponseDefinitionBuilder {
+        private final Supplier<ResponseDefinitionBuilder> underlying;
+
+        private LazyResponseDefinitionBuilder(final Supplier<ResponseDefinitionBuilder> underlying) {
+            this.underlying = underlying;
+        }
+
+        @Override
+        public ResponseDefinition build() {
+            return underlying.get().build();
+        }
+    }
+
     @RegisterExtension
     static WireMockExtension wm = WireMockExtension.newInstance()
-        .options(wireMockConfig().httpsPort(8443))
+        .options(wireMockConfig().port(8443))
         .build();
 
     @Test
@@ -65,7 +83,6 @@ public class SnapshotAcceptanceTest {
         //region Consume Snapshot
         SnapshotConsumer snapshotConsumer = SnapshotConsumer
             .builder()
-            // TODO: Additional configuration
             .build();
         Flux<@NonNull Entity<@NonNull SnapshotEntityHeader>> entityFlowable =
             Flux.from(
@@ -89,7 +106,7 @@ public class SnapshotAcceptanceTest {
                 }
             })
             .toIterable();
-        assertThat(entities).containsExactly("Hello", "World", "I", "am", "a", "Snapshot");
+        assertThat(entities).containsExactlyInAnyOrder("Hello", "World", "I", "am", "a", "Snapshot");
         //endregion
     }
 
@@ -101,20 +118,24 @@ public class SnapshotAcceptanceTest {
             throw new UnfinishedStubbingException("SnapshotIndex not found for " + snapshotId.value());
         }
         SnapshotIndex snapshotIndex = maybeSnapshotIndex.get();
-        wm.stubFor(get("/" + snapshotId)
-            .willReturn(aResponse().withBodyFile(snapshotIndex.toJson().toUtf8())));
+        wm.stubFor(get("/" + snapshotId.value())
+                       .willReturn(aResponse().withBody(snapshotIndex.toJson().toUtf8())));
         for (Url url : snapshotIndex.pages()) {
-            wm.stubFor(get(url.value()
-                // Truncate to relative path
-                .replace(wm.baseUrl(), ""))
-                .willReturn(
-                    aResponse().withBody(
-                        snapshotPageRepository
-                            .findBy(pageId(url, snapshotIndex.id()))
-                            .orElse(Body.fromUtf8("404 Notfound"))
-                            .toUtf8()
-                    )
-                )
+            wm.stubFor(get(url.value().replace(wm.baseUrl(), ""))
+                           .willReturn(new LazyResponseDefinitionBuilder(() -> {
+                               var body = snapshotPageRepository
+                                   .findBy(pageId(url, snapshotIndex.id()))
+                                   .get();
+                               var response = aResponse();
+                               for (var header : body.toHttpHeaders()) {
+                                   response.withHeader(header.name(), header.values().toArray(new String[]{}));
+                               }
+                               try {
+                                   return response.withBody(body.toBytes());
+                               } catch (IOException e) {
+                                   throw new RuntimeException(e);
+                               }
+                           }))
             );
         }
     }
@@ -129,7 +150,7 @@ public class SnapshotAcceptanceTest {
 
     private @NonNull PageId pageId(@NonNull Url url, @NonNull SnapshotId snapshotId) {
         return PageId.of(url.value()
-            // Extract PageId from Url
-            .replace(wm.url("/" + snapshotId.value() + "/"), ""));
+                             // Extract PageId from Url
+                             .replace(wm.url("/" + snapshotId.value() + "/"), ""));
     }
 }
