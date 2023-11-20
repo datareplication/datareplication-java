@@ -4,8 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 // TODO: docs
-// TODO: split this into PageHeaderException and... PageBodyException? so the explanation in streamPages is a bit more
-//       straightforward?
 public class PageFormatException extends ConsumerException {
     private PageFormatException(final String message) {
         super(message);
