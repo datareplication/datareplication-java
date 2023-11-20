@@ -209,7 +209,7 @@ public interface Body extends ToHttpHeaders {
      * @see #fromUtf8(String, ContentType)
      */
     static @NonNull Body fromUtf8(@NonNull String utf8) {
-        return fromUtf8(utf8, ContentType.of("text/plain; charset=utf-8"));
+        return fromUtf8(utf8, BodyConstants.DEFAULT_UTF8_CONTENT_TYPE);
     }
 
     /**
@@ -271,7 +271,7 @@ public interface Body extends ToHttpHeaders {
      * @return a Body of the array's bytes
      */
     static @NonNull Body fromBytesUnsafe(byte @NonNull [] bytes) {
-        return fromBytesUnsafe(bytes, ContentType.of("application/octet-stream"));
+        return fromBytesUnsafe(bytes, BodyConstants.DEFAULT_BYTES_CONTENT_TYPE);
     }
 
     /**
@@ -332,4 +332,9 @@ public interface Body extends ToHttpHeaders {
             throw new IllegalStateException("unexpected IOException in countUtf8Bytes; bug?", e);
         }
     }
+}
+
+class BodyConstants {
+    static final ContentType DEFAULT_UTF8_CONTENT_TYPE = ContentType.of("text/plain; charset=utf-8");
+    static final ContentType DEFAULT_BYTES_CONTENT_TYPE = ContentType.of("application/octet-stream");
 }
