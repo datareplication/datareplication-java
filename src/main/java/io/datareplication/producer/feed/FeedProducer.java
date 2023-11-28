@@ -25,12 +25,11 @@ public interface FeedProducer {
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {
-        private FeedEntityRepository feedEntityRepository;
-        private FeedPageMetadataRepository feedPageMetadataRepository;
-        private FeedProducerJournalRepository feedProducerJournalRepository;
-        private FeedPageUrlBuilder feedPageUrlBuilder;
+        private final FeedEntityRepository feedEntityRepository;
+        private final FeedPageMetadataRepository feedPageMetadataRepository;
+        private final FeedProducerJournalRepository feedProducerJournalRepository;
+        private final FeedPageUrlBuilder feedPageUrlBuilder;
         private Clock clock;
-        // TODO: threadpool
         // TODO: more settings
 
         @NonNull Builder clock(@NonNull Clock clock) {
@@ -39,7 +38,12 @@ public interface FeedProducer {
         }
 
         @NonNull FeedProducer build() {
-            throw new UnsupportedOperationException("not implemented");
+            return new FeedProducerImpl(feedEntityRepository,
+                                        feedPageMetadataRepository,
+                                        feedProducerJournalRepository,
+                                        feedPageUrlBuilder,
+                                        clock,
+                                        new RandomContentIdProvider());
         }
     }
 
