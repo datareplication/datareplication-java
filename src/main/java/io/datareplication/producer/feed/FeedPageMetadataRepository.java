@@ -25,7 +25,8 @@ public interface FeedPageMetadataRepository {
 
     @NonNull CompletionStage<Void> save(@NonNull List<@NonNull PageMetadata> pages);
 
+    // TODO: maybe replace with getAllWithNoNextLink and just do the filtering in the library? Then we wouldn't have to
+    //  explain the generation stuff.
     // TODO: explain: page with no next link with the lowest generation
-    // TODO: implementation note: need to rotate generations once we reach a limit
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> getLatest();
 }
