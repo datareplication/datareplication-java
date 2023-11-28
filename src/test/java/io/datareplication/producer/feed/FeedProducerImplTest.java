@@ -23,20 +23,20 @@ class FeedProducerImplTest {
     private final FeedEntityRepository feedEntityRepository = mock(FeedEntityRepository.class);
     private final FeedPageMetadataRepository feedPageMetadataRepository = mock(FeedPageMetadataRepository.class);
     private final FeedProducerJournalRepository feedProducerJournalRepository = mock(FeedProducerJournalRepository.class);
-    private final FeedPageUrlBuilder feedPageUrlBuilder = mock(FeedPageUrlBuilder.class);
     private final SettableClock clock = new SettableClock(SOME_TIME);
     private final RandomContentIdProvider contentIdProvider = mock(RandomContentIdProvider.class);
 
     private static final Instant SOME_TIME = Instant.parse("2023-11-28T14:00:33.123Z");
     private static final ContentId SOME_CONTENT_ID = ContentId.of("test-content-id@datareplication.io");
     private static final Duration TEST_TIMEOUT = Duration.ofSeconds(1);
+    private static final int ASSIGN_PAGES_LIMIT = 10;
 
     private final FeedProducer feedProducer = new FeedProducerImpl(feedEntityRepository,
                                                                    feedPageMetadataRepository,
                                                                    feedProducerJournalRepository,
-                                                                   feedPageUrlBuilder,
                                                                    clock,
-                                                                   contentIdProvider);
+                                                                   contentIdProvider,
+                                                                   ASSIGN_PAGES_LIMIT);
 
     @BeforeEach
     void setUp() {

@@ -18,9 +18,9 @@ class FeedProducerImpl implements FeedProducer {
     private final FeedEntityRepository feedEntityRepository;
     private final FeedPageMetadataRepository feedPageMetadataRepository;
     private final FeedProducerJournalRepository feedProducerJournalRepository;
-    private final FeedPageUrlBuilder feedPageUrlBuilder;
     private final Clock clock;
     private final RandomContentIdProvider contentIdProvider;
+    private final int assignPagesLimit;
 
     @Override
     public @NonNull CompletionStage<Void> publish(@NonNull final OperationType operationType,
@@ -48,8 +48,15 @@ class FeedProducerImpl implements FeedProducer {
         return feedEntityRepository.append(entity);
     }
 
+    // TODO: Let's talk about assignPagesLimit. Should this be a limit per call (i.e. every time you call assignPages, it
+    //  will process at most limit entities, i.e. it will never return a number > the limit? Or is it a batch size, i.e.
+    //  assignPages will always process as much as it can find, but it will split the work into blocks of at most limit
+    //  entities to prevent OOM? In this case the return value might well be > limit. But it might also cause assignPages
+    //  to effectively loop for an indeterminate amount of time if there's a constant drip of entities.
+    //  I'm leaning towards hard limit, because you can easily build the loop on top, but you can't easily get
+    //  guaranteed-limited work units from the loop version.
     @Override
-    public @NonNull CompletionStage<Void> assignPages() {
+    public @NonNull CompletionStage<Integer> assignPages() {
         throw new UnsupportedOperationException("not implemented");
     }
 }

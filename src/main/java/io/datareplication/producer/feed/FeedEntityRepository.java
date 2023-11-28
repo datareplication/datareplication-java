@@ -26,7 +26,7 @@ public interface FeedEntityRepository {
 
     @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(@NonNull PageId pageId);
 
-    @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned();
+    @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned(int limit);
 
     @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getPageAssignments(@NonNull PageId pageId);
 

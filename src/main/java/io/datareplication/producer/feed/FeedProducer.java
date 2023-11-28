@@ -21,19 +21,37 @@ public interface FeedProducer {
     @NonNull CompletionStage<Void> publish(@NonNull Entity<@NonNull FeedEntityHeader> entity);
 
     // TODO: is there a better name?
-    @NonNull CompletionStage<Void> assignPages();
+
+    /**
+     * @return the number of entities added to pages
+     */
+    @NonNull CompletionStage<Integer> assignPages();
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {
         private final FeedEntityRepository feedEntityRepository;
         private final FeedPageMetadataRepository feedPageMetadataRepository;
         private final FeedProducerJournalRepository feedProducerJournalRepository;
-        private final FeedPageUrlBuilder feedPageUrlBuilder;
         private Clock clock;
+        private int assignPagesLimit;
         // TODO: more settings
 
+        /**
+         * Use the given {@link Clock} when generating timestamps for new entities.
+         *
+         * @param clock the clock to use for timestamps
+         * @return this builder
+         */
         @NonNull Builder clock(@NonNull Clock clock) {
             this.clock = clock;
+            return this;
+        }
+
+        @NonNull Builder assignPagesLimit(int limit) {
+            if (limit <= 0) {
+                throw new IllegalArgumentException("limit must be >= 1");
+            }
+            this.assignPagesLimit = limit;
             return this;
         }
 
@@ -41,20 +59,19 @@ public interface FeedProducer {
             return new FeedProducerImpl(feedEntityRepository,
                                         feedPageMetadataRepository,
                                         feedProducerJournalRepository,
-                                        feedPageUrlBuilder,
                                         clock,
-                                        new RandomContentIdProvider());
+                                        new RandomContentIdProvider(),
+                                        assignPagesLimit);
         }
     }
 
     static @NonNull Builder builder(@NonNull FeedEntityRepository feedEntityRepository,
                                     @NonNull FeedPageMetadataRepository feedPageMetadataRepository,
-                                    @NonNull FeedProducerJournalRepository feedProducerJournalRepository,
-                                    @NonNull FeedPageUrlBuilder feedPageUrlBuilder) {
+                                    @NonNull FeedProducerJournalRepository feedProducerJournalRepository) {
         return new Builder(feedEntityRepository,
                            feedPageMetadataRepository,
                            feedProducerJournalRepository,
-                           feedPageUrlBuilder,
-                           Clock.systemUTC());
+                           Clock.systemUTC(),
+                           10000);
     }
 }
