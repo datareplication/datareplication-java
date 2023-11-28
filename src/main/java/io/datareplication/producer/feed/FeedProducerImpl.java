@@ -87,6 +87,8 @@ class FeedProducerImpl implements FeedProducer {
                 final var unassigned = args.getT2();
 
                 // TODO: lag/delay? Filter out everything not old enough first or after postdating?
+                // TODO: actually maybe we have to make the timestamping rollbackable to avoid reorderings if page assignments
+                //  are rolled back but the timestamp changes remain?
                 // step 1: make sure all timestamps are not before the latest page, keeping ordering as much as possible
                 final var unassignedWithUpdatedTimestamps = maybeLatest
                     .map(latest -> newEntityTimestampsService.updatedEntityTimestamps(latest, unassigned))
