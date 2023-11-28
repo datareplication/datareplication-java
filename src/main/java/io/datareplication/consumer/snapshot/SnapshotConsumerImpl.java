@@ -41,7 +41,6 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
             .get(url, HttpResponse.BodyHandlers.ofByteArray())
             // safety: ok because we "own" the byte array and aren't modifying it
             .map(response -> Body.fromBytesUnsafe(response.body(), APPLICATION_JSON))
-            // TODO: wrap ParsingException?
             .map(json -> {
                 try {
                     return SnapshotIndex.fromJson(json);
@@ -68,7 +67,7 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
         > streamEntities(@NonNull final SnapshotIndex snapshotIndex) {
         final var entities = streamPagesInternal(snapshotIndex, networkConcurrency)
             .map(page -> JdkFlowAdapter.flowPublisherToFlux(page.toCompleteEntities()));
-        // TODO: what prefetch?
+        // Not sure about prefetch here, maybe this needs to be tuned?
         final var flux = (delayErrors
             ? entities.flatMapDelayError(Function.identity(), networkConcurrency, 1)
             : entities.flatMap(Function.identity(), networkConcurrency, 1)
@@ -81,6 +80,8 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
         StreamingPage<SnapshotPageHeader, SnapshotEntityHeader>
         > streamPagesInternal(final SnapshotIndex snapshotIndex, int networkConcurrency) {
         final var pages = Flux.fromIterable(snapshotIndex.pages());
+        // prefetch=1 makes sense here because pageLoader::load returns a publisher with exactly one element so we can't
+        // prefetch more than 1 anyway.
         return (delayErrors
             ? pages.flatMapDelayError(pageLoader::load, networkConcurrency, 1)
             : pages.flatMap(pageLoader::load, networkConcurrency, 1))
