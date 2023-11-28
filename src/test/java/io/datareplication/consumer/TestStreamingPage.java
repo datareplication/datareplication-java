@@ -1,10 +1,10 @@
 package io.datareplication.consumer;
 
 import io.datareplication.model.ToHttpHeaders;
-import io.reactivex.rxjava3.core.Flowable;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.concurrent.Flow;
@@ -18,14 +18,14 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
 
     public TestStreamingPage(final PageHeader header,
                              final String boundary,
-                             final Flowable<Chunk<EntityHeader>> chunksFlowable) {
-        this(header, boundary, FlowAdapters.toFlowPublisher(chunksFlowable));
+                             final Flux<Chunk<EntityHeader>> chunksFlux) {
+        this(header, boundary, JdkFlowAdapter.publisherToFlowPublisher(chunksFlux));
     }
 
     public TestStreamingPage(final PageHeader header,
                              final String boundary,
                              final List<Chunk<EntityHeader>> chunks) {
-        this(header, boundary, Flowable.fromIterable(chunks));
+        this(header, boundary, Flux.fromIterable(chunks));
     }
 
     @Override

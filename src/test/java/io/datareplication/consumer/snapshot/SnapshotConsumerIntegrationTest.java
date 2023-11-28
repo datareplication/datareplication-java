@@ -12,11 +12,14 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
-import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.reactivestreams.FlowAdapters;
+import reactor.adapter.JdkFlowAdapter;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -106,11 +109,12 @@ class SnapshotConsumerIntegrationTest {
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
 
-        final var entities = Single
+        final var entities = Mono
             .fromCompletionStage(consumer.loadSnapshotIndex(validSnapshotUrl))
-            .flatMapPublisher(snapshotIndex -> FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)))
-            .toList()
-            .blockingGet();
+            .flatMapMany(snapshotIndex -> JdkFlowAdapter.flowPublisherToFlux(consumer.streamEntities(snapshotIndex)))
+            .collectList()
+            .single()
+            .block();
 
         assertThat(entities)
             .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
@@ -167,7 +171,7 @@ class SnapshotConsumerIntegrationTest {
     }
 
     @Test
-    void shouldThrowException_whenOnePageIsMissing_delayErrors() throws InterruptedException {
+    void shouldThrowException_whenOnePageIsMissing_delayErrors() {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(AUTH)
@@ -176,38 +180,54 @@ class SnapshotConsumerIntegrationTest {
             .networkConcurrency(1)
             .build();
 
-        Single
+        final var flux = Mono
             .fromCompletionStage(consumer.loadSnapshotIndex(onePageMissingSnapshotUrl))
-            .flatMapPublisher(snapshotIndex -> FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)))
-            .map(entity -> entity.body().toUtf8())
-            .test()
-            .await()
-            .assertValues("hello", "world", "I", "am")
-            .assertError(new HttpException.ClientError(
+            .flatMapMany(snapshotIndex -> JdkFlowAdapter.flowPublisherToFlux(consumer.streamEntities(snapshotIndex)))
+            .map(entity -> {
+                try {
+                    return entity.body().toUtf8();
+                } catch (IOException e) {
+                    throw new AssertionError(e);
+                }
+            });
+
+        StepVerifier
+            .create(flux)
+            .expectNext("hello", "world", "I", "am")
+            .expectErrorMatches(new HttpException.ClientError(
                 Url.of("http://localhost:8443/not-found-1.content.multipart"),
-                404));
+                404)::equals)
+            .verify();
     }
 
     @Test
-    void shouldThrowException_whenAllPagesAreMissing() throws InterruptedException {
+    void shouldThrowException_whenAllPagesAreMissing() {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(AUTH)
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
 
-        Single
+        final var flux = Mono
             .fromCompletionStage(consumer.loadSnapshotIndex(allPagesMissingSnapshotUrl))
-            .flatMapPublisher(snapshotIndex -> FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)))
-            .map(entity -> entity.body().toUtf8())
-            .test()
-            .await()
-            .assertNoValues()
-            .assertError(HttpException.ClientError.class);
+            .flatMapMany(snapshotIndex -> JdkFlowAdapter.flowPublisherToFlux(consumer.streamEntities(snapshotIndex)))
+            .map(entity -> {
+                try {
+                    return entity.body().toUtf8();
+                } catch (IOException e) {
+                    throw new AssertionError(e);
+                }
+            });
+
+        StepVerifier
+            .create(flux)
+            .expectNextCount(0)
+            .expectError(HttpException.ClientError.class)
+            .verify();
     }
 
     @Test
-    void shouldThrowException_whenAllPagesAreMissing_delayErrors() throws InterruptedException {
+    void shouldThrowException_whenAllPagesAreMissing_delayErrors() {
         SnapshotConsumer consumer = SnapshotConsumer
             .builder()
             .authorization(AUTH)
@@ -215,27 +235,28 @@ class SnapshotConsumerIntegrationTest {
             .delayErrors(true)
             .build();
 
-        Single
+        final var flux = Mono
             .fromCompletionStage(consumer.loadSnapshotIndex(allPagesMissingSnapshotUrl))
-            .flatMapPublisher(snapshotIndex -> FlowAdapters.toPublisher(consumer.streamEntities(snapshotIndex)))
-            .map(entity -> entity.body().toUtf8())
-            .test()
-            .await()
-            .assertNoValues()
-            .assertError(exc -> {
-                if (!(exc instanceof ConsumerException.CollectedErrors)) {
-                    return false;
+            .flatMapMany(snapshotIndex -> JdkFlowAdapter.flowPublisherToFlux(consumer.streamEntities(snapshotIndex)))
+            .map(entity -> {
+                try {
+                    return entity.body().toUtf8();
+                } catch (IOException e) {
+                    throw new AssertionError(e);
                 }
-                final var collectedErrors = (ConsumerException.CollectedErrors) exc;
-                if (collectedErrors.exceptions().size() != 3) {
-                    return false;
-                }
-                for (var inner : collectedErrors.exceptions()) {
-                    if (!(inner instanceof HttpException.ClientError)) {
-                        return false;
-                    }
-                }
-                return true;
             });
+
+        StepVerifier
+            .create(flux)
+            .expectNextCount(0)
+            .expectErrorSatisfies(exc -> {
+                assertThat(exc)
+                    .isInstanceOf(ConsumerException.CollectedErrors.class);
+                final var collectedErrors = (ConsumerException.CollectedErrors) exc;
+                assertThat(collectedErrors.exceptions())
+                    .hasSize(3)
+                    .allMatch(throwable -> throwable instanceof HttpException.ClientError);
+            })
+            .verify();
     }
 }

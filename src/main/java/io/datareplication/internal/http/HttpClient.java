@@ -6,8 +6,8 @@ import io.datareplication.consumer.HttpException;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
-import io.reactivex.rxjava3.core.Single;
 import lombok.NonNull;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
@@ -72,26 +72,26 @@ public class HttpClient {
      * @return the response if the request was successful
      */
     @NonNull
-    public <T> Single<HttpResponse<T>> get(@NonNull Url url,
-                                           @NonNull HttpResponse.BodyHandler<T> bodyHandler) {
-        return Single
+    public <T> Mono<@NonNull HttpResponse<T>> get(@NonNull Url url,
+                                         @NonNull HttpResponse.BodyHandler<T> bodyHandler) {
+        return Mono
             .fromSupplier(() -> newRequest(url))
             .map(req -> req.GET().build())
             .flatMap(request -> send(url, request, bodyHandler));
     }
 
-    private <T> Single<HttpResponse<T>> send(Url url,
+    private <T> Mono<HttpResponse<T>> send(Url url,
                                              HttpRequest request,
                                              HttpResponse.BodyHandler<T> bodyHandler) {
-        return Single
+        return Mono
             .fromCompletionStage(httpClient.sendAsync(request, bodyHandler))
-            .onErrorResumeNext(exc -> {
+            .onErrorResume(exc -> {
                 if (exc instanceof CompletionException && exc.getCause() instanceof IOException) {
-                    return Single.error(new HttpException.NetworkError(url, exc.getCause()));
+                    return Mono.error(new HttpException.NetworkError(url, exc.getCause()));
                 } else if (exc instanceof IOException) {
-                    return Single.error(new HttpException.NetworkError(url, exc));
+                    return Mono.error(new HttpException.NetworkError(url, exc));
                 } else {
-                    return Single.error(exc);
+                    return Mono.error(exc);
                 }
             })
             .flatMap(response -> checkResponse(url, response));
@@ -121,13 +121,13 @@ public class HttpClient {
         }
     }
 
-    private <T> Single<HttpResponse<T>> checkResponse(Url url, HttpResponse<T> response) {
+    private <T> Mono<HttpResponse<T>> checkResponse(Url url, HttpResponse<T> response) {
         if (response.statusCode() >= SERVER_ERRORS) {
-            return Single.error(new HttpException.ServerError(url, response.statusCode()));
+            return Mono.error(new HttpException.ServerError(url, response.statusCode()));
         } else if (response.statusCode() >= CLIENT_ERRORS) {
-            return Single.error(new HttpException.ClientError(url, response.statusCode()));
+            return Mono.error(new HttpException.ClientError(url, response.statusCode()));
         } else {
-            return Single.just(response);
+            return Mono.just(response);
         }
     }
 }
