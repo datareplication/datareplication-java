@@ -11,7 +11,7 @@ import io.datareplication.model.Body;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
-import io.util.ResourceReader;
+import io.datareplication.util.ResourceReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
