@@ -5,4 +5,5 @@
 Learn more on the [Datareplication homepage](https://www.datareplication.io)
 
 ## License
-TBD
+
+Licensed under MIT (see LICENSE file)
