@@ -17,12 +17,18 @@ import java.util.concurrent.Flow;
 public class FeedConsumerImpl implements FeedConsumer {
     private final HttpClient httpClient;
     @Override
-    public @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(@NonNull final Url url, @NonNull final StartFrom startFrom) {
+    public @NonNull Flow.Publisher<
+        @NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>
+        > streamPages(@NonNull final Url url,
+                      @NonNull final StartFrom startFrom) {
         throw new UnsupportedOperationException("NIY");
     }
 
     @Override
-    public @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull final Url url, @NonNull final StartFrom startFrom) {
+    public @NonNull Flow.Publisher<
+        @NonNull Entity<@NonNull FeedEntityHeader>
+        > streamEntities(@NonNull final Url url,
+                         @NonNull final StartFrom startFrom) {
         throw new UnsupportedOperationException("NIY");
     }
 }

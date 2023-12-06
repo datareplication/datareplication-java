@@ -1,9 +1,7 @@
 package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.Authorization;
-import io.datareplication.consumer.ConsumerException;
 import io.datareplication.consumer.StreamingPage;
-import io.datareplication.consumer.snapshot.SnapshotConsumer;
 import io.datareplication.internal.http.AuthSupplier;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.model.Entity;
@@ -80,7 +78,9 @@ public interface FeedConsumer {
          * @param authorizationSupplier a function returning the Authorization to use for HTTP requests
          * @return this builder
          */
-        public @NonNull FeedConsumer.Builder authorization(@NonNull Supplier<@NonNull Authorization> authorizationSupplier) {
+        public @NonNull FeedConsumer.Builder authorization(
+            @NonNull Supplier<@NonNull Authorization> authorizationSupplier
+        ) {
             authSupplier = AuthSupplier.supplier(authorizationSupplier);
             return this;
         }
@@ -100,8 +100,8 @@ public interface FeedConsumer {
     }
 
     /**
-     * Create a new {@link FeedConsumer.Builder} with default settings. Use the {@link FeedConsumer.Builder#build()} method on
-     * the returned builder to create a {@link FeedConsumer} with the specified settings.
+     * Create a new {@link FeedConsumer.Builder} with default settings. Use the {@link FeedConsumer.Builder#build()}
+     * method on the returned builder to create a {@link FeedConsumer} with the specified settings.
      *
      * @return a new builder
      */

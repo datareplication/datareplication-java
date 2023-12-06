@@ -2,6 +2,7 @@ package io.datareplication.consumer.feed;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.Authorization;
+import io.datareplication.consumer.feed.testhelper.StringMessageInMemoryRepository;
 import io.datareplication.model.Body;
 import io.datareplication.model.BodyTestUtil;
 import io.datareplication.model.ContentType;
@@ -13,7 +14,6 @@ import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
-import io.datareplication.consumer.feed.testhelper.StringMessageInMemoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -69,7 +69,10 @@ class FeedConsumerIntegrationTest {
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
 
-        final var entities = Flux.concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, StartFrom.beginning())))
+        final var entities = Flux.concat(FlowAdapters.toPublisher(
+                    consumer.streamEntities(validFeedUrl, StartFrom.beginning())
+                )
+            )
             .collectList()
             .toFuture()
             .get();
@@ -98,7 +101,11 @@ class FeedConsumerIntegrationTest {
                             HttpHeader.of("Content-Transfer-Encoding", "8bit"),
                             HttpHeader.of("Content-Length", "70")
                         )),
-                    Body.fromUtf8("First consumable entity, but in this case it's a delete operation-type", ContentType.of("text/plain"))),
+                    Body.fromUtf8(
+                        "First consumable entity, but in this case it's a delete operation-type",
+                        ContentType.of("text/plain")
+                    )
+                ),
                 new Entity<>(
                     new FeedEntityHeader(
                         Timestamp.of(Instant.parse("Mon, 27 Nov 2023 03:10:00 GMT")),
