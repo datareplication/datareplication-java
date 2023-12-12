@@ -13,7 +13,7 @@ class TimestampTest {
     void shouldParseRfc1123DateTime() {
         String dateTime = "Mon, 27 Nov 2023 00:00:00 GMT";
 
-        Timestamp timestamp = Timestamp.parseRfc1123DateTime(dateTime);
+        Timestamp timestamp = Timestamp.fromRfc1123String(dateTime);
 
         assertThat(timestamp.value()).isEqualTo("2023-11-27T00:00:00.00Z");
     }
@@ -22,7 +22,7 @@ class TimestampTest {
     void shouldThrowExceptionOnInvalidDateTime() {
         String dateTime = "Wtf, 50 Nov 3999 00:00:00 LOL";
 
-        assertThatThrownBy(() -> Timestamp.parseRfc1123DateTime(dateTime))
+        assertThatThrownBy(() -> Timestamp.fromRfc1123String(dateTime))
             .isInstanceOf(DateTimeParseException.class)
             .hasMessageContaining("Text 'Wtf, 50 Nov 3999 00:00:00 LOL' could not be parsed at index 0");
     }

@@ -80,7 +80,7 @@ class FeedConsumerIntegrationTest {
             .contains(
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 00:00:00 GMT"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<0-A@random-content-id>"),
                         HttpHeaders.of(
@@ -91,7 +91,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("only consumable with \"StartFrom.beginning()\"", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 02:41:07 GMT"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 02:41:07 GMT"),
                         OperationType.PUT,
                         ContentId.of("<0-B@random-content-id>"),
                         HttpHeaders.of(
@@ -106,7 +106,7 @@ class FeedConsumerIntegrationTest {
                 ),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 03:10:00 GMT"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<1-A@random-content-id>"),
                         HttpHeaders.of(
@@ -117,7 +117,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("hello", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 03:10:00 GMT"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<1-B@random-content-id>"),
                         HttpHeaders.of(
@@ -128,7 +128,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("world", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 03:10:00 GMT"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<2-A@random-content-id>"),
                         HttpHeaders.of(
@@ -139,7 +139,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("I", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 04:02:30 GMT"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 04:02:30 GMT"),
                         OperationType.PUT,
                         ContentId.of("<2-B@random-content-id>"),
                         HttpHeaders.of(
@@ -150,7 +150,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("am", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Thu, 28 Nov 2023 01:00:00 GMT"),
+                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 01:00:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<3-A@random-content-id>"),
                         HttpHeaders.of(
@@ -161,7 +161,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("a", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Thu, 28 Nov 2023 12:00:00 GMT"),
+                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 12:00:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<3-B@random-content-id>"),
                         HttpHeaders.of(
@@ -172,7 +172,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("snapshot", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Thu, 28 Nov 2023 12:30:01 GMT"),
+                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 12:30:01 GMT"),
                         OperationType.DELETE,
                         ContentId.of("<3-C@random-content-id>"),
                         HttpHeaders.of(
@@ -183,7 +183,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("snapshot", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.parseRfc1123DateTime("Thu, 28 Nov 2023 18:30:00 GMT"),
+                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 18:30:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<3-D@random-content-id>"),
                         HttpHeaders.of(
@@ -207,7 +207,7 @@ class FeedConsumerIntegrationTest {
         final var entities = Flux.concat(FlowAdapters.toPublisher(
                 consumer.streamEntities(
                     validFeedUrl,
-                    StartFrom.timestamp(Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 00:00:00 GMT"))
+                    StartFrom.timestamp(Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT"))
                 )))
             .map(entity -> {
                 try {
@@ -249,7 +249,7 @@ class FeedConsumerIntegrationTest {
                     validFeedUrl,
                     StartFrom.contentId(
                         ContentId.of("0-B@random-content-id"),
-                        Timestamp.parseRfc1123DateTime("Mon, 27 Nov 2023 00:00:00 GMT")
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
                     )
                 )))
             .map(entity -> {

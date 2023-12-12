@@ -4,6 +4,7 @@ import io.datareplication.consumer.Authorization;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.AuthSupplier;
 import io.datareplication.internal.http.HttpClient;
+import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
@@ -95,7 +96,9 @@ public interface FeedConsumer {
                 HttpHeaders.of(additionalHeaders),
                 Optional.empty(),
                 Optional.empty());
-            return new FeedConsumerImpl(httpClient);
+            final var pageLoader = new PageLoader(httpClient);
+            final var feedCrawler = new FeedCrawler(httpClient);
+            return new FeedConsumerImpl(pageLoader, feedCrawler);
         }
     }
 
