@@ -3,7 +3,6 @@ package io.datareplication;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import io.datareplication.consumer.snapshot.SnapshotConsumer;
 import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
@@ -25,7 +24,6 @@ import org.reactivestreams.FlowAdapters;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;

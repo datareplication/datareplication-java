@@ -1,0 +1,21 @@
+--<random-boundary>
+Operation-Type: http-equiv=PUT
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-ID: <2-A@random-content-id>
+Last-Modified: Mon, 27 Nov 2023 03:10:00 GMT
+Content-Length: 1
+
+I
+--<random-boundary>
+Operation-Type: http-equiv=PUT
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-ID: <2-B@random-content-id>
+Last-Modified: Mon, 27 Nov 2023 04:02:30 GMT
+Content-Length: 2
+
+am
+--<random-boundary>--
