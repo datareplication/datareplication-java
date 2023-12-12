@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 /**
  * A timestamp mostly for HTTP <code>Last-Modified</code> headers. Note that while {@link Instant} has nanosecond
@@ -20,5 +21,13 @@ public class Timestamp {
      */
     public static @NonNull Timestamp now() {
         return Timestamp.of(Instant.now());
+    }
+
+    /**
+     * Parses a RFC-1123 date-time, such as 'Tue, 3 Jun 2008 11:05:30 GMT'.
+     * @return the Timestamp
+     */
+    public static @NonNull Timestamp parseRfc1123DateTime(String dateTime) {
+        return Timestamp.of(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(dateTime)));
     }
 }
