@@ -92,12 +92,15 @@ public interface FeedConsumer {
          * @return a new {@link FeedConsumer}
          */
         public @NonNull FeedConsumer build() {
-            final var httpClient = new HttpClient(authSupplier,
+            final var httpClient = new HttpClient(
+                authSupplier,
                 HttpHeaders.of(additionalHeaders),
                 Optional.empty(),
-                Optional.empty());
+                Optional.empty()
+            );
             final var pageLoader = new PageLoader(httpClient);
-            final var feedCrawler = new FeedCrawler(httpClient);
+            final var headerLoader = new HeaderLoader(httpClient);
+            final var feedCrawler = new FeedPageCrawler(headerLoader);
             return new FeedConsumerImpl(pageLoader, feedCrawler);
         }
     }
