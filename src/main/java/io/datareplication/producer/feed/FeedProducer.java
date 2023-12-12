@@ -56,13 +56,13 @@ public interface FeedProducer {
 
         @NonNull FeedProducer build() {
             return new FeedProducerImpl(feedEntityRepository,
-                                        feedPageMetadataRepository,
-                                        feedProducerJournalRepository,
-                                        clock,
-                                        new RandomContentIdProvider(),
-                                        new NewEntityTimestampsService(),
-                                        new AssignPagesService(),
-                                        assignPagesLimit);
+                feedPageMetadataRepository,
+                feedProducerJournalRepository,
+                clock,
+                new RandomContentIdProvider(),
+                new NewEntityTimestampsService(),
+                new AssignPagesService(),
+                assignPagesLimit);
         }
     }
 
@@ -70,9 +70,9 @@ public interface FeedProducer {
                                     @NonNull FeedPageMetadataRepository feedPageMetadataRepository,
                                     @NonNull FeedProducerJournalRepository feedProducerJournalRepository) {
         return new Builder(feedEntityRepository,
-                           feedPageMetadataRepository,
-                           feedProducerJournalRepository,
-                           Clock.systemUTC(),
-                           10000);
+            feedPageMetadataRepository,
+            feedProducerJournalRepository,
+            Clock.systemUTC(),
+            10000);
     }
 }
