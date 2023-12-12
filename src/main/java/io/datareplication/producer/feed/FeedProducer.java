@@ -55,14 +55,20 @@ public interface FeedProducer {
         }
 
         @NonNull FeedProducer build() {
-            return new FeedProducerImpl(feedEntityRepository,
+            return new FeedProducerImpl(
+                feedEntityRepository,
                 feedPageMetadataRepository,
                 feedProducerJournalRepository,
                 clock,
                 new RandomContentIdProvider(),
+                new RollbackService(
+                    feedEntityRepository,
+                    feedPageMetadataRepository
+                ),
                 new NewEntityTimestampsService(),
                 new AssignPagesService(),
-                assignPagesLimit);
+                assignPagesLimit
+            );
         }
     }
 

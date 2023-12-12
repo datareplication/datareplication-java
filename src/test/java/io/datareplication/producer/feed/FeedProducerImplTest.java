@@ -28,6 +28,7 @@ class FeedProducerImplTest {
     private final FeedProducerJournalRepository feedProducerJournalRepository = mock(FeedProducerJournalRepository.class);
     private final SettableClock clock = new SettableClock(SOME_TIME);
     private final RandomContentIdProvider contentIdProvider = mock(RandomContentIdProvider.class);
+    private final RollbackService rollbackService = mock(RollbackService.class);
     private final NewEntityTimestampsService newEntityTimestampsService = mock(NewEntityTimestampsService.class);
     private final AssignPagesService assignPagesService = mock(AssignPagesService.class);
 
@@ -41,6 +42,7 @@ class FeedProducerImplTest {
         feedProducerJournalRepository,
         clock,
         contentIdProvider,
+        rollbackService,
         newEntityTimestampsService,
         assignPagesService,
         ASSIGN_PAGES_LIMIT);
@@ -48,6 +50,8 @@ class FeedProducerImplTest {
     @BeforeEach
     void setUp() {
         when(contentIdProvider.newContentId()).thenReturn(SOME_CONTENT_ID);
+        when(feedProducerJournalRepository.get())
+            .thenReturn(Mono.just(Optional.<FeedProducerJournalRepository.JournalState>empty()).toFuture());
         when(feedProducerJournalRepository.save(any())).thenReturn(Mono.<Void>empty().toFuture());
         when(feedProducerJournalRepository.delete()).thenReturn(Mono.<Void>empty().toFuture());
         when(feedEntityRepository.savePageAssignments(any())).thenReturn(Mono.<Void>empty().toFuture());
@@ -131,6 +135,7 @@ class FeedProducerImplTest {
         assertThat(result)
             .isCompletedWithValue(2)
             .succeedsWithin(TEST_TIMEOUT);
+        verifyNoInteractions(rollbackService);
         final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
         inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
             List.of(newPage1.pageId(), newPage2.pageId()),
@@ -172,7 +177,7 @@ class FeedProducerImplTest {
         assertThat(result)
             .isCompletedWithValue(2)
             .succeedsWithin(TEST_TIMEOUT);
-
+        verifyNoInteractions(rollbackService);
         final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
         inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
             List.of(newPage1.pageId(), newPage2.pageId()),
@@ -215,6 +220,7 @@ class FeedProducerImplTest {
         assertThat(result)
             .isCompletedWithValue(1)
             .succeedsWithin(TEST_TIMEOUT);
+        verifyNoInteractions(rollbackService);
         final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
         inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
             List.of(),
@@ -248,10 +254,41 @@ class FeedProducerImplTest {
         assertThat(result)
             .isCompletedWithValue(0)
             .succeedsWithin(TEST_TIMEOUT);
+        verifyNoInteractions(rollbackService);
         verify(feedProducerJournalRepository, never()).save(any());
         verify(feedEntityRepository, never()).savePageAssignments(any());
         verify(feedPageMetadataRepository, never()).save(any());
         verify(feedProducerJournalRepository, never()).delete();
+    }
+
+    @Test
+    void assignPages_shouldPerformRollbackAndThenDeleteJournalState() {
+        final var journalState = new FeedProducerJournalRepository.JournalState(
+            List.of(PageId.of("1"), PageId.of("2")),
+            PageId.of("3"),
+            Optional.of(PageId.of("4"))
+        );
+        when(feedProducerJournalRepository.get())
+            .thenReturn(Mono.just(Optional.of(journalState)).toFuture());
+        when(rollbackService.rollback(journalState)).thenReturn(Mono.empty());
+        when(feedPageMetadataRepository.getLatest())
+            .thenReturn(Mono.just(Optional.<FeedPageMetadataRepository.PageMetadata>empty()).toFuture());
+
+        when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
+            .thenReturn(Mono.just(List.<FeedEntityRepository.PageAssignment>of()).toFuture());
+        when(assignPagesService.assignPages(Optional.empty(), List.of()))
+            .thenReturn(Optional.empty());
+
+        final var result = feedProducer.assignPages();
+
+        assertThat(result)
+            .isCompletedWithValue(0)
+            .succeedsWithin(TEST_TIMEOUT);
+        final var inOrder = Mockito.inOrder(feedProducerJournalRepository, rollbackService);
+        inOrder.verify(feedProducerJournalRepository).get();
+        inOrder.verify(rollbackService).rollback(journalState);
+        inOrder.verify(feedProducerJournalRepository).delete();
+        inOrder.verifyNoMoreInteractions();
     }
 
     private static FeedPageMetadataRepository.PageMetadata somePageMetadata(String id) {

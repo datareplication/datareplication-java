@@ -24,6 +24,7 @@ class FeedProducerImpl implements FeedProducer {
     private final FeedProducerJournalRepository feedProducerJournalRepository;
     private final Clock clock;
     private final RandomContentIdProvider contentIdProvider;
+    private final RollbackService rollbackService;
     private final NewEntityTimestampsService newEntityTimestampsService;
     private final AssignPagesService assignPagesService;
     private final int assignPagesLimit;
@@ -73,7 +74,15 @@ class FeedProducerImpl implements FeedProducer {
         //  clean up entity = unset page ID, copy originalLastModified to lastModified if set and unset originalLastModified
 
         return Mono
-            .fromCompletionStage(feedPageMetadataRepository::getLatest)
+            .fromCompletionStage(feedProducerJournalRepository::get)
+            .flatMap(maybeJournalState -> maybeJournalState
+                .map(journalState -> rollbackService
+                    .rollback(journalState)
+                    .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete))
+                )
+                .orElse(Mono.empty())
+            )
+            .then(Mono.fromCompletionStage(feedPageMetadataRepository::getLatest))
             .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimit)))
             .map((args) -> {
                 final var maybeLatest = args.getT1();
