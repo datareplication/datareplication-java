@@ -64,43 +64,35 @@ class FeedProducerImpl implements FeedProducer {
     //  guaranteed-limited work units from the loop version.
     @Override
     public @NonNull CompletionStage<Integer> assignPages() {
-        // TODO: check journal, rollback if necessary
-        // TODO: journal probably should save differently (old latest page separate from the others) for easier rollback
-        //  because there's only two possibilities:
-        //  - latest page switched -> everything clean because things are visible
-        //  - old latest page -> switch didn't happen, delete all new pages and clean up non-visible entities for old (still current) latest page
-        //                       or maybe: there were no new pages and the page entry was or was not updated, but we still just clean up
-        //                       all non-visible entities because if the page entry was updated they'd be visible
-        //  clean up entity = unset page ID, copy originalLastModified to lastModified if set and unset originalLastModified
-
         return Mono
+            // Step 1: load journal state to check if we need to recover from a broken state.
             .fromCompletionStage(feedProducerJournalRepository::get)
             .flatMap(maybeJournalState -> maybeJournalState
                 .map(journalState -> rollbackService
+                    // If we have a broken state, we let RollbackService handle the finer details.
                     .rollback(journalState)
-                    .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete))
-                )
-                .orElse(Mono.empty())
-            )
+                    // Once the rollback is done, we clean up the journal entry because the state is now clean.
+                    .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete)))
+                .orElse(Mono.empty()))
+            // Step 2: load the current latest page so we can extend it/link it up.
             .then(Mono.fromCompletionStage(feedPageMetadataRepository::getLatest))
+            // Also load all entities that currently aren't assigned to a page (up to a max).
             .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimit)))
+            // Step 3: calculate page assignments to make, pages to create, and existing pages to update.
             .map((args) -> {
                 final var maybeLatest = args.getT1();
                 final var unassigned = args.getT2();
 
                 // TODO: lag/delay? Filter out everything not old enough first or after postdating?
-                // TODO: actually maybe we have to make the timestamping rollbackable to avoid reorderings if page assignments
-                //  are rolled back but the timestamp changes remain?
-                //  Plan: if we update lastModified, save the original value in originalLastModified. Then rollback can just
-                //  undo that together with unsetting the page id
-                // step 1: make sure all timestamps are not before the latest page, keeping ordering as much as possible
+                // Make sure all timestamps are not before the latest page, keeping ordering as much as possible.
                 final var unassignedWithUpdatedTimestamps = maybeLatest
                     .map(latest -> newEntityTimestampsService.updatedEntityTimestamps(latest, unassigned))
                     .orElse(unassigned);
 
-                // step 2: given the old latest page, generate updated PageAssignments and new and updated PageMetadata
+                // Build new pages etc. and return the steps to take.
                 return assignPagesService.assignPages(maybeLatest, unassignedWithUpdatedTimestamps);
             })
+            // Step 4: apply all the changes we determined previously.
             .flatMap(maybeAssignPagesResult -> maybeAssignPagesResult
                 .map(this::saveAssignPagesResult)
                 .orElse(Mono.just(0))
@@ -122,21 +114,21 @@ class FeedProducerImpl implements FeedProducer {
         );
 
         return Mono
-            // step 1: save journal state
+            // Step 4.1: save journal state so we can roll back if we crash
             .fromCompletionStage(() -> feedProducerJournalRepository.save(journalState))
-            // step 2: save all entities
+            // Step 4.2: save all entities
             // we can just do this because FeedPageProvider checks the page metadata and filters out any entities that
             // aren't acknowledged in the page metadata so none of this is visible for now
             .then(Mono.fromCompletionStage(() -> feedEntityRepository.savePageAssignments(assignPagesResult.entityPageAssignments())))
-            // step 3: save page with rotated generation
+            // Step 4.3: save page with rotated generation
             // If we need to rotate the generation on the still-current latest page, we need to do it before we save the
             // new and updated latest page objects to uphold the ordering rules for generations.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(listFromOptional(assignPagesResult.newGeneration()))))
-            // step 4: create new pages
+            // Step 4.4: create new pages
             // It's now possible to access these pages via their ID, but they're not yet reachable from the (current) latest
             // page. That's why we don't need to care about order yet.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(assignPagesResult.newPages())))
-            // step 5: save the new latest page
+            // Step 4.5: save the new latest page
             // If the feed is currently empty, saving this page will immediately make it the new latest page and make
             // it and every other new page visible, which is why we're waiting until all other new pages are saved
             // before we do this one.
@@ -146,11 +138,11 @@ class FeedProducerImpl implements FeedProducer {
             // be visible yet. While both of them won't have a next link and thus qualify as latest, this one will
             // have a higher generation number so the old one will be preferred when loading.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(List.of(assignPagesResult.newLatestPage()))))
-            // step 6: update the old latest page
+            // Step 4.6: update the old latest page
             // This will make everything visible, so we do this last. By setting its next link, this page doesn't
             // qualify as the latest page any more and the new one becomes the latest page.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(listFromOptional(assignPagesResult.previousLatestPage()))))
-            // step 7: if we successfully reached this point, the new repo state is clean and we can remove our journal entry.
+            // Step 4.7: if we successfully reached this point, the new repo state is clean and we can remove our journal entry.
             .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete))
             .thenReturn(assignPagesResult.entityPageAssignments().size());
     }
