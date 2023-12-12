@@ -12,14 +12,13 @@ class AssignPagesService {
         // pages have to be saved in that order: first the bulk of the new pages...
         List<FeedPageMetadataRepository.PageMetadata> newPages;
         // ...then the new latest page (so all pages reachable from there are already available)...
-        Optional<FeedPageMetadataRepository.PageMetadata> newLatestPage;
-        // ...and then the old latest page which now has the next link, making the new pages reachable
+        FeedPageMetadataRepository.PageMetadata newLatestPage;
+        // ...and then the previous latest page (if different from the new one) which now has the next link, making the new pages reachable
         Optional<FeedPageMetadataRepository.PageMetadata> previousLatestPage;
     }
 
-    AssignPagesResult assignPages(Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage, List<FeedEntityRepository.PageAssignment> entities) {
-        // impl note: if no new pages are created (i.e. the old latest page is the new latest page)
-        // we have to make sure to store it only in one of the fields to avoid problems
+    Optional<AssignPagesResult> assignPages(Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage, List<FeedEntityRepository.PageAssignment> entities) {
+        // impl note: if no new pages are created (old latest = new latest) then previousLatestPage must be empty
         // impl note: generation is old latest page generation + 1, and we set that on all pages we return incl the old latest page
 
         throw new UnsupportedOperationException("not yet implemented");

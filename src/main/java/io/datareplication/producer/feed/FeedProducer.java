@@ -20,11 +20,10 @@ public interface FeedProducer {
 
     @NonNull CompletionStage<Void> publish(@NonNull Entity<@NonNull FeedEntityHeader> entity);
 
-    // TODO: is there a better name?
-
     /**
      * @return the number of entities added to pages
      */
+    // TODO: is there a better name?
     @NonNull CompletionStage<Integer> assignPages();
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -61,6 +60,8 @@ public interface FeedProducer {
                                         feedProducerJournalRepository,
                                         clock,
                                         new RandomContentIdProvider(),
+                                        new NewEntityTimestampsService(),
+                                        new AssignPagesService(),
                                         assignPagesLimit);
         }
     }
