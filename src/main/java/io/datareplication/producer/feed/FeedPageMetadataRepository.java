@@ -29,4 +29,6 @@ public interface FeedPageMetadataRepository {
     //  explain the generation stuff.
     // TODO: explain: page with no next link with the lowest generation
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> getLatest();
+
+    @NonNull CompletionStage<Void> delete(@NonNull List<@NonNull PageId> pageIds);
 }
