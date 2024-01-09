@@ -30,7 +30,7 @@ class FeedProducerImplTest {
     private final SettableClock clock = new SettableClock(SOME_TIME);
     private final RandomContentIdProvider contentIdProvider = mock(RandomContentIdProvider.class);
     private final RollbackService rollbackService = mock(RollbackService.class);
-    private final NewEntityTimestampsService newEntityTimestampsService = mock(NewEntityTimestampsService.class);
+    private final EntityTimestampsService entityTimestampsService = mock(EntityTimestampsService.class);
     private final AssignPagesService assignPagesService = mock(AssignPagesService.class);
 
     private static final Instant SOME_TIME = Instant.parse("2023-11-28T14:00:33.123Z");
@@ -44,7 +44,7 @@ class FeedProducerImplTest {
         clock,
         contentIdProvider,
         rollbackService,
-        newEntityTimestampsService,
+        entityTimestampsService,
         assignPagesService,
         ASSIGN_PAGES_LIMIT);
 
@@ -120,7 +120,7 @@ class FeedProducerImplTest {
             .thenReturn(Mono.just(List.of(previousLatestPage)).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
-        when(newEntityTimestampsService.updatedEntityTimestamps(previousLatestPage, List.of(entity1)))
+        when(entityTimestampsService.updateEntityTimestamps(previousLatestPage, List.of(entity1)))
             .thenReturn(List.of(entity2));
         when(assignPagesService.assignPages(Optional.of(previousLatestPage), List.of(entity2)))
             .thenReturn(Optional.of(new AssignPagesService.AssignPagesResult(
@@ -205,7 +205,7 @@ class FeedProducerImplTest {
             .thenReturn(Mono.just(List.of(oldLatestPage)).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
-        when(newEntityTimestampsService.updatedEntityTimestamps(oldLatestPage, List.of(entity1)))
+        when(entityTimestampsService.updateEntityTimestamps(oldLatestPage, List.of(entity1)))
             .thenReturn(List.of(entity2));
         when(assignPagesService.assignPages(Optional.of(oldLatestPage), List.of(entity2)))
             .thenReturn(Optional.of(new AssignPagesService.AssignPagesResult(
@@ -245,7 +245,7 @@ class FeedProducerImplTest {
             .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
-        when(newEntityTimestampsService.updatedEntityTimestamps(latestPage, List.of(entity1)))
+        when(entityTimestampsService.updateEntityTimestamps(latestPage, List.of(entity1)))
             .thenReturn(List.of(entity2));
         when(assignPagesService.assignPages(Optional.of(latestPage), List.of(entity2)))
             .thenReturn(Optional.empty());

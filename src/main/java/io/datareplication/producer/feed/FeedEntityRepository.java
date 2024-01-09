@@ -28,10 +28,13 @@ public interface FeedEntityRepository {
     // TODO: clearer connection between entity and PageAssignment? Maybe a wrapper type that contains all?
     @NonNull CompletionStage<Void> append(@NonNull Entity<@NonNull FeedEntityHeader> entity);
 
+    // TODO: doc: entities must be sorted by (timestamp, disambiguator) ascending
     @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(@NonNull PageId pageId);
 
+    // TODO: doc: entities must be sorted by (timestamp, disambiguator) ascending
     @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned(int limit);
 
+    // TODO: doc: entities must be sorted by (timestamp, disambiguator) ascending
     @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getPageAssignments(@NonNull PageId pageId);
 
     @NonNull CompletionStage<Void> savePageAssignments(@NonNull List<@NonNull PageAssignment> pageAssignments);

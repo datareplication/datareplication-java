@@ -25,7 +25,7 @@ class FeedProducerImpl implements FeedProducer {
     private final Clock clock;
     private final RandomContentIdProvider contentIdProvider;
     private final RollbackService rollbackService;
-    private final NewEntityTimestampsService newEntityTimestampsService;
+    private final EntityTimestampsService entityTimestampsService;
     private final AssignPagesService assignPagesService;
     private final int assignPagesLimit;
 
@@ -86,7 +86,7 @@ class FeedProducerImpl implements FeedProducer {
                 // TODO: lag/delay? Filter out everything not old enough first or after postdating?
                 // Make sure all timestamps are not before the latest page, keeping ordering as much as possible.
                 final var unassignedWithUpdatedTimestamps = maybeLatest
-                    .map(latest -> newEntityTimestampsService.updatedEntityTimestamps(latest, unassigned))
+                    .map(latest -> entityTimestampsService.updateEntityTimestamps(latest, unassigned))
                     .orElse(unassigned);
 
                 // Build new pages etc. and return the steps to take.

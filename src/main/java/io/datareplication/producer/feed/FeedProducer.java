@@ -65,7 +65,7 @@ public interface FeedProducer {
                     feedEntityRepository,
                     feedPageMetadataRepository
                 ),
-                new NewEntityTimestampsService(),
+                new EntityTimestampsService(),
                 new AssignPagesService(),
                 assignPagesLimit
             );
