@@ -92,7 +92,7 @@ public interface SnapshotProducer {
          * @param pageIdProvider the pageIdProvider which generates IDs for Pages.
          * @return this builder
          */
-        public Builder pageIdProvider(final PageIdProvider pageIdProvider) {
+        public @NonNull Builder pageIdProvider(@NonNull final PageIdProvider pageIdProvider) {
             this.pageIdProvider = pageIdProvider;
             return this;
         }
@@ -103,20 +103,20 @@ public interface SnapshotProducer {
          * @param snapshotIdProvider the snapshotIdProvider which generates IDs for Snapshots.
          * @return this builder
          */
-        public Builder snapshotIdProvider(final SnapshotIdProvider snapshotIdProvider) {
+        public @NonNull Builder snapshotIdProvider(@NonNull final SnapshotIdProvider snapshotIdProvider) {
             this.snapshotIdProvider = snapshotIdProvider;
             return this;
         }
 
         /**
          * Set the maximum bytes per page. When a page is composed, a new page will be created if the current page
-         * gets to big. Defaults to 1.000.000 bytes.
+         * gets too big. Defaults to 1 MB.
          *
          * @param maxBytesPerPage the maximum bytes per page. Must be equal or greater than 1.
          * @return this builder
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
-        public Builder maxBytesPerPage(final long maxBytesPerPage) {
+        public @NonNull Builder maxBytesPerPage(final long maxBytesPerPage) {
             if (maxBytesPerPage <= 0) {
                 throw new IllegalArgumentException("maxBytesPerPage must be >= 1");
             }
@@ -132,7 +132,7 @@ public interface SnapshotProducer {
          * @return this builder
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
-        public Builder maxEntriesPerPage(final long maxEntriesPerPage) {
+        public @NonNull Builder maxEntriesPerPage(final long maxEntriesPerPage) {
             if (maxEntriesPerPage <= 0) {
                 throw new IllegalArgumentException("maxEntriesPerPage must be >= 1");
             }

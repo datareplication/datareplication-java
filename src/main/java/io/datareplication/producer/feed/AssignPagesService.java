@@ -1,11 +1,17 @@
 package io.datareplication.producer.feed;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Value;
 
 import java.util.List;
 import java.util.Optional;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class AssignPagesService {
+    private final long maxBytesPerPage;
+    private final long maxEntriesPerPage;
+
     @Value
     static class AssignPagesResult {
         // These fields are in the order they need to be saved in:
