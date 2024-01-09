@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -115,8 +116,8 @@ class FeedProducerImplTest {
         final var entity1 = somePageAssignment("1");
         final var entity2 = somePageAssignment("2");
         final var entity3 = somePageAssignment("3");
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(previousLatestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(previousLatestPage)).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
         when(newEntityTimestampsService.updatedEntityTimestamps(previousLatestPage, List.of(entity1)))
@@ -159,8 +160,8 @@ class FeedProducerImplTest {
         final var entity1 = somePageAssignment("1");
         final var entity2 = somePageAssignment("2");
         final var entity3 = somePageAssignment("3");
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.<FeedPageMetadataRepository.PageMetadata>empty()).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(Collections.<FeedPageMetadataRepository.PageMetadata>emptyList()).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
         when(assignPagesService.assignPages(Optional.empty(), List.of(entity1)))
@@ -200,8 +201,8 @@ class FeedProducerImplTest {
         final var entity1 = somePageAssignment("1");
         final var entity2 = somePageAssignment("2");
         final var entity3 = somePageAssignment("3");
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(oldLatestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(oldLatestPage)).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
         when(newEntityTimestampsService.updatedEntityTimestamps(oldLatestPage, List.of(entity1)))
@@ -240,8 +241,8 @@ class FeedProducerImplTest {
         final var latestPage = somePageMetadata("latest");
         final var entity1 = somePageAssignment("1");
         final var entity2 = somePageAssignment("2");
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(latestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.of(entity1)).toFuture());
         when(newEntityTimestampsService.updatedEntityTimestamps(latestPage, List.of(entity1)))
@@ -271,8 +272,8 @@ class FeedProducerImplTest {
         when(feedProducerJournalRepository.get())
             .thenReturn(Mono.just(Optional.of(journalState)).toFuture());
         when(rollbackService.rollback(journalState)).thenReturn(Mono.empty());
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.<FeedPageMetadataRepository.PageMetadata>empty()).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(Collections.<FeedPageMetadataRepository.PageMetadata>emptyList()).toFuture());
 
         when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
             .thenReturn(Mono.just(List.<FeedEntityRepository.PageAssignment>of()).toFuture());

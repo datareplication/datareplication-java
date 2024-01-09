@@ -71,11 +71,11 @@ class FeedProducerImpl implements FeedProducer {
                 .map(journalState -> rollbackService
                     // If we have a broken state, we let RollbackService handle the finer details.
                     .rollback(journalState)
-                    // Once the rollback is done, we clean up the journal entry because the state is now clean.
+                    // Once the rollback is done, we delete the journal entry because the state is now clean.
                     .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete)))
                 .orElse(Mono.empty()))
             // Step 2: load the current latest page so we can extend it/link it up.
-            .then(Mono.fromCompletionStage(feedPageMetadataRepository::getLatest))
+            .then(FeedPageMetadataRepositoryActions.getLatest(feedPageMetadataRepository))
             // Also load all entities that currently aren't assigned to a page (up to a max).
             .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimit)))
             // Step 3: calculate page assignments to make, pages to create, and existing pages to update.

@@ -10,6 +10,7 @@ class NewEntityTimestampsService {
         //  are rolled back but the timestamp changes remain?
         //  Plan: if we update lastModified, save the original value in originalLastModified. Then rollback can just
         //  undo that together with unsetting the page id
+        //  ^ handled, we have to set originalLastModified here
         throw new UnsupportedOperationException("not yet implemented");
     }
 }

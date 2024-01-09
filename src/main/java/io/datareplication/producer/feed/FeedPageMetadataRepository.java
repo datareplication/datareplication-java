@@ -4,7 +4,9 @@ import io.datareplication.model.PageId;
 import io.datareplication.model.Timestamp;
 import lombok.NonNull;
 import lombok.Value;
+import reactor.core.publisher.Mono;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -23,12 +25,26 @@ public interface FeedPageMetadataRepository {
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> get(@NonNull PageId pageId);
 
+    @NonNull CompletionStage<@NonNull List<@NonNull PageMetadata>> getWithoutNextLink();
+
     @NonNull CompletionStage<Void> save(@NonNull List<@NonNull PageMetadata> pages);
 
-    // TODO: maybe replace with getAllWithNoNextLink and just do the filtering in the library? Then we wouldn't have to
-    //  explain the generation stuff.
-    // TODO: explain: page with no next link with the lowest generation
-    @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> getLatest();
-
     @NonNull CompletionStage<Void> delete(@NonNull List<@NonNull PageId> pageIds);
+}
+
+class FeedPageMetadataRepositoryActions {
+    private FeedPageMetadataRepositoryActions() {
+    }
+
+    /**
+     * The "latest page" in a repository is the page with no next link with the lowest generation. This is implemented as
+     * a helper function here so repository implementors don't have to understand generations.
+     */
+    static Mono<Optional<FeedPageMetadataRepository.PageMetadata>> getLatest(FeedPageMetadataRepository repository) {
+        // it just looks bad here
+        //noinspection Convert2MethodRef
+        return Mono
+            .fromCompletionStage(repository::getWithoutNextLink)
+            .map(candidates -> candidates.stream().min(Comparator.comparingInt(page -> page.generation())));
+    }
 }

@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,8 +47,8 @@ class RollbackServiceTest {
             latestPage.pageId(),
             Optional.empty()
         );
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(latestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getPageAssignments(latestPage.pageId()))
             .thenReturn(Mono.just(List.of(entity1, entity2, entity3)).toFuture());
 
@@ -68,8 +69,8 @@ class RollbackServiceTest {
             latestPage.pageId(),
             Optional.of(PageId.of("previous-latest"))
         );
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(latestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getPageAssignments(latestPage.pageId()))
             .thenReturn(Mono.just(List.of(entity1, entity2)).toFuture());
 
@@ -104,8 +105,8 @@ class RollbackServiceTest {
             latestPage.pageId(),
             Optional.empty()
         );
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(latestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getPageAssignments(latestPage.pageId()))
             .thenReturn(Mono.just(List.of(entity1, entity2, entity3, entity4)).toFuture());
 
@@ -165,8 +166,8 @@ class RollbackServiceTest {
             newLatest.pageId(),
             Optional.empty()
         );
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.of(latestPage)).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getPageAssignments(latestPage.pageId()))
             .thenReturn(Mono.just(List.of(latest_entity1, latest_entity2)).toFuture());
         when(feedEntityRepository.getPageAssignments(newPage1.pageId()))
@@ -234,8 +235,8 @@ class RollbackServiceTest {
             newLatest.pageId(),
             Optional.empty()
         );
-        when(feedPageMetadataRepository.getLatest())
-            .thenReturn(Mono.just(Optional.<FeedPageMetadataRepository.PageMetadata>empty()).toFuture());
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(Collections.<FeedPageMetadataRepository.PageMetadata>emptyList()).toFuture());
         when(feedEntityRepository.getPageAssignments(newLatest.pageId()))
             .thenReturn(Mono.just(List.of(entity1, entity2, entity3)).toFuture());
 
