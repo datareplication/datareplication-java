@@ -32,19 +32,3 @@ public interface FeedPageMetadataRepository {
     @NonNull CompletionStage<Void> delete(@NonNull List<@NonNull PageId> pageIds);
 }
 
-class FeedPageMetadataRepositoryActions {
-    private FeedPageMetadataRepositoryActions() {
-    }
-
-    /**
-     * The "latest page" in a repository is the page with no next link with the lowest generation. This is implemented as
-     * a helper function here so repository implementors don't have to understand generations.
-     */
-    static Mono<Optional<FeedPageMetadataRepository.PageMetadata>> getLatest(FeedPageMetadataRepository repository) {
-        // it just looks bad here
-        //noinspection Convert2MethodRef
-        return Mono
-            .fromCompletionStage(repository::getWithoutNextLink)
-            .map(candidates -> candidates.stream().min(Comparator.comparingInt(page -> page.generation())));
-    }
-}

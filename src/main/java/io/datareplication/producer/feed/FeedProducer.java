@@ -110,6 +110,7 @@ public interface FeedProducer {
                     feedEntityRepository,
                     feedPageMetadataRepository
                 ),
+                new GenerationRotationService(feedPageMetadataRepository),
                 new EntityTimestampsService(),
                 new AssignPagesService(maxBytesPerPage, maxEntitiesPerPage),
                 assignPagesLimit

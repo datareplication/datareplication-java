@@ -25,6 +25,7 @@ class FeedProducerImpl implements FeedProducer {
     private final Clock clock;
     private final RandomContentIdProvider contentIdProvider;
     private final RollbackService rollbackService;
+    private final GenerationRotationService generationRotationService;
     private final EntityTimestampsService entityTimestampsService;
     private final AssignPagesService assignPagesService;
     private final int assignPagesLimit;
@@ -75,7 +76,10 @@ class FeedProducerImpl implements FeedProducer {
                     .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete)))
                 .orElse(Mono.empty()))
             // Step 2: load the current latest page so we can extend it/link it up.
-            .then(FeedPageMetadataRepositoryActions.getLatest(feedPageMetadataRepository))
+            .then(Mono.fromCompletionStage(feedPageMetadataRepository::getWithoutNextLink))
+            .map(Generations::selectLatestPage)
+            // Rotate generation if necessary.
+            .flatMap(generationRotationService::rotateGenerationIfNecessary)
             // Also load all entities that currently aren't assigned to a page (up to a max).
             .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimit)))
             // Step 3: calculate page assignments to make, pages to create, and existing pages to update.

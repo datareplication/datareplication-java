@@ -30,6 +30,7 @@ class FeedProducerImplTest {
     private final SettableClock clock = new SettableClock(SOME_TIME);
     private final RandomContentIdProvider contentIdProvider = mock(RandomContentIdProvider.class);
     private final RollbackService rollbackService = mock(RollbackService.class);
+    private final GenerationRotationService generationRotationService = mock(GenerationRotationService.class);
     private final EntityTimestampsService entityTimestampsService = mock(EntityTimestampsService.class);
     private final AssignPagesService assignPagesService = mock(AssignPagesService.class);
 
@@ -44,6 +45,7 @@ class FeedProducerImplTest {
         clock,
         contentIdProvider,
         rollbackService,
+        generationRotationService,
         entityTimestampsService,
         assignPagesService,
         ASSIGN_PAGES_LIMIT);
@@ -51,6 +53,8 @@ class FeedProducerImplTest {
     @BeforeEach
     void setUp() {
         when(contentIdProvider.newContentId()).thenReturn(SOME_CONTENT_ID);
+        when(generationRotationService.rotateGenerationIfNecessary(any()))
+            .thenAnswer(args -> Mono.just(args.getArgument(0)));
         when(feedProducerJournalRepository.get())
             .thenReturn(Mono.just(Optional.<FeedProducerJournalRepository.JournalState>empty()).toFuture());
         when(feedProducerJournalRepository.save(any())).thenReturn(Mono.<Void>empty().toFuture());
@@ -260,6 +264,30 @@ class FeedProducerImplTest {
         verify(feedEntityRepository, never()).savePageAssignments(any());
         verify(feedPageMetadataRepository, never()).save(any());
         verify(feedProducerJournalRepository, never()).delete();
+    }
+
+    @Test
+    void assignPages_shouldUseLatestPageFromGenerationRotationService() {
+        final var unrotatedLatestPage = somePageMetadata("latest-unrotated", 1);
+        final var rotatedLatestPage = somePageMetadata("latest-rotated", 2);
+        final var entity1 = somePageAssignment("1");
+        final var entity2 = somePageAssignment("2");
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(List.of(unrotatedLatestPage)).toFuture());
+        when(generationRotationService.rotateGenerationIfNecessary(Optional.of(unrotatedLatestPage)))
+            .thenReturn(Mono.just(Optional.of(rotatedLatestPage)));
+        when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
+            .thenReturn(Mono.just(List.<FeedEntityRepository.PageAssignment>of()).toFuture());
+        when(entityTimestampsService.updateEntityTimestamps(rotatedLatestPage, List.of(entity1)))
+            .thenReturn(List.of(entity2));
+        when(assignPagesService.assignPages(Optional.of(rotatedLatestPage), List.of()))
+            .thenReturn(Optional.empty());
+
+        final var result = feedProducer.assignPages();
+
+        assertThat(result)
+            .isCompletedWithValue(0)
+            .succeedsWithin(TEST_TIMEOUT);
     }
 
     @Test

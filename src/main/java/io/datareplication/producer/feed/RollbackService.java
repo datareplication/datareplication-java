@@ -28,11 +28,13 @@ class RollbackService {
      * Perform necessary cleanup actions to roll back a dirty journal state. This service does all its actions as
      * side effects to keep the rollback handling out of the main code path as far as possible. This means once the returned
      * Mono resolves, the repository state has been cleaned and the journal state can be deleted.
+     *
      * @param journalState journal info for cleanup
      */
     Mono<Void> rollback(FeedProducerJournalRepository.JournalState journalState) {
-        return FeedPageMetadataRepositoryActions
-            .getLatest(feedPageMetadataRepository)
+        return Mono
+            .fromCompletionStage(feedPageMetadataRepository::getWithoutNextLink)
+            .map(Generations::selectLatestPage)
             .flatMapMany(maybeLatestPage -> determineRollbackActions(maybeLatestPage, journalState))
             .reduce(new RollbackActions(new ArrayList<>(), new ArrayList<>()), this::accumulateActions)
             .flatMap(actions -> Mono
