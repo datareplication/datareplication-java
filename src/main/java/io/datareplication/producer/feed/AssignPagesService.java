@@ -35,6 +35,13 @@ class AssignPagesService {
         Optional<FeedPageMetadataRepository.PageMetadata> previousLatestPage;
     }
 
+    @Value
+    private static class PackResult {
+        FeedPageMetadataRepository.PageMetadata page;
+        List<FeedEntityRepository.PageAssignment> assignedEntities;
+        List<FeedEntityRepository.PageAssignment> remaining;
+    }
+
     Optional<AssignPagesResult> assignPages(Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage, List<FeedEntityRepository.PageAssignment> entities) {
         // impl note: if no new pages are created (old latest = new latest) then previousLatestPage must be empty
         // impl note: generation is old latest page generation + 1, and we set that on all pages we return incl the old latest page
@@ -47,7 +54,60 @@ class AssignPagesService {
 
         final int generation = maybeLatestPage.map(x -> x.generation() + 1).orElse(Generations.INITIAL_GENERATION);
 
-        final var newPages = new ArrayList<FeedPageMetadataRepository.PageMetadata>();
+
+        var firstNext = pageIdProvider.newPageId();
+        var maybePack = maybeLatestPage.map(p -> packEntities(p, generation, firstNext, entities));
+
+        var packs = new ArrayList<PackResult>();
+
+        var remaining = maybePack.map(x -> x.remaining).orElse(entities);
+        var prev = maybePack.map(x -> x.page.pageId());
+        var next = firstNext;
+
+        while (!remaining.isEmpty()) {
+            var newNextId = pageIdProvider.newPageId();
+            var basePage = new FeedPageMetadataRepository.PageMetadata(
+                next,
+                Timestamp.of(Instant.EPOCH),
+                prev,
+                Optional.empty(),
+                0,
+                0,
+                generation
+            );
+            var result = packEntities(basePage, generation, newNextId, remaining);
+            next = newNextId;
+            prev = Optional.of(result.page.pageId());
+            remaining = result.remaining;
+            packs.add(result);
+        }
+
+
+        var assignedEntities = new ArrayList<FeedEntityRepository.PageAssignment>();
+        maybePack.ifPresent(x -> assignedEntities.addAll(x.assignedEntities));
+        packs.forEach(x -> assignedEntities.addAll(x.assignedEntities));
+
+        FeedPageMetadataRepository.PageMetadata latestPage;
+        if (!packs.isEmpty()) {
+            latestPage = packs.remove(packs.size() - 1).page;
+        } else if (maybePack.isPresent()) {
+            latestPage = maybePack.get().page;
+            maybePack = Optional.empty();
+        } else {
+            throw new IllegalStateException("can't happen, I think");
+        }
+
+        var newPages = packs.stream().map(x -> x.page).collect(Collectors.toList());
+
+        return Optional.of(new AssignPagesResult(
+            assignedEntities,
+            newPages,
+            latestPage,
+            maybePack.map(x -> x.page)
+        ));
+
+
+        /*final var newPages = new ArrayList<FeedPageMetadataRepository.PageMetadata>();
         final var assignedEntities = new ArrayList<FeedEntityRepository.PageAssignment>();
         var prevPageId = maybeLatestPage.flatMap(FeedPageMetadataRepository.PageMetadata::prev);
         var lastModified = maybeLatestPage.map(x -> x.lastModified()).orElse(Timestamp.of(Instant.EPOCH));
@@ -107,8 +167,56 @@ class AssignPagesService {
             newPages,
             latestPage,
             previousLatestPage
-        ));
+        ));*/
 
         //throw new UnsupportedOperationException("not yet implemented");
+    }
+
+    private PackResult packEntities(
+        FeedPageMetadataRepository.PageMetadata page,
+        int generation,
+        PageId nextPage,
+        List<FeedEntityRepository.PageAssignment> unassignedEntities
+    ) {
+        var assignedEntities = new ArrayList<FeedEntityRepository.PageAssignment>();
+        var lastModified = page.lastModified();
+        var numberOfEntities = page.numberOfEntities();
+        var contentLength = page.contentLength();
+        var idx = 0;
+        var setNextLink = false;
+
+        for (; idx < unassignedEntities.size(); idx++) {
+            var entity = unassignedEntities.get(idx);
+            if (numberOfEntities >= maxEntitiesPerPage || (contentLength > 0 && contentLength + entity.contentLength() > maxBytesPerPage)) {
+                setNextLink = true;
+                break;
+            }
+            lastModified = entity.lastModified();
+            numberOfEntities += 1;
+            contentLength += entity.contentLength();
+            final var assignedEntity = new FeedEntityRepository.PageAssignment(
+                entity.contentId(),
+                entity.lastModified(),
+                entity.originalLastModified(),
+                entity.contentLength(),
+                Optional.of(page.pageId())
+            );
+            assignedEntities.add(assignedEntity);
+        }
+
+        var newPage = new FeedPageMetadataRepository.PageMetadata(
+            page.pageId(),
+            lastModified,
+            page.prev(),
+            setNextLink ? Optional.of(nextPage) : Optional.empty(),
+            contentLength,
+            numberOfEntities,
+            generation
+        );
+        return new PackResult(
+            newPage,
+            assignedEntities,
+            unassignedEntities.subList(idx, unassignedEntities.size())
+        );
     }
 }
