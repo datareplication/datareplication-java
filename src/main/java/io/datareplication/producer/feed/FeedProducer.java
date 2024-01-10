@@ -112,7 +112,7 @@ public interface FeedProducer {
                 ),
                 new GenerationRotationService(feedPageMetadataRepository),
                 new EntityTimestampsService(),
-                new AssignPagesService(maxBytesPerPage, maxEntitiesPerPage),
+                new AssignPagesService(new RandomPageIdProvider(), maxBytesPerPage, maxEntitiesPerPage),
                 assignPagesLimit
             );
         }
