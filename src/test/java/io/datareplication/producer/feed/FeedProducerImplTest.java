@@ -111,9 +111,48 @@ class FeedProducerImplTest {
     }
 
     @Test
-    void assignPages_shouldSaveNewPageAssignmentsWithExistingLatestPageAndNewGeneration() {
-        final var previousLatestPage = somePageMetadata("previous-latest", 14);
-        final var previousLatestPageNewGeneration = somePageMetadata("previous-latest", 18);
+    void assignPages_shouldSaveNewPageAssignmentsWithoutPreviousLatestPage() {
+        final var newLatestPage = somePageMetadata("new-latest");
+        final var newPage1 = somePageMetadata("new-page-1");
+        final var newPage2 = somePageMetadata("new-page-2");
+        final var entity1 = somePageAssignment("1");
+        final var entity2 = somePageAssignment("2");
+        final var entity3 = somePageAssignment("3");
+        when(feedPageMetadataRepository.getWithoutNextLink())
+            .thenReturn(Mono.just(Collections.<FeedPageMetadataRepository.PageMetadata>emptyList()).toFuture());
+        when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
+            .thenReturn(Mono.just(List.of(entity1)).toFuture());
+        when(assignPagesService.assignPages(Optional.empty(), List.of(entity1)))
+            .thenReturn(Optional.of(new AssignPagesService.AssignPagesResult(
+                List.of(entity2, entity3),
+                List.of(newPage1, newPage2),
+                newLatestPage,
+                Optional.empty()
+            )));
+
+        final var result = feedProducer.assignPages();
+
+        assertThat(result)
+            .isCompletedWithValue(2)
+            .succeedsWithin(TEST_TIMEOUT);
+        verifyNoInteractions(rollbackService);
+        final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
+        inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
+            List.of(newPage1.pageId(), newPage2.pageId()),
+            newLatestPage.pageId(),
+            Optional.empty()
+        ));
+        inOrder.verify(feedEntityRepository).savePageAssignments(List.of(entity2, entity3));
+        inOrder.verify(feedPageMetadataRepository).save(List.of(newPage1, newPage2));
+        inOrder.verify(feedPageMetadataRepository).save(List.of(newLatestPage));
+        inOrder.verify(feedPageMetadataRepository).save(List.of());
+        inOrder.verify(feedProducerJournalRepository).delete();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void assignPages_shouldSaveNewPageAssignmentsWithExistingLatestPage() {
+        final var previousLatestPage = somePageMetadata("previous-latest");
         final var newLatestPage = somePageMetadata("new-latest");
         final var newPage1 = somePageMetadata("new-page-1");
         final var newPage2 = somePageMetadata("new-page-2");
@@ -129,7 +168,6 @@ class FeedProducerImplTest {
         when(assignPagesService.assignPages(Optional.of(previousLatestPage), List.of(entity2)))
             .thenReturn(Optional.of(new AssignPagesService.AssignPagesResult(
                 List.of(entity2, entity3),
-                Optional.of(previousLatestPageNewGeneration),
                 List.of(newPage1, newPage2),
                 newLatestPage,
                 Optional.of(previousLatestPage)
@@ -148,7 +186,6 @@ class FeedProducerImplTest {
             Optional.of(previousLatestPage.pageId())
         ));
         inOrder.verify(feedEntityRepository).savePageAssignments(List.of(entity2, entity3));
-        inOrder.verify(feedPageMetadataRepository).save(List.of(previousLatestPageNewGeneration));
         inOrder.verify(feedPageMetadataRepository).save(List.of(newPage1, newPage2));
         inOrder.verify(feedPageMetadataRepository).save(List.of(newLatestPage));
         inOrder.verify(feedPageMetadataRepository).save(List.of(previousLatestPage));
@@ -157,51 +194,9 @@ class FeedProducerImplTest {
     }
 
     @Test
-    void assignPages_shouldSaveNewPageAssignmentsWithoutPreviousLatestPage() {
-        final var newLatestPage = somePageMetadata("new-latest");
-        final var newPage1 = somePageMetadata("new-page-1");
-        final var newPage2 = somePageMetadata("new-page-2");
-        final var entity1 = somePageAssignment("1");
-        final var entity2 = somePageAssignment("2");
-        final var entity3 = somePageAssignment("3");
-        when(feedPageMetadataRepository.getWithoutNextLink())
-            .thenReturn(Mono.just(Collections.<FeedPageMetadataRepository.PageMetadata>emptyList()).toFuture());
-        when(feedEntityRepository.getUnassigned(ASSIGN_PAGES_LIMIT))
-            .thenReturn(Mono.just(List.of(entity1)).toFuture());
-        when(assignPagesService.assignPages(Optional.empty(), List.of(entity1)))
-            .thenReturn(Optional.of(new AssignPagesService.AssignPagesResult(
-                List.of(entity2, entity3),
-                Optional.empty(),
-                List.of(newPage1, newPage2),
-                newLatestPage,
-                Optional.empty()
-            )));
-
-        final var result = feedProducer.assignPages();
-
-        assertThat(result)
-            .isCompletedWithValue(2)
-            .succeedsWithin(TEST_TIMEOUT);
-        verifyNoInteractions(rollbackService);
-        final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
-        inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
-            List.of(newPage1.pageId(), newPage2.pageId()),
-            newLatestPage.pageId(),
-            Optional.empty()
-        ));
-        inOrder.verify(feedEntityRepository).savePageAssignments(List.of(entity2, entity3));
-        inOrder.verify(feedPageMetadataRepository).save(List.of());
-        inOrder.verify(feedPageMetadataRepository).save(List.of(newPage1, newPage2));
-        inOrder.verify(feedPageMetadataRepository).save(List.of(newLatestPage));
-        inOrder.verify(feedPageMetadataRepository).save(List.of());
-        inOrder.verify(feedProducerJournalRepository).delete();
-        inOrder.verifyNoMoreInteractions();
-    }
-
-    @Test
     void assignPages_shouldSaveNewPageAssignmentsWithUpdatedLatestPage() {
-        final var oldLatestPage = somePageMetadata("latest", 15);
-        final var updatedLatestPage = somePageMetadata("latest", 66);
+        final var oldLatestPage = somePageMetadata("latest-1");
+        final var updatedLatestPage = somePageMetadata("latest-2");
         final var entity1 = somePageAssignment("1");
         final var entity2 = somePageAssignment("2");
         final var entity3 = somePageAssignment("3");
@@ -214,7 +209,6 @@ class FeedProducerImplTest {
         when(assignPagesService.assignPages(Optional.of(oldLatestPage), List.of(entity2)))
             .thenReturn(Optional.of(new AssignPagesService.AssignPagesResult(
                 List.of(entity3),
-                Optional.empty(),
                 List.of(),
                 updatedLatestPage,
                 Optional.empty()
@@ -233,7 +227,7 @@ class FeedProducerImplTest {
             Optional.empty()
         ));
         inOrder.verify(feedEntityRepository).savePageAssignments(List.of(entity3));
-        inOrder.verify(feedPageMetadataRepository, times(2)).save(List.of());
+        inOrder.verify(feedPageMetadataRepository).save(List.of());
         inOrder.verify(feedPageMetadataRepository).save(List.of(updatedLatestPage));
         inOrder.verify(feedPageMetadataRepository).save(List.of());
         inOrder.verify(feedProducerJournalRepository).delete();
@@ -268,8 +262,8 @@ class FeedProducerImplTest {
 
     @Test
     void assignPages_shouldUseLatestPageFromGenerationRotationService() {
-        final var unrotatedLatestPage = somePageMetadata("latest-unrotated", 1);
-        final var rotatedLatestPage = somePageMetadata("latest-rotated", 2);
+        final var unrotatedLatestPage = somePageMetadata("latest-unrotated");
+        final var rotatedLatestPage = somePageMetadata("latest-rotated");
         final var entity1 = somePageAssignment("1");
         final var entity2 = somePageAssignment("2");
         when(feedPageMetadataRepository.getWithoutNextLink())
@@ -321,10 +315,6 @@ class FeedProducerImplTest {
     }
 
     private static FeedPageMetadataRepository.PageMetadata somePageMetadata(String id) {
-        return somePageMetadata(id, 3);
-    }
-
-    private static FeedPageMetadataRepository.PageMetadata somePageMetadata(String id, int generation) {
         return new FeedPageMetadataRepository.PageMetadata(
             PageId.of(id),
             Timestamp.now(),
@@ -332,7 +322,7 @@ class FeedProducerImplTest {
             Optional.empty(),
             1,
             2,
-            generation
+            3
         );
     }
 

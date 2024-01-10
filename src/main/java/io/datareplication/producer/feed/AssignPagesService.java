@@ -19,8 +19,6 @@ class AssignPagesService {
 
         // Entity assignments can happen in bulk because they're not visible without PageMetadata updates.
         List<FeedEntityRepository.PageAssignment> entityPageAssignments;
-        // Sometimes we need to rotate the generation on the current latest page before we do anything else.
-        Optional<FeedPageMetadataRepository.PageMetadata> newGeneration;
         // The bulk of new pages can be saved in any order because they're not immediately visible.
         List<FeedPageMetadataRepository.PageMetadata> newPages;
         // The new latest page: if this is a new page, it won't be visible because it has a higher generation is higher than the
@@ -34,8 +32,6 @@ class AssignPagesService {
     Optional<AssignPagesResult> assignPages(Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage, List<FeedEntityRepository.PageAssignment> entities) {
         // impl note: if no new pages are created (old latest = new latest) then previousLatestPage must be empty
         // impl note: generation is old latest page generation + 1, and we set that on all pages we return incl the old latest page
-
-        // TODO: impl note: rotating generations happens here now
 
         throw new UnsupportedOperationException("not yet implemented");
     }

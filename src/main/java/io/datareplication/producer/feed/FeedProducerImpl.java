@@ -124,15 +124,11 @@ class FeedProducerImpl implements FeedProducer {
             // we can just do this because FeedPageProvider checks the page metadata and filters out any entities that
             // aren't acknowledged in the page metadata so none of this is visible for now
             .then(Mono.fromCompletionStage(() -> feedEntityRepository.savePageAssignments(assignPagesResult.entityPageAssignments())))
-            // Step 4.3: save page with rotated generation
-            // If we need to rotate the generation on the still-current latest page, we need to do it before we save the
-            // new and updated latest page objects to uphold the ordering rules for generations.
-            .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(listFromOptional(assignPagesResult.newGeneration()))))
-            // Step 4.4: create new pages
+            // Step 4.3: create new pages
             // It's now possible to access these pages via their ID, but they're not yet reachable from the (current) latest
             // page. That's why we don't need to care about order yet.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(assignPagesResult.newPages())))
-            // Step 4.5: save the new latest page
+            // Step 4.4: save the new latest page
             // If the feed is currently empty, saving this page will immediately make it the new latest page and make
             // it and every other new page visible, which is why we're waiting until all other new pages are saved
             // before we do this one.
@@ -142,11 +138,11 @@ class FeedProducerImpl implements FeedProducer {
             // be visible yet. While both of them won't have a next link and thus qualify as latest, this one will
             // have a higher generation number so the old one will be preferred when loading.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(List.of(assignPagesResult.newLatestPage()))))
-            // Step 4.6: update the old latest page
+            // Step 4.5: update the old latest page
             // This will make everything visible, so we do this last. By setting its next link, this page doesn't
             // qualify as the latest page any more and the new one becomes the latest page.
             .then(Mono.fromCompletionStage(() -> feedPageMetadataRepository.save(listFromOptional(assignPagesResult.previousLatestPage()))))
-            // Step 4.7: if we successfully reached this point, the new repo state is clean and we can remove our journal entry.
+            // Step 4.6: if we successfully reached this point, the new repo state is clean and we can remove our journal entry.
             .then(Mono.fromCompletionStage(feedProducerJournalRepository::delete))
             .thenReturn(assignPagesResult.entityPageAssignments().size());
     }
