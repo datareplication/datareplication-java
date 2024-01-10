@@ -7,7 +7,8 @@ import lombok.NonNull;
 import reactor.adapter.JdkFlowAdapter;
 
 import java.util.concurrent.Flow;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 
 /**
  * {@link StreamingPage} impl that wraps a StreamingPage containing generic {@link HttpHeaders} with specialized header
@@ -24,15 +25,16 @@ public class WrappedStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader
     @SuppressWarnings("unchecked")
     public WrappedStreamingPage(final StreamingPage<HttpHeaders, HttpHeaders> underlying,
                                 final PageHeader pageHeader,
-                                final Function<HttpHeaders, EntityHeader> convertEntityHeader) {
+                                final BiFunction<Integer, HttpHeaders, EntityHeader> convertEntityHeader) {
         this.pageHeader = pageHeader;
         this.boundary = underlying.boundary();
+        final AtomicInteger index = new AtomicInteger();
         var flux = JdkFlowAdapter
             .flowPublisherToFlux(underlying)
             .map(chunk -> {
                 if (chunk instanceof StreamingPage.Chunk.Header) {
                     var header = (StreamingPage.Chunk.Header<HttpHeaders>) chunk;
-                    var convertedHeader = convertEntityHeader.apply(header.header());
+                    var convertedHeader = convertEntityHeader.apply(index.getAndIncrement(), header.header());
                     return Chunk.header(convertedHeader, header.contentType());
                 } else {
                     // this is ok: the only subclass that uses the type parameter is Header which we explicitly convert

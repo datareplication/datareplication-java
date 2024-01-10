@@ -7,6 +7,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Represents the link from a feed page.
+ * Each page must have a "link; rel=self" set.
+ * If they exist, the links to the previous "link; rel=prev" and next "link; rel=next" pages must also be present.
+ */
 public abstract class Link {
     private Link() {
     }
@@ -44,5 +49,34 @@ public abstract class Link {
 
     public static @NonNull Self self(Url value) {
         return new Self(value);
+    }
+
+    public enum Rel {
+        /**
+         * Link to this page must always be set
+         */
+        SELF,
+        /**
+         * Link to the next page. If this is not set, it means that the consumer has arrived at the last page
+         */
+        NEXT,
+        /**
+         * Link to the previous page. If this is not set, this means that this is the first (oldest) page of the feed
+         */
+        PREV;
+
+        @Override
+        public String toString() {
+            switch (this) {
+                case SELF:
+                    return "self";
+                case NEXT:
+                    return "next";
+                case PREV:
+                    return "prev";
+                default:
+                    throw new UnsupportedOperationException("unknown value");
+            }
+        }
     }
 }

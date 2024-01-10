@@ -1,7 +1,12 @@
 package io.datareplication.consumer;
 
+import io.datareplication.model.HttpHeaders;
+import io.datareplication.model.Url;
+import io.datareplication.model.feed.Link;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+
+import java.util.Map;
 
 // TODO: docs
 public class PageFormatException extends ConsumerException {
@@ -17,6 +22,32 @@ public class PageFormatException extends ConsumerException {
     public static final class MissingContentTypeHeader extends PageFormatException {
         public MissingContentTypeHeader() {
             super("Content-Type header is missing from HTTP response");
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class MissingLastModifiedHeader extends PageFormatException {
+
+        public MissingLastModifiedHeader() {
+            super("Last-Modified header is missing from HTTP response");
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class MissingLinkHeader extends PageFormatException {
+
+        public MissingLinkHeader() {
+            super("Link header is missing from HTTP response");
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class MissingSelfLinkHeader extends PageFormatException {
+        private final HttpHeaders links;
+
+        public MissingSelfLinkHeader(HttpHeaders links) {
+            super(String.format("LINK; rel=self header is missing from HTTP response: %s", links));
+            this.links = links;
         }
     }
 
@@ -66,11 +97,41 @@ public class PageFormatException extends ConsumerException {
     }
 
     @EqualsAndHashCode(callSuper = false)
+    public static final class MissingLastModifiedHeaderInEntity extends PageFormatException {
+        private final int index;
+
+        public MissingLastModifiedHeaderInEntity(int index) {
+            super(String.format("Last-Modified header is missing from entity at index %s", index));
+            this.index = index;
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
     public static final class MissingContentTypeInEntity extends PageFormatException {
         private final int index;
 
         public MissingContentTypeInEntity(int index) {
             super(String.format("Content-Type header is missing from entity at index %s", index));
+            this.index = index;
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class MissingContentIdInEntity extends PageFormatException {
+        private final int index;
+
+        public MissingContentIdInEntity(int index) {
+            super(String.format("Content-Id header is missing from entity at index %s", index));
+            this.index = index;
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static final class MissingOperationTypeInEntity extends PageFormatException {
+        private final int index;
+
+        public MissingOperationTypeInEntity(int index) {
+            super(String.format("Operation-Type header is missing from entity at index %s", index));
             this.index = index;
         }
     }

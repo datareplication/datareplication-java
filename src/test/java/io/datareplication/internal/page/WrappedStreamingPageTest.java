@@ -14,7 +14,6 @@ import reactor.test.StepVerifier;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,7 +35,7 @@ class WrappedStreamingPageTest {
         final var wrappedPage = new WrappedStreamingPage<>(
             underlying,
             new SnapshotPageHeader(),
-            Function.identity());
+            (index, header) -> header);
 
         assertThat(wrappedPage.header()).isEqualTo(new SnapshotPageHeader());
         assertThat(wrappedPage.boundary()).isEqualTo("underlying-boundary");
@@ -61,7 +60,7 @@ class WrappedStreamingPageTest {
         final var wrappedPage = new WrappedStreamingPage<>(
             underlying,
             new SnapshotPageHeader(),
-            SnapshotEntityHeader::new);
+            (index, header) -> new SnapshotEntityHeader(header));
 
         assertThat(JdkFlowAdapter.flowPublisherToFlux(wrappedPage).collectList().block())
             .containsExactly(
@@ -92,7 +91,7 @@ class WrappedStreamingPageTest {
         final var wrappedPage = new WrappedStreamingPage<>(
             underlying,
             new SnapshotPageHeader(),
-            header -> {
+            (index, header) -> {
                 throw expectedException;
             });
 

@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.adapter.JdkFlowAdapter;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
@@ -64,11 +65,20 @@ class FeedConsumerImplTest {
             ));
 
         List<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> pages = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamPages(url, StartFrom.beginning())).collectList().single().block();
+            .flowPublisherToFlux(feedConsumer.streamPages(url, StartFrom.beginning()))
+            .collectList()
+            .single()
+            .block();
 
-        // TODO: Better assertion: no .get(0)
-        assertThat(JdkFlowAdapter
-            .flowPublisherToFlux(pages.get(0).toCompleteEntities()).collectList().single().block())
+        assertThat(pages).hasSize(1);
+        assertThat(
+            Flux
+                .fromIterable(pages)
+                .flatMap(page -> JdkFlowAdapter.flowPublisherToFlux(page.toCompleteEntities()))
+                .collectList()
+                .single()
+                .block()
+        )
             .containsExactly(new Entity<>(feedEntityHeader, Body.fromUtf8("Hello World!")));
     }
 
