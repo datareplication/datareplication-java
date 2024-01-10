@@ -34,7 +34,7 @@ public interface FeedProducer {
         private Clock clock = Clock.systemUTC();
         private int assignPagesLimit = Integer.MAX_VALUE;
         private long maxBytesPerPage = 1000 * 1000;
-        private long maxEntriesPerPage = Long.MAX_VALUE;
+        private long maxEntitiesPerPage = Long.MAX_VALUE;
         // TODO: more settings
 
         /**
@@ -84,18 +84,18 @@ public interface FeedProducer {
         }
 
         /**
-         * Set the maximum entries per page. When a page is composed, a new page will be created if the current page
-         * has too many entries. Defaults to Long.MAX_VALUE (meaning no limit).
+         * Set the maximum entities per page. When a page is composed, a new page will be created if the current page
+         * has too many entities. Defaults to Long.MAX_VALUE (meaning no limit).
          *
-         * @param maxEntriesPerPage the maximum entries per page. Must be equal or greater than 1.
+         * @param maxEntitiesPerPage the maximum number of entities per page. Must be equal or greater than 1.
          * @return this builder
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
-        public @NonNull Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            if (maxEntriesPerPage <= 0) {
-                throw new IllegalArgumentException("maxEntriesPerPage must be >= 1");
+        public @NonNull Builder maxEntitiesPerPage(final long maxEntitiesPerPage) {
+            if (maxEntitiesPerPage <= 0) {
+                throw new IllegalArgumentException("maxEntitiesPerPage must be >= 1");
             }
-            this.maxEntriesPerPage = maxEntriesPerPage;
+            this.maxEntitiesPerPage = maxEntitiesPerPage;
             return this;
         }
 
@@ -111,7 +111,7 @@ public interface FeedProducer {
                     feedPageMetadataRepository
                 ),
                 new EntityTimestampsService(),
-                new AssignPagesService(maxBytesPerPage, maxEntriesPerPage),
+                new AssignPagesService(maxBytesPerPage, maxEntitiesPerPage),
                 assignPagesLimit
             );
         }

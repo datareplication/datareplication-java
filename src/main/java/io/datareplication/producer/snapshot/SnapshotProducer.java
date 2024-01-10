@@ -43,7 +43,7 @@ public interface SnapshotProducer {
         private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
         private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
         private long maxBytesPerPage = 1000L * 1000L;
-        private long maxEntriesPerPage = Long.MAX_VALUE;
+        private long maxEntitiesPerPage = Long.MAX_VALUE;
 
         /**
          * Build a new {@link SnapshotProducer} with the parameters set on this builder.
@@ -81,7 +81,7 @@ public interface SnapshotProducer {
                 pageIdProvider,
                 snapshotIdProvider,
                 maxBytesPerPage,
-                maxEntriesPerPage,
+                maxEntitiesPerPage,
                 clock
             );
         }
@@ -125,18 +125,18 @@ public interface SnapshotProducer {
         }
 
         /**
-         * Set the maximum entries per page. When a page is composed, a new page will be created if the current page
-         * has too many entries. Defaults to Long.MAX_VALUE (meaning no limit).
+         * Set the maximum entities per page. When a page is composed, a new page will be created if the current page
+         * has too many entities. Defaults to Long.MAX_VALUE (meaning no limit).
          *
-         * @param maxEntriesPerPage the maximum entries per page. Must be equal or greater than 1.
+         * @param maxEntitiesPerPage the maximum number of entities per page. Must be equal or greater than 1.
          * @return this builder
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
-        public @NonNull Builder maxEntriesPerPage(final long maxEntriesPerPage) {
-            if (maxEntriesPerPage <= 0) {
-                throw new IllegalArgumentException("maxEntriesPerPage must be >= 1");
+        public @NonNull Builder maxEntitiesPerPage(final long maxEntitiesPerPage) {
+            if (maxEntitiesPerPage <= 0) {
+                throw new IllegalArgumentException("maxEntitiesPerPage must be >= 1");
             }
-            this.maxEntriesPerPage = maxEntriesPerPage;
+            this.maxEntitiesPerPage = maxEntitiesPerPage;
             return this;
         }
     }

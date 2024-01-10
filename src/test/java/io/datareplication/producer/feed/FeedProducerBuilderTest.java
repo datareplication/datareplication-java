@@ -36,14 +36,14 @@ class FeedProducerBuilderTest {
     }
 
     @Test
-    void maxEntriesPerPage_shouldNotAllowZero() {
-        assertThatThrownBy(() -> builder.maxEntriesPerPage(0))
+    void maxEntitiesPerPage_shouldNotAllowZero() {
+        assertThatThrownBy(() -> builder.maxEntitiesPerPage(0))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void maxEntriesPerPage_shouldNotAllowNegative() {
-        assertThatThrownBy(() -> builder.maxEntriesPerPage(-1))
+    void maxEntitiesPerPage_shouldNotAllowNegative() {
+        assertThatThrownBy(() -> builder.maxEntitiesPerPage(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -74,7 +74,7 @@ class SnapshotProducerImplTest {
     }
 
     @Test
-    @DisplayName("should produce a snapshot without entries")
+    @DisplayName("should produce a snapshot without entities")
     void shouldProduceEmptySnapshot() throws ExecutionException, InterruptedException {
         SnapshotProducer snapshotProducer = SnapshotProducer
             .builder()
@@ -126,7 +126,7 @@ class SnapshotProducerImplTest {
     }
 
     @Test
-    @DisplayName("should produce a snapshot with multiple entries (buffered by ContentLength)")
+    @DisplayName("should produce a snapshot with multiple entities (buffered by ContentLength)")
     void shouldProduceSnapshotContentLength()
         throws ExecutionException, InterruptedException {
         Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(entities);
@@ -170,8 +170,8 @@ class SnapshotProducerImplTest {
     }
 
     @Test
-    @DisplayName("should produce a snapshot with multiple entries (buffered by MaxEntries)")
-    void shouldProduceSnapshotMaxEntries()
+    @DisplayName("should produce a snapshot with multiple entities (buffered by MaxEntities)")
+    void shouldProduceSnapshotMaxentities()
         throws ExecutionException, InterruptedException {
         Flux<Entity<SnapshotEntityHeader>> entityFlow = Flux.fromIterable(entities);
         when(pageIdProvider.newPageId()).thenReturn(pageId1, pageId2, pageId3);
@@ -184,7 +184,7 @@ class SnapshotProducerImplTest {
             .builder()
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
-            .maxEntriesPerPage(2L)
+            .maxEntitiesPerPage(2L)
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
@@ -210,8 +210,8 @@ class SnapshotProducerImplTest {
     }
 
     @Test
-    @DisplayName("should produce a snapshot with multiple entries (buffered by ContentLength and MaxEntries)")
-    void shouldProduceSnapshotContentLengthAndMaxEntries()
+    @DisplayName("should produce a snapshot with multiple entities (buffered by ContentLength and MaxEntities)")
+    void shouldProduceSnapshotContentLengthAndMaxEntities()
         throws ExecutionException, InterruptedException {
 
         List<Entity<SnapshotEntityHeader>> entities =
@@ -228,7 +228,7 @@ class SnapshotProducerImplTest {
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(10)
-            .maxEntriesPerPage(3L)
+            .maxEntitiesPerPage(3L)
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,

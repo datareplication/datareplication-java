@@ -10,6 +10,7 @@ import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
 import io.datareplication.model.snapshot.SnapshotIndex;
 import io.datareplication.model.snapshot.SnapshotPageHeader;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import reactor.adapter.JdkFlowAdapter;
@@ -22,7 +23,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 class SnapshotProducerImpl implements SnapshotProducer {
     private final SnapshotPageUrlBuilder snapshotPageUrlBuilder;
     private final SnapshotIndexRepository snapshotIndexRepository;
@@ -30,7 +31,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
     private final PageIdProvider pageIdProvider;
     private final SnapshotIdProvider snapshotIdProvider;
     private final long maxBytesPerPage;
-    private final long maxEntriesPerPage;
+    private final long maxEntitiesPerPage;
     private final Clock clock;
 
     @Override
@@ -38,7 +39,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
         final @NonNull Flow.Publisher<@NonNull Entity<@NonNull SnapshotEntityHeader>> entities
     ) {
         AtomicLong currentBytesForPage = new AtomicLong(0L);
-        AtomicLong currentEntriesPerPage = new AtomicLong(0L);
+        AtomicLong currentEntitiesForPage = new AtomicLong(0L);
         SnapshotId id = snapshotIdProvider.newSnapshotId();
         Timestamp createdAt = Timestamp.of(clock.instant());
 
@@ -46,9 +47,9 @@ class SnapshotProducerImpl implements SnapshotProducer {
             .bufferUntil(entity -> {
                 long bytes = entity.body().contentLength();
                 if (currentBytesForPage.addAndGet(bytes) > maxBytesPerPage
-                    || currentEntriesPerPage.incrementAndGet() > maxEntriesPerPage) {
+                    || currentEntitiesForPage.incrementAndGet() > maxEntitiesPerPage) {
                     currentBytesForPage.set(bytes);
-                    currentEntriesPerPage.set(1L);
+                    currentEntitiesForPage.set(1L);
                     return true;
                 } else {
                     return false;

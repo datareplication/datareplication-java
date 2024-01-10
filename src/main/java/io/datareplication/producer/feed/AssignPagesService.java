@@ -10,7 +10,7 @@ import java.util.Optional;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class AssignPagesService {
     private final long maxBytesPerPage;
-    private final long maxEntriesPerPage;
+    private final long maxEntitiesPerPage;
 
     @Value
     static class AssignPagesResult {
