@@ -106,7 +106,7 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
-            <version>3.6.0</version>
+            <version>3.6.2</version>
         </dependency>
     </dependencies>
 
