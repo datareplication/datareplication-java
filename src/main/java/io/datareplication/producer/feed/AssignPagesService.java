@@ -2,15 +2,45 @@ package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
 import io.datareplication.model.Timestamp;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Value;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+@Data
+@AllArgsConstructor
+final class MutablePage {
+    final PageId pageId;
+    Timestamp lastModified;
+    final Optional<PageId> prev;
+    long contentLength;
+    int numberOfEntities;
+
+    static MutablePage emptyPage(PageId pageId, Optional<PageId> prev) {
+        return new MutablePage(
+            pageId,
+            Timestamp.of(Instant.EPOCH),
+            prev,
+            0,
+            0
+        );
+    }
+
+    FeedPageMetadataRepository.PageMetadata finishPage(Optional<PageId> next, int generation) {
+        return new FeedPageMetadataRepository.PageMetadata(
+            pageId,
+            lastModified,
+            prev,
+            next,
+            contentLength,
+            numberOfEntities,
+            generation
+        );
+    }
+}
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class AssignPagesService {
@@ -61,55 +91,32 @@ class AssignPagesService {
         final var newPages = new ArrayList<FeedPageMetadataRepository.PageMetadata>();
         var previousLatestPage = Optional.<FeedPageMetadataRepository.PageMetadata>empty();
 
-        var page = maybeLatestPage
-            .orElseGet(() -> new FeedPageMetadataRepository.PageMetadata(
-                pageIdProvider.newPageId(),
-                Timestamp.of(Instant.EPOCH),
-                Optional.empty(),
-                Optional.empty(),
-                0,
-                0,
-                generation
-            ));
+        var page = maybeLatestPage.map(p -> new MutablePage(
+                    p.pageId(),
+                    p.lastModified(),
+                    p.prev(),
+                    p.contentLength(),
+                    p.numberOfEntities()
+                )
+            )
+            .orElseGet(() -> MutablePage.emptyPage(pageIdProvider.newPageId(), Optional.empty()));
 
         for (var entity : unassignedEntities) {
             if (page.numberOfEntities() >= maxEntitiesPerPage || (page.contentLength() > 0 && page.contentLength() + entity.contentLength() > maxBytesPerPage)) {
                 var next = pageIdProvider.newPageId();
-                var finalPage = new FeedPageMetadataRepository.PageMetadata(
-                    page.pageId(),
-                    page.lastModified(),
-                    page.prev(),
-                    Optional.of(next),
-                    page.contentLength(),
-                    page.numberOfEntities(),
-                    generation
-                );
+                var finalPage = page.finishPage(Optional.of(next), generation);
                 if (maybeLatestPage.isPresent() && maybeLatestPage.get().pageId().equals(finalPage.pageId())) {
                     previousLatestPage = Optional.of(finalPage);
                 } else {
                     newPages.add(finalPage);
                 }
 
-                page = new FeedPageMetadataRepository.PageMetadata(
-                    next,
-                    Timestamp.of(Instant.EPOCH),
-                    Optional.of(finalPage.pageId()),
-                    Optional.empty(),
-                    0,
-                    0,
-                    generation
-                );
+                page = MutablePage.emptyPage(next, Optional.of(finalPage.pageId()));
             }
 
-            page = new FeedPageMetadataRepository.PageMetadata(
-                page.pageId(),
-                entity.lastModified(),
-                page.prev(),
-                page.next(),
-                page.contentLength() + entity.contentLength(),
-                page.numberOfEntities() + 1,
-                generation
-            );
+            page.lastModified(entity.lastModified());
+            page.contentLength(page.contentLength() + entity.contentLength());
+            page.numberOfEntities(page.numberOfEntities() + 1);
             final var assignedEntity = new FeedEntityRepository.PageAssignment(
                 entity.contentId(),
                 entity.lastModified(),
@@ -123,7 +130,7 @@ class AssignPagesService {
         return Optional.of(new AssignPagesResult(
             assignedEntities,
             newPages,
-            page,
+            page.finishPage(Optional.empty(), generation),
             previousLatestPage
         ));
 
