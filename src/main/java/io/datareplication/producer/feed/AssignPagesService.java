@@ -42,25 +42,98 @@ class AssignPagesService {
         List<FeedEntityRepository.PageAssignment> remaining;
     }
 
-    Optional<AssignPagesResult> assignPages(Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage, List<FeedEntityRepository.PageAssignment> entities) {
+    Optional<AssignPagesResult> assignPages(
+        Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage,
+        List<FeedEntityRepository.PageAssignment> unassignedEntities
+    ) {
         // impl note: if no new pages are created (old latest = new latest) then previousLatestPage must be empty
         // impl note: generation is old latest page generation + 1, and we set that on all pages we return incl the old latest page
 
         // NB: I think the tests are complete and pass, but the implementation is ugly
 
-        if (entities.isEmpty()) {
+        if (unassignedEntities.isEmpty()) {
             return Optional.empty();
         }
 
         final int generation = maybeLatestPage.map(x -> x.generation() + 1).orElse(Generations.INITIAL_GENERATION);
 
+        final var assignedEntities = new ArrayList<FeedEntityRepository.PageAssignment>();
+        final var newPages = new ArrayList<FeedPageMetadataRepository.PageMetadata>();
+        var previousLatestPage = Optional.<FeedPageMetadataRepository.PageMetadata>empty();
 
+        var page = maybeLatestPage
+            .orElseGet(() -> new FeedPageMetadataRepository.PageMetadata(
+                pageIdProvider.newPageId(),
+                Timestamp.of(Instant.EPOCH),
+                Optional.empty(),
+                Optional.empty(),
+                0,
+                0,
+                generation
+            ));
+
+        for (var entity : unassignedEntities) {
+            if (page.numberOfEntities() >= maxEntitiesPerPage || (page.contentLength() > 0 && page.contentLength() + entity.contentLength() > maxBytesPerPage)) {
+                var next = pageIdProvider.newPageId();
+                var finalPage = new FeedPageMetadataRepository.PageMetadata(
+                    page.pageId(),
+                    page.lastModified(),
+                    page.prev(),
+                    Optional.of(next),
+                    page.contentLength(),
+                    page.numberOfEntities(),
+                    generation
+                );
+                if (maybeLatestPage.isPresent() && maybeLatestPage.get().pageId().equals(finalPage.pageId())) {
+                    previousLatestPage = Optional.of(finalPage);
+                } else {
+                    newPages.add(finalPage);
+                }
+
+                page = new FeedPageMetadataRepository.PageMetadata(
+                    next,
+                    Timestamp.of(Instant.EPOCH),
+                    Optional.of(finalPage.pageId()),
+                    Optional.empty(),
+                    0,
+                    0,
+                    generation
+                );
+            }
+
+            page = new FeedPageMetadataRepository.PageMetadata(
+                page.pageId(),
+                entity.lastModified(),
+                page.prev(),
+                page.next(),
+                page.contentLength() + entity.contentLength(),
+                page.numberOfEntities() + 1,
+                generation
+            );
+            final var assignedEntity = new FeedEntityRepository.PageAssignment(
+                entity.contentId(),
+                entity.lastModified(),
+                entity.originalLastModified(),
+                entity.contentLength(),
+                Optional.of(page.pageId())
+            );
+            assignedEntities.add(assignedEntity);
+        }
+
+        return Optional.of(new AssignPagesResult(
+            assignedEntities,
+            newPages,
+            page,
+            previousLatestPage
+        ));
+
+        /*
         var firstNext = pageIdProvider.newPageId();
-        var maybePack = maybeLatestPage.map(p -> packEntities(p, generation, firstNext, entities));
+        var maybePack = maybeLatestPage.map(p -> packEntities(p, generation, firstNext, unassignedEntities));
 
         var packs = new ArrayList<PackResult>();
 
-        var remaining = maybePack.map(x -> x.remaining).orElse(entities);
+        var remaining = maybePack.map(x -> x.remaining).orElse(unassignedEntities);
         var prev = maybePack.map(x -> x.page.pageId());
         var next = firstNext;
 
@@ -105,7 +178,7 @@ class AssignPagesService {
             latestPage,
             maybePack.map(x -> x.page)
         ));
-
+*/
 
         /*final var newPages = new ArrayList<FeedPageMetadataRepository.PageMetadata>();
         final var assignedEntities = new ArrayList<FeedEntityRepository.PageAssignment>();
