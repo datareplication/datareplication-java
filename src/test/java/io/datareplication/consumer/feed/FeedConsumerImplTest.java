@@ -48,7 +48,9 @@ class FeedConsumerImplTest {
         Timestamp lastModified = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:14 GMT");
         Url url = Url.of("dummy url");
         ContentId contentId = ContentId.of("any ID");
-        HttpHeaders headers = HttpHeaders.of(HttpHeader.of("h1", "v1"));
+        HttpHeaders headers = HttpHeaders.of(
+            HttpHeader.of("Last-Modified", "Thu, 5 Oct 2023 03:00:14 GMT"),
+            HttpHeader.of("Link", "<https://example.datareplication.io/1>; rel=self"));
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModified, OperationType.PUT, contentId);
         when(feedPageCrawler.crawl(url, StartFrom.beginning()))
             .thenReturn(CompletableFuture.supplyAsync(() ->

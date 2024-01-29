@@ -101,7 +101,8 @@ public interface FeedConsumer {
             final var pageLoader = new PageLoader(httpClient);
             final var headerLoader = new HeaderLoader(httpClient);
             final var feedCrawler = new FeedPageCrawler(headerLoader);
-            return new FeedConsumerImpl(pageLoader, feedCrawler);
+            final var feedPageHeaderParser = new FeedPageHeaderParser();
+            return new FeedConsumerImpl(pageLoader, feedCrawler, feedPageHeaderParser);
         }
     }
 
