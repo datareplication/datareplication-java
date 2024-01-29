@@ -4,9 +4,7 @@ import io.datareplication.model.PageId;
 import io.datareplication.model.Timestamp;
 import lombok.NonNull;
 import lombok.Value;
-import reactor.core.publisher.Mono;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -18,7 +16,7 @@ public interface FeedPageMetadataRepository {
         @NonNull Timestamp lastModified;
         @NonNull Optional<@NonNull PageId> prev;
         @NonNull Optional<@NonNull PageId> next;
-        long contentLength;
+        long numberOfBytes;
         int numberOfEntities;
         int generation;
     }

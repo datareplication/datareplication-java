@@ -29,7 +29,7 @@ class GenerationRotationService {
             latestPage.lastModified(),
             latestPage.prev(),
             latestPage.next(),
-            latestPage.contentLength(),
+            latestPage.numberOfBytes(),
             latestPage.numberOfEntities(),
             Generations.INITIAL_GENERATION
         );

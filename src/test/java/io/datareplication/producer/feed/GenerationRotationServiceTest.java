@@ -124,7 +124,7 @@ class GenerationRotationServiceTest {
             page.lastModified(),
             page.prev(),
             page.next(),
-            page.contentLength(),
+            page.numberOfBytes(),
             page.numberOfEntities(),
             generation
         );

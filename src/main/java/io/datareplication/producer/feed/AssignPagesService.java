@@ -23,7 +23,7 @@ final class MutablePage {
             page.pageId(),
             page.lastModified(),
             page.prev(),
-            page.contentLength(),
+            page.numberOfBytes(),
             page.numberOfEntities()
         );
     }

@@ -21,7 +21,7 @@ public interface FeedEntityRepository {
         @NonNull ContentId contentId;
         @NonNull Timestamp lastModified;
         @NonNull Optional<@NonNull Timestamp> originalLastModified;
-        int contentLength;
+        long contentLength;
         @NonNull Optional<@NonNull PageId> pageId;
     }
 

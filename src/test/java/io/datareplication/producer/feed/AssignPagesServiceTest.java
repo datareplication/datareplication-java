@@ -331,7 +331,7 @@ class AssignPagesServiceTest {
                 latestPage.lastModified(),
                 latestPage.prev(),
                 Optional.of(PageId.of("page-1")),
-                latestPage.contentLength(),
+                latestPage.numberOfBytes(),
                 latestPage.numberOfEntities(),
                 101))
         ));
