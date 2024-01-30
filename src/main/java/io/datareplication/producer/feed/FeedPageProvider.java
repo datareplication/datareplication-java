@@ -5,7 +5,9 @@ import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 import java.util.Optional;
@@ -32,5 +34,23 @@ public interface FeedPageProvider {
     @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderWithContentType>> pageHeader(@NonNull PageId id);
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(
-            @NonNull PageId id);
+        @NonNull PageId id);
+
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    class Builder {
+        private final FeedEntityRepository feedEntityRepository;
+        private final FeedPageMetadataRepository feedPageMetadataRepository;
+
+        public @NonNull FeedPageProvider build() {
+            return new FeedPageProviderImpl(
+                feedEntityRepository,
+                feedPageMetadataRepository
+            );
+        }
+    }
+
+    static @NonNull Builder builder(@NonNull FeedEntityRepository feedEntityRepository,
+                                    @NonNull FeedPageMetadataRepository feedPageMetadataRepository) {
+        return new Builder(feedEntityRepository, feedPageMetadataRepository);
+    }
 }
