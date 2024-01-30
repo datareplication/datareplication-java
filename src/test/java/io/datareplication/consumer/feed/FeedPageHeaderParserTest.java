@@ -57,7 +57,12 @@ class FeedPageHeaderParserTest {
         HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
         HttpHeader linkPrevHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_PREV);
         HttpHeader linkNextHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_NEXT);
-        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkSelfHttpHeader, linkPrevHttpHeader, linkNextHttpHeader);
+        HttpHeaders httpHeaders = HttpHeaders.of(
+            lastModifiedHttpHeader,
+            linkSelfHttpHeader,
+            linkPrevHttpHeader,
+            linkNextHttpHeader
+        );
 
         FeedPageHeader feedPageHeader = feedPageHeaderParser.feedPageHeader(httpHeaders);
 
@@ -190,7 +195,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModifiedInEntity)
-            .hasMessage("unparseable Last-Modified header: not a valid date from entity at index 1");
+            .hasMessage("unparseable Last-Modified header from entity at index 1: 'not a valid date'");
     }
 
 
@@ -222,6 +227,6 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingOperationTypeInEntity)
-            .hasMessage("unparseable Operation-Type header: 'CUT' from entity at index 1");
+            .hasMessage("unparseable Operation-Type header from entity at index 1: 'CUT'");
     }
 }

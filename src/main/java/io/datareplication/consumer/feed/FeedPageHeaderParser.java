@@ -96,8 +96,7 @@ public class FeedPageHeaderParser {
                     }
                 }
             ).orElseThrow(() -> new PageFormatException.MissingOperationTypeInEntity(index)),
-            extractContentId(httpHeaders).orElseThrow(() -> new PageFormatException.MissingContentIdInEntity(index)))
-            ;
+            extractContentId(httpHeaders).orElseThrow(() -> new PageFormatException.MissingContentIdInEntity(index)));
     }
 
     @FunctionalInterface

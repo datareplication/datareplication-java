@@ -61,7 +61,12 @@ class FeedConsumerImplTest {
         Url url = Url.of("dummy url");
         ContentId contentId = ContentId.of("any ID");
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModified, OperationType.PUT, contentId);
-        FeedPageHeader feedPageHeader = new FeedPageHeader(lastModified, Link.self(url), Optional.empty(), Optional.empty());
+        FeedPageHeader feedPageHeader = new FeedPageHeader(
+            lastModified,
+            Link.self(url),
+            Optional.empty(),
+            Optional.empty()
+        );
         when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders))
             .thenReturn(feedPageHeader);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders))
@@ -95,7 +100,12 @@ class FeedConsumerImplTest {
                 .block()
         )
             .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
-            .containsExactly(new Entity<>(feedEntityHeader, Body.fromUtf8("Hello World!", ContentType.of("text/plain"))));
+            .containsExactly(
+                new Entity<>(
+                    feedEntityHeader,
+                    Body.fromUtf8("Hello World!", ContentType.of("text/plain"))
+                )
+            );
     }
 
     private static ByteBuffer utf8(String s) {

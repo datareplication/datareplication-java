@@ -1,16 +1,11 @@
 package io.datareplication.model.feed;
 
-import io.datareplication.model.HttpHeader;
 import io.datareplication.model.Url;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Represents the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link">link</a> from a feed page.
