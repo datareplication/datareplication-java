@@ -1,6 +1,8 @@
 package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.PageFormatException;
+import io.datareplication.internal.http.HeaderFieldValue;
+import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
@@ -14,10 +16,8 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static io.datareplication.model.HttpHeader.CONTENT_ID;
 import static io.datareplication.model.HttpHeader.LAST_MODIFIED;
@@ -28,10 +28,9 @@ import static io.datareplication.model.HttpHeader.OPERATION_TYPE;
 public class FeedPageHeaderParser {
     public FeedPageHeader feedPageHeader(final HttpHeaders httpHeaders) {
 
-        var pageLinkHeaders = httpHeaders
+        var pageLinkHeader = httpHeaders
             .get(LINK)
-            .orElseThrow(PageFormatException.MissingLinkHeader::new);
-        var pageLinkMap = toMap(pageLinkHeaders.values());
+            .orElseThrow(() -> new PageFormatException.MissingLinkHeader(httpHeaders));
         return new FeedPageHeader(
             extractLastModified(
                 httpHeaders,
@@ -42,10 +41,37 @@ public class FeedPageHeaderParser {
                         throw new PageFormatException.InvalidLastModifiedHeader(lastModified, e);
                     }
                 }
-            ).orElseThrow(PageFormatException.MissingLastModifiedHeader::new),
-            extractSelfLink(pageLinkMap).orElseThrow(() -> new PageFormatException.MissingSelfLinkHeader(httpHeaders)),
-            extractPrevLink(pageLinkMap),
-            extractNextLink(pageLinkMap));
+            ).orElseThrow(() -> new PageFormatException.MissingLastModifiedHeader(httpHeaders)),
+            fromHeaderValue(pageLinkHeader, "self").map(Link::self)
+                .orElseThrow(() -> new PageFormatException.MissingSelfLinkHeader(httpHeaders)),
+            fromHeaderValue(pageLinkHeader, "prev").map(Link::prev),
+            fromHeaderValue(pageLinkHeader, "next").map(Link::next)
+        );
+    }
+
+    private static Optional<Url> fromHeaderValue(HttpHeader httpHeader, String rel) {
+        return httpHeader
+            .values()
+            .stream()
+            .filter(headerFieldValue -> headerFieldValue.contains("; rel=" + rel))
+            .map(HeaderFieldValue::parse)
+            .map(FeedPageHeaderParser::toUrl)
+            .filter(Optional::isPresent)
+            .findFirst()
+            .flatMap(Function.identity());
+    }
+
+    private static Optional<Url> toUrl(HeaderFieldValue headerFieldValue) {
+        var cleanUrl = headerFieldValue
+            .mainValue()
+            .trim()
+            .replaceFirst("<", "")
+            .replaceFirst(">", "");
+        if (!cleanUrl.isBlank()) {
+            return Optional.of(Url.of(cleanUrl));
+        } else {
+            return Optional.empty();
+        }
     }
 
     public FeedEntityHeader feedEntityHeader(final Integer index, final HttpHeaders httpHeaders) {
@@ -102,52 +128,5 @@ public class FeedPageHeaderParser {
             .get(LAST_MODIFIED)
             .flatMap(httpHeader -> httpHeader.values().stream().findFirst())
             .map(timestampParser::parse);
-    }
-
-    private static @NonNull Optional<Link.@NonNull Self> extractSelfLink(final Map<Link.Rel, Url> pageLinkMap) {
-        return Optional
-            .ofNullable(pageLinkMap.getOrDefault(Link.Rel.SELF, null))
-            .map(Link::self);
-    }
-
-    private static @NonNull Optional<Link.@NonNull Next> extractNextLink(final Map<Link.Rel, Url> pageLinkMap) {
-        return Optional
-            .ofNullable(pageLinkMap.getOrDefault(Link.Rel.NEXT, null))
-            .map(Link::next);
-    }
-
-    private static @NonNull Optional<Link.@NonNull Prev> extractPrevLink(final Map<Link.Rel, Url> pageLinkMap) {
-        return Optional
-            .ofNullable(pageLinkMap.getOrDefault(Link.Rel.PREV, null))
-            .map(Link::prev);
-    }
-
-    // TODO: Refactor whole Link parsing (guided by tests)
-    private static @NonNull Optional<@NonNull Url> extractUrl(final String value) {
-        return Optional.of(Url.of(value.replaceFirst(".*; rel=", "").trim()));
-    }
-
-    private static @NonNull Optional<Link.@NonNull Rel> extractRel(final String headerValue) {
-        // TODO: Handle IllegalArgumentException of Link.Rel::valueOf
-        if (headerValue.contains("rel=\"")) {
-            var relString = headerValue
-                .replaceAll(".*rel=\"", "")
-                .replace("\"", "");
-            return Optional.of(relString).map(Link.Rel::valueOf);
-        } else if (headerValue.contains("rel=")) {
-            var relString = headerValue
-                .replaceAll(".*rel=\"", "");
-            return Optional.of(relString).map(Link.Rel::valueOf);
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private @NonNull Map<Link.@NonNull Rel, @NonNull Url> toMap(final List<String> values) {
-        return values
-            .stream()
-            .collect(Collectors.toMap(
-                x -> extractRel(x).orElseThrow(IllegalArgumentException::new),
-                x -> extractUrl(x).orElseThrow(IllegalArgumentException::new)));
     }
 }

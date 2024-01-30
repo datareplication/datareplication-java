@@ -33,12 +33,11 @@ class FeedPageHeaderParserTest {
         feedPageHeaderParser = new FeedPageHeaderParser();
     }
 
-    //TODO: Add tests for FeedPageHeaderParser feedPageHeader
     @Test
     void shouldParsePageHttpHeader() {
         HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
-        HttpHeader linkHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
-        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkHttpHeader);
+        HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
+        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkSelfHttpHeader);
 
         FeedPageHeader feedPageHeader = feedPageHeaderParser.feedPageHeader(httpHeaders);
 
@@ -50,6 +49,84 @@ class FeedPageHeaderParserTest {
                 Optional.empty()
             )
         );
+    }
+
+    @Test
+    void shouldParsePageHttpHeaderWithPrevNextLinks() {
+        HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
+        HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
+        HttpHeader linkPrevHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_PREV);
+        HttpHeader linkNextHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_NEXT);
+        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkSelfHttpHeader, linkPrevHttpHeader, linkNextHttpHeader);
+
+        FeedPageHeader feedPageHeader = feedPageHeaderParser.feedPageHeader(httpHeaders);
+
+        assertThat(feedPageHeader).isEqualTo(
+            new FeedPageHeader(
+                Timestamp.fromRfc1123String(LAST_MODIFIED),
+                Link.self(Url.of("https://example.datareplication.io/2")),
+                Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
+                Optional.of(Link.next(Url.of("https://example.datareplication.io/3")))
+            )
+        );
+    }
+
+    @Test
+    void noLinkHttpHeaderShouldThrowException() {
+        HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
+        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader);
+
+        var missingSelfLinkHeader = assertThrows(
+            PageFormatException.MissingLinkHeader.class,
+            () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
+        );
+
+        assertThat(missingSelfLinkHeader)
+            .hasMessage("Link header is missing from HTTP response: '" + httpHeaders + "'");
+    }
+
+    @Test
+    void missingSelfHttpHeaderShouldThrowException() {
+        HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
+        HttpHeader linkNextHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_NEXT);
+        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkNextHttpHeader);
+
+        var missingSelfLinkHeader = assertThrows(
+            PageFormatException.MissingSelfLinkHeader.class,
+            () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
+        );
+
+        assertThat(missingSelfLinkHeader)
+            .hasMessage("LINK; rel=self header is missing from HTTP response: '" + httpHeaders + "'");
+    }
+
+    @Test
+    void missingLastModifiedShouldThrowException() {
+        HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
+        HttpHeaders httpHeaders = HttpHeaders.of(linkSelfHttpHeader);
+
+        var missingLastModified = assertThrows(
+            PageFormatException.MissingLastModifiedHeader.class,
+            () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
+        );
+
+        assertThat(missingLastModified)
+            .hasMessage("Last-Modified header is missing from HTTP response: '" + httpHeaders + "'");
+    }
+
+    @Test
+    void invalidLastModifiedShouldThrowException() {
+        HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, "not a valid date");
+        HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
+        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkSelfHttpHeader);
+
+        var missingLastModifiedInEntity = assertThrows(
+            PageFormatException.InvalidLastModifiedHeader.class,
+            () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
+        );
+
+        assertThat(missingLastModifiedInEntity)
+            .hasMessage("Last-Modified header is invalid: 'not a valid date'");
     }
 
     @Test
@@ -86,7 +163,7 @@ class FeedPageHeaderParserTest {
     }
 
     @Test
-    void missingLastModifiedShouldThrowException() {
+    void missingLastModifiedInEntityShouldThrowException() {
         HttpHeader contentIdHttpHeader = HttpHeader.of(HttpHeader.CONTENT_ID, ANY_CONTENT_ID);
         HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE);
         HttpHeaders httpHeaders = HttpHeaders.of(contentIdHttpHeader, operationTypeHttpHeader);
@@ -101,7 +178,7 @@ class FeedPageHeaderParserTest {
     }
 
     @Test
-    void invalidLastModifiedShouldThrowException() {
+    void invalidLastModifiedInEntityShouldThrowException() {
         HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, "not a valid date");
         HttpHeader contentIdHttpHeader = HttpHeader.of(HttpHeader.CONTENT_ID, ANY_CONTENT_ID);
         HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE);

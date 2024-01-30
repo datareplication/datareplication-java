@@ -49,13 +49,13 @@ public class PageLoader {
         return httpClient
             .get(url, HttpResponse.BodyHandlers.ofPublisher())
             .map(response -> {
-                final HttpHeaders pageHeader = convertHeaders(response);
+                final HttpHeaders httpHeaders = convertHeaders(response);
                 final String contentTypeString = response
                     .headers()
                     .firstValue(HttpHeader.CONTENT_TYPE)
-                    .orElseThrow(PageFormatException.MissingContentTypeHeader::new);
+                    .orElseThrow(() -> new PageFormatException.MissingContentTypeHeader(httpHeaders));
                 final MultipartContentType multipartContentType = MultipartContentType.parse(contentTypeString);
-                return parseMultipartPage(url, pageHeader, multipartContentType.boundary(), response.body());
+                return parseMultipartPage(url, httpHeaders, multipartContentType.boundary(), response.body());
             });
     }
 

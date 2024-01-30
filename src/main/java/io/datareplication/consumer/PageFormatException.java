@@ -16,16 +16,21 @@ public class PageFormatException extends ConsumerException {
 
     @EqualsAndHashCode(callSuper = false)
     public static final class MissingContentTypeHeader extends PageFormatException {
-        public MissingContentTypeHeader() {
-            super("Content-Type header is missing from HTTP response");
+        private final HttpHeaders httpHeaders;
+
+        public MissingContentTypeHeader(HttpHeaders httpHeaders) {
+            super(String.format("Content-Type header is missing from HTTP response: %s", httpHeaders));
+            this.httpHeaders = httpHeaders;
         }
     }
 
     @EqualsAndHashCode(callSuper = false)
     public static final class MissingLastModifiedHeader extends PageFormatException {
+        private final HttpHeaders httpHeaders;
 
-        public MissingLastModifiedHeader() {
-            super("Last-Modified header is missing from HTTP response");
+        public MissingLastModifiedHeader(HttpHeaders httpHeaders) {
+            super(String.format("Last-Modified header is missing from HTTP response: '%s'", httpHeaders));
+            this.httpHeaders = httpHeaders;
         }
     }
 
@@ -33,25 +38,27 @@ public class PageFormatException extends ConsumerException {
     public static final class InvalidLastModifiedHeader extends PageFormatException {
 
         public InvalidLastModifiedHeader(String lastModified, Throwable cause) {
-            super(String.format("Last-Modified header %s is invalid", lastModified), cause);
+            super(String.format("Last-Modified header is invalid: '%s'", lastModified), cause);
         }
     }
 
     @EqualsAndHashCode(callSuper = false)
     public static final class MissingLinkHeader extends PageFormatException {
+        private final HttpHeaders httpHeaders;
 
-        public MissingLinkHeader() {
-            super("Link header is missing from HTTP response");
+        public MissingLinkHeader(HttpHeaders httpHeaders) {
+            super(String.format("Link header is missing from HTTP response: '%s'", httpHeaders));
+            this.httpHeaders = httpHeaders;
         }
     }
 
     @EqualsAndHashCode(callSuper = false)
     public static final class MissingSelfLinkHeader extends PageFormatException {
-        private final HttpHeaders links;
+        private final HttpHeaders httpHeaders;
 
-        public MissingSelfLinkHeader(HttpHeaders links) {
-            super(String.format("LINK; rel=self header is missing from HTTP response: %s", links));
-            this.links = links;
+        public MissingSelfLinkHeader(HttpHeaders httpHeaders) {
+            super(String.format("LINK; rel=self header is missing from HTTP response: '%s'", httpHeaders));
+            this.httpHeaders = httpHeaders;
         }
     }
 
