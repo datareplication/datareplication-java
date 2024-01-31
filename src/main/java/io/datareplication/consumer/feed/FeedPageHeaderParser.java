@@ -67,10 +67,10 @@ public class FeedPageHeaderParser {
             .trim()
             .replaceFirst("<", "")
             .replaceFirst(">", "");
-        if (!cleanUrl.isBlank()) {
-            return Optional.of(Url.of(cleanUrl));
-        } else {
+        if (cleanUrl.isBlank()) {
             return Optional.empty();
+        } else {
+            return Optional.of(Url.of(cleanUrl));
         }
     }
 
