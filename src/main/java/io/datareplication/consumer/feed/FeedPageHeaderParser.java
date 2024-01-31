@@ -24,9 +24,25 @@ import static io.datareplication.model.HttpHeader.LAST_MODIFIED;
 import static io.datareplication.model.HttpHeader.LINK;
 import static io.datareplication.model.HttpHeader.OPERATION_TYPE;
 
+/**
+ * Parse the headers of a feed page.
+ * <p>
+ * This class is package-private because it is only used by {@link FeedConsumerImpl}.
+ * It is not part of the public API.
+ * </p>
+ *
+ * @see FeedConsumerImpl
+ */
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class FeedPageHeaderParser {
-    public FeedPageHeader feedPageHeader(final HttpHeaders httpHeaders) {
+    /**
+     * Parse the headers of a feed page.
+     *
+     * @param httpHeaders the headers of the feed page
+     * @return the parsed headers
+     * @throws PageFormatException if the headers are malformed or missing
+     */
+    public FeedPageHeader feedPageHeader(@NonNull final HttpHeaders httpHeaders) {
 
         var pageLinkHeader = httpHeaders
             .get(LINK)
@@ -49,7 +65,10 @@ public class FeedPageHeaderParser {
         );
     }
 
-    private static Optional<Url> fromHeaderValue(HttpHeader httpHeader, String rel) {
+    private static @NonNull Optional<@NonNull Url> fromHeaderValue(
+        @NonNull HttpHeader httpHeader,
+        @NonNull String rel
+    ) {
         return httpHeader
             .values()
             .stream()
@@ -61,7 +80,7 @@ public class FeedPageHeaderParser {
             .flatMap(Function.identity());
     }
 
-    private static Optional<Url> toUrl(HeaderFieldValue headerFieldValue) {
+    private static @NonNull Optional<@NonNull Url> toUrl(@NonNull HeaderFieldValue headerFieldValue) {
         var cleanUrl = headerFieldValue
             .mainValue()
             .trim()
@@ -74,7 +93,18 @@ public class FeedPageHeaderParser {
         }
     }
 
-    public FeedEntityHeader feedEntityHeader(final Integer index, final HttpHeaders httpHeaders) {
+    /**
+     * Parse the headers of a feed entity.
+     *
+     * @param index       the index of the entity in the page
+     * @param httpHeaders the headers of the feed entity
+     * @return the parsed headers
+     * @throws PageFormatException if the headers are malformed or missing
+     */
+    public FeedEntityHeader feedEntityHeader(
+        @NonNull final Integer index,
+        @NonNull final HttpHeaders httpHeaders
+    ) {
         return new FeedEntityHeader(
             extractLastModified(
                 httpHeaders,
@@ -101,28 +131,33 @@ public class FeedPageHeaderParser {
 
     @FunctionalInterface
     private interface TimestampParser {
-        Timestamp parse(String input);
+        Timestamp parse(@NonNull String input);
     }
 
     @FunctionalInterface
     private interface OperationTypeParser {
-        OperationType parse(String input);
+        OperationType parse(@NonNull String input);
     }
 
-    private static @NonNull Optional<ContentId> extractContentId(final HttpHeaders httpHeaders) {
+    private static @NonNull Optional<@NonNull ContentId> extractContentId(
+        @NonNull final HttpHeaders httpHeaders
+    ) {
         return httpHeaders.get(CONTENT_ID).flatMap(httpHeader ->
             httpHeader.values().stream().findFirst()).map(ContentId::of);
     }
 
-    private static @NonNull Optional<OperationType> extractOperationType(
+    private static @NonNull Optional<@NonNull OperationType> extractOperationType(
         final HttpHeaders httpHeaders,
-        final OperationTypeParser operationTypeParser) {
+        final OperationTypeParser operationTypeParser
+    ) {
         return httpHeaders.get(OPERATION_TYPE).flatMap(httpHeader ->
             httpHeader.values().stream().findFirst()).map(operationTypeParser::parse);
     }
 
-    private static @NonNull Optional<Timestamp> extractLastModified(final HttpHeaders header,
-                                                                    final TimestampParser timestampParser) {
+    private static @NonNull Optional<@NonNull Timestamp> extractLastModified(
+        @NonNull final HttpHeaders header,
+        @NonNull final TimestampParser timestampParser
+    ) {
         return header
             .get(LAST_MODIFIED)
             .flatMap(httpHeader -> httpHeader.values().stream().findFirst())
