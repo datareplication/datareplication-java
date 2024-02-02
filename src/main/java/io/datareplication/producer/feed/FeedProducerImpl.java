@@ -28,7 +28,7 @@ class FeedProducerImpl implements FeedProducer {
     private final GenerationRotationService generationRotationService;
     private final EntityTimestampsService entityTimestampsService;
     private final AssignPagesService assignPagesService;
-    private final int assignPagesLimit;
+    private final int assignPagesLimitPerRun;
 
     @Override
     public @NonNull CompletionStage<Void> publish(@NonNull final OperationType operationType,
@@ -56,13 +56,6 @@ class FeedProducerImpl implements FeedProducer {
         return feedEntityRepository.append(entity);
     }
 
-    // TODO: Let's talk about assignPagesLimit. Should this be a limit per call (i.e. every time you call assignPages, it
-    //  will process at most limit entities, i.e. it will never return a number > the limit? Or is it a batch size, i.e.
-    //  assignPages will always process as much as it can find, but it will split the work into blocks of at most limit
-    //  entities to prevent OOM? In this case the return value might well be > limit. But it might also cause assignPages
-    //  to effectively loop for an indeterminate amount of time if there's a constant drip of entities.
-    //  I'm leaning towards hard limit, because you can easily build the loop on top, but you can't easily get
-    //  guaranteed-limited work units from the loop version.
     @Override
     public @NonNull CompletionStage<Integer> assignPages() {
         return Mono
@@ -81,7 +74,7 @@ class FeedProducerImpl implements FeedProducer {
             // Rotate generation if necessary.
             .flatMap(generationRotationService::rotateGenerationIfNecessary)
             // Also load all entities that currently aren't assigned to a page (up to a max).
-            .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimit)))
+            .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimitPerRun)))
             // Step 3: calculate page assignments to make, pages to create, and existing pages to update.
             .map((args) -> {
                 final var maybeLatest = args.getT1();

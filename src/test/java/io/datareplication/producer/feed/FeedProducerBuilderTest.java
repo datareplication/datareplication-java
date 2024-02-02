@@ -12,14 +12,14 @@ class FeedProducerBuilderTest {
     private final FeedProducer.Builder builder = FeedProducer.builder(feedEntityRepository, feedPageMetadataRepository, feedProducerJournalRepository);
 
     @Test
-    void assignPagesLimit_shouldNotAllowZero() {
-        assertThatThrownBy(() -> builder.assignPagesLimit(0))
+    void assignPagesLimitPerRun_shouldNotAllowZero() {
+        assertThatThrownBy(() -> builder.assignPagesLimitPerRun(0))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void assignPagesLimit_shouldNotAllowNegative() {
-        assertThatThrownBy(() -> builder.assignPagesLimit(-1))
+    void assignPagesLimitPerRun_shouldNotAllowNegative() {
+        assertThatThrownBy(() -> builder.assignPagesLimitPerRun(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

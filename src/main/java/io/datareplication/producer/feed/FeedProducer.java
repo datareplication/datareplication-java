@@ -32,7 +32,7 @@ public interface FeedProducer {
         private final FeedPageMetadataRepository feedPageMetadataRepository;
         private final FeedProducerJournalRepository feedProducerJournalRepository;
         private Clock clock = Clock.systemUTC();
-        private int assignPagesLimit = Integer.MAX_VALUE;
+        private int assignPagesLimitPerRun = Integer.MAX_VALUE;
         private long maxBytesPerPage = 1000 * 1000;
         private long maxEntitiesPerPage = Long.MAX_VALUE;
         // TODO: more settings
@@ -55,15 +55,15 @@ public interface FeedProducer {
          * It defaults to {@link Integer#MAX_VALUE}, i.e. in practice unlimited.
          * </p>
          *
-         * @param limit the maximum number of entities per call
+         * @param limit the maximum number of entities to load and assign per run
          * @return this builder
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
-        public @NonNull Builder assignPagesLimit(int limit) {
+        public @NonNull Builder assignPagesLimitPerRun(int limit) {
             if (limit <= 0) {
                 throw new IllegalArgumentException("limit must be >= 1");
             }
-            this.assignPagesLimit = limit;
+            this.assignPagesLimitPerRun = limit;
             return this;
         }
 
@@ -113,7 +113,7 @@ public interface FeedProducer {
                 new GenerationRotationService(feedPageMetadataRepository),
                 new EntityTimestampsService(),
                 new AssignPagesService(new RandomPageIdProvider(), maxBytesPerPage, maxEntitiesPerPage),
-                assignPagesLimit
+                assignPagesLimitPerRun
             );
         }
     }
