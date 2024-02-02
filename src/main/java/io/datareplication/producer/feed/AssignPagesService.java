@@ -141,9 +141,9 @@ class AssignPagesService {
 
     private boolean fitsOnPage(MutablePage page, FeedEntityRepository.PageAssignment entity) {
         var pageEmpty = page.numberOfEntities() == 0;
-        var tooManyEntities = page.numberOfEntities() >= maxEntitiesPerPage;
-        var tooManyBytes = page.contentLength() + entity.contentLength() > maxBytesPerPage;
-        return pageEmpty || (!tooManyEntities && !tooManyBytes);
+        var wouldBeTooManyEntities = page.numberOfEntities() + 1 > maxEntitiesPerPage;
+        var wouldBeTooManyBytes = page.contentLength() + entity.contentLength() > maxBytesPerPage;
+        return pageEmpty || (!wouldBeTooManyEntities && !wouldBeTooManyBytes);
     }
 
     private static FeedEntityRepository.PageAssignment assignedEntity(FeedEntityRepository.PageAssignment entity, PageId pageId) {
