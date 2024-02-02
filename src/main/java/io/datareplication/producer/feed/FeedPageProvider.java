@@ -1,8 +1,6 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.ContentType;
-import io.datareplication.model.Page;
-import io.datareplication.model.PageId;
+import io.datareplication.model.*;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
 import lombok.AccessLevel;
@@ -24,9 +22,16 @@ public interface FeedPageProvider {
 
     // TODO: don't like the name
     @Value
-    class HeaderWithContentType {
+    class HeaderWithContentType implements ToHttpHeaders {
         @NonNull FeedPageHeader header;
         @NonNull ContentType contentType;
+
+        @Override
+        public @NonNull HttpHeaders toHttpHeaders() {
+            return header
+                .toHttpHeaders()
+                .update(HttpHeader.contentType(contentType));
+        }
     }
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageId>> latestPageId();
