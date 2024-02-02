@@ -1,5 +1,6 @@
 package io.datareplication.model;
 
+import io.datareplication.internal.multipart.MultipartUtils;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -85,8 +86,7 @@ public class Page<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpH
         }
 
         chunks.add(Body.fromUtf8(String.format("--%s--", boundary)));
-        final var contentType = ContentType.of(String.format("multipart/mixed; boundary=\"%s\"", boundary));
-        return new MultipartBody(contentType, chunks);
+        return new MultipartBody(MultipartUtils.pageContentType(boundary), chunks);
     }
 
     @EqualsAndHashCode

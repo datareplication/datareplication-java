@@ -12,7 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 /**
- * Parse a multipart document into {@link Token Tokens}.
+  * Parse a multipart document into {@link Token Tokens}. Somewhat faithfully implements
+ * <a href="https://datatracker.ietf.org/doc/html/rfc2046#page-22">RFC 2046</a>.
  */
 public class MultipartParser {
     private State state;

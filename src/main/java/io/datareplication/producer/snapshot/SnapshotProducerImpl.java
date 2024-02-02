@@ -1,5 +1,6 @@
 package io.datareplication.producer.snapshot;
 
+import io.datareplication.internal.multipart.MultipartUtils;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
@@ -80,6 +81,6 @@ class SnapshotProducerImpl implements SnapshotProducer {
 
     private Page<SnapshotPageHeader, SnapshotEntityHeader> pageOf(PageId pageId,
                                                                   final List<Entity<SnapshotEntityHeader>> entities) {
-        return new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), pageId.boundary(), entities);
+        return new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId), entities);
     }
 }

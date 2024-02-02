@@ -1,5 +1,6 @@
 package io.datareplication.producer.feed;
 
+import io.datareplication.internal.multipart.MultipartUtils;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
@@ -35,8 +36,8 @@ class FeedPageProviderImpl implements FeedPageProvider {
             .get(id)
             .thenApply(maybePage -> maybePage.map(page -> {
                 // TODO: refactor to somewhere else
-                var boundary = String.format("_---_%s", page.pageId().value());
-                var contentType = ContentType.of(String.format("multipart/mixed; boundary=\"%s\"", boundary));
+                var boundary = MultipartUtils.defaultBoundary(page.pageId());
+                var contentType = MultipartUtils.pageContentType(boundary);
                 return new HeaderWithContentType(
                     new FeedPageHeader(
                         page.lastModified(),
@@ -59,7 +60,7 @@ class FeedPageProviderImpl implements FeedPageProvider {
                 var entities = args.getT2();
                 return args.getT1().map(page -> {
                     // TODO: refactor to somewhere else
-                    var boundary = String.format("_---_%s", page.pageId().value());
+                    var boundary = MultipartUtils.defaultBoundary(page.pageId());
                     var header = new FeedPageHeader(
                             page.lastModified(),
                             Link.self(feedPageUrlBuilder.pageUrl(page.pageId())),
