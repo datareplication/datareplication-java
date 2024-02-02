@@ -1,8 +1,7 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.*;
-import io.datareplication.model.feed.FeedPageHeader;
-import io.datareplication.model.feed.Link;
+import io.datareplication.model.feed.*;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -22,7 +21,7 @@ class FeedPageProviderImplTest {
     private final FeedPageUrlBuilder feedPageUrlBuilder = new FeedPageUrlBuilder() {
         @Override
         public @NonNull Url pageUrl(@NonNull PageId pageId) {
-            return Url.of( String.format("https://datareplication.io/%s", pageId.value()));
+            return Url.of(String.format("https://datareplication.io/%s", pageId.value()));
         }
     };
 
@@ -156,6 +155,106 @@ class FeedPageProviderImplTest {
             )))
             .expectComplete()
             .verify();
+    }
+
+    @Test
+    void page_shouldReturnEmpty_whenNoPageMetadataForId() {
+        var pageId = PageId.of("page");
+        when(feedPageMetadataRepository.get(pageId))
+            .thenReturn(Mono.just(Optional.<FeedPageMetadataRepository.PageMetadata>empty()).toFuture());
+        when(feedEntityRepository.get(pageId))
+            .thenReturn(Mono.just(List.<Entity<FeedEntityHeader>>of()).toFuture());
+
+        var result = feedPageProvider.page(pageId);
+
+        StepVerifier
+            .create(Mono.fromCompletionStage(result))
+            .expectNext(Optional.empty())
+            .expectComplete()
+            .verify();
+    }
+
+    @Test
+    void page_shouldReturnPageWithAllEntities() {
+        var pageId = PageId.of("page");
+        var entities = List.of(entity("1"), entity("2"), entity("3"));
+        var timestamp = Timestamp.of(Instant.parse("2024-02-02T14:52:32Z"));
+        when(feedPageMetadataRepository.get(pageId))
+            .thenReturn(Mono.just(Optional.of(new FeedPageMetadataRepository.PageMetadata(
+                PageId.of("pageid-from-repo"),
+                timestamp,
+                Optional.empty(),
+                Optional.empty(),
+                666,
+                3,
+                900
+            ))).toFuture());
+        when(feedEntityRepository.get(pageId)).thenReturn(Mono.just(entities).toFuture());
+
+        var result = feedPageProvider.page(pageId);
+
+        StepVerifier
+            .create(Mono.fromCompletionStage(result))
+            .expectNext(Optional.of(new Page<>(
+                new FeedPageHeader(
+                    timestamp,
+                    Link.self(Url.of("https://datareplication.io/pageid-from-repo")),
+                    Optional.empty(),
+                    Optional.empty(),
+                    HttpHeaders.EMPTY
+                ),
+                "_---_pageid-from-repo",
+                entities
+            )))
+            .expectComplete()
+            .verify();
+    }
+
+    @Test
+    void page_shouldNotIncludeAnyExcessEntitiesInReturnedPage() {
+        var pageId = PageId.of("page");
+        var entities = List.of(entity("1"), entity("2"), entity("3"), entity("4"));
+        var timestamp = Timestamp.of(Instant.parse("2024-02-02T15:23:12Z"));
+        when(feedPageMetadataRepository.get(pageId))
+            .thenReturn(Mono.just(Optional.of(new FeedPageMetadataRepository.PageMetadata(
+                PageId.of("pageid-from-repo"),
+                timestamp,
+                Optional.empty(),
+                Optional.empty(),
+                666,
+                2,
+                900
+            ))).toFuture());
+        when(feedEntityRepository.get(pageId)).thenReturn(Mono.just(entities).toFuture());
+
+        var result = feedPageProvider.page(pageId);
+
+        StepVerifier
+            .create(Mono.fromCompletionStage(result))
+            .expectNext(Optional.of(new Page<>(
+                new FeedPageHeader(
+                    timestamp,
+                    Link.self(Url.of("https://datareplication.io/pageid-from-repo")),
+                    Optional.empty(),
+                    Optional.empty(),
+                    HttpHeaders.EMPTY
+                ),
+                "_---_pageid-from-repo",
+                entities.subList(0, 2)
+            )))
+            .expectComplete()
+            .verify();
+    }
+
+    private Entity<FeedEntityHeader> entity(String contentId) {
+        return new Entity<>(
+            new FeedEntityHeader(
+                Timestamp.of(Instant.now()),
+                OperationType.PUT,
+                ContentId.of(contentId)
+            ),
+            Body.fromUtf8("entity body")
+        );
     }
 
     private FeedPageMetadataRepository.PageMetadata page(String pageId, int generation) {

@@ -9,9 +9,11 @@ import io.datareplication.model.feed.Link;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class FeedPageProviderImpl implements FeedPageProvider {
@@ -49,6 +51,30 @@ class FeedPageProviderImpl implements FeedPageProvider {
 
     @Override
     public @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(@NonNull PageId id) {
-        throw new RuntimeException("not yet implemented");
+        var pageMetadataFuture = Mono.fromCompletionStage(() -> feedPageMetadataRepository.get(id));
+        var entitiesFuture = Mono.fromCompletionStage(() -> feedEntityRepository.get(id));
+        return Mono
+            .zip(pageMetadataFuture, entitiesFuture)
+            .map(args -> {
+                var entities = args.getT2();
+                return args.getT1().map(page -> {
+                    // TODO: refactor to somewhere else
+                    var boundary = String.format("_---_%s", page.pageId().value());
+                    var header = new FeedPageHeader(
+                            page.lastModified(),
+                            Link.self(feedPageUrlBuilder.pageUrl(page.pageId())),
+                            page.prev().map(x -> Link.prev(feedPageUrlBuilder.pageUrl(x))),
+                            page.next().map(x -> Link.next(feedPageUrlBuilder.pageUrl(x)))
+                        );
+                    var entitiesList = entities.stream().limit(page.numberOfEntities()).collect(Collectors.toList());
+                    //entities.subList(0, page.numberOfEntities())
+                    return new Page<>(
+                        header,
+                        boundary,
+                        entitiesList
+                    );
+                });
+            })
+            .toFuture();
     }
 }
