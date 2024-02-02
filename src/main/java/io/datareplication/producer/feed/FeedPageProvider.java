@@ -40,17 +40,24 @@ public interface FeedPageProvider {
     class Builder {
         private final FeedEntityRepository feedEntityRepository;
         private final FeedPageMetadataRepository feedPageMetadataRepository;
+        private final FeedPageUrlBuilder feedPageUrlBuilder;
 
         public @NonNull FeedPageProvider build() {
             return new FeedPageProviderImpl(
                 feedEntityRepository,
-                feedPageMetadataRepository
+                feedPageMetadataRepository,
+                feedPageUrlBuilder
             );
         }
     }
 
     static @NonNull Builder builder(@NonNull FeedEntityRepository feedEntityRepository,
-                                    @NonNull FeedPageMetadataRepository feedPageMetadataRepository) {
-        return new Builder(feedEntityRepository, feedPageMetadataRepository);
+                                    @NonNull FeedPageMetadataRepository feedPageMetadataRepository,
+                                    @NonNull FeedPageUrlBuilder feedPageUrlBuilder) {
+        return new Builder(
+            feedEntityRepository,
+            feedPageMetadataRepository,
+            feedPageUrlBuilder
+        );
     }
 }
