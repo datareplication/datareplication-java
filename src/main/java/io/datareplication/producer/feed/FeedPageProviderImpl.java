@@ -1,7 +1,7 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.internal.multipart.MultipartUtils;
-import io.datareplication.model.ContentType;
+import io.datareplication.model.Entity;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
 import io.datareplication.model.feed.FeedEntityHeader;
@@ -12,9 +12,9 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class FeedPageProviderImpl implements FeedPageProvider {
@@ -34,48 +34,50 @@ class FeedPageProviderImpl implements FeedPageProvider {
     public @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderWithContentType>> pageHeader(@NonNull PageId id) {
         return feedPageMetadataRepository
             .get(id)
-            .thenApply(maybePage -> maybePage.map(page -> {
-                // TODO: refactor to somewhere else
-                var boundary = MultipartUtils.defaultBoundary(page.pageId());
-                var contentType = MultipartUtils.pageContentType(boundary);
-                return new HeaderWithContentType(
-                    new FeedPageHeader(
-                        page.lastModified(),
-                        Link.self(feedPageUrlBuilder.pageUrl(page.pageId())),
-                        page.prev().map(x -> Link.prev(feedPageUrlBuilder.pageUrl(x))),
-                        page.next().map(x -> Link.next(feedPageUrlBuilder.pageUrl(x)))
-                    ),
-                    contentType
-                );
-            }));
+            .thenApply(maybePageMetadata -> maybePageMetadata.map(this::headerWithContentType));
     }
 
     @Override
     public @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(@NonNull PageId id) {
-        var pageMetadataFuture = Mono.fromCompletionStage(() -> feedPageMetadataRepository.get(id));
-        var entitiesFuture = Mono.fromCompletionStage(() -> feedEntityRepository.get(id));
-        return Mono
-            .zip(pageMetadataFuture, entitiesFuture)
-            .map(args -> {
-                var entities = args.getT2();
-                return args.getT1().map(page -> {
-                    // TODO: refactor to somewhere else
-                    var boundary = MultipartUtils.defaultBoundary(page.pageId());
-                    var header = new FeedPageHeader(
-                            page.lastModified(),
-                            Link.self(feedPageUrlBuilder.pageUrl(page.pageId())),
-                            page.prev().map(x -> Link.prev(feedPageUrlBuilder.pageUrl(x))),
-                            page.next().map(x -> Link.next(feedPageUrlBuilder.pageUrl(x)))
-                        );
-                    var entitiesList = entities.stream().limit(page.numberOfEntities()).collect(Collectors.toList());
-                    //entities.subList(0, page.numberOfEntities())
-                    return new Page<>(
-                        header,
-                        boundary,
-                        entitiesList
-                    );
-                });
-            })
-            .toFuture();
+        var pageMetadataFuture = feedPageMetadataRepository
+            .get(id);
+        var entitiesFuture = feedEntityRepository.get(id);
+        return pageMetadataFuture.thenCombine(entitiesFuture, (maybePageMetadata, entities) ->
+            maybePageMetadata.map(pageMetadata -> page(pageMetadata, entities))
+        );
+    }
+
+    private FeedPageHeader feedPageHeader(FeedPageMetadataRepository.PageMetadata pageMetadata) {
+        return new FeedPageHeader(
+            pageMetadata.lastModified(),
+            Link.self(feedPageUrlBuilder.pageUrl(pageMetadata.pageId())),
+            pageMetadata
+                .prev()
+                .map(feedPageUrlBuilder::pageUrl)
+                .map(Link::prev),
+            pageMetadata
+                .next()
+                .map(feedPageUrlBuilder::pageUrl)
+                .map(Link::next)
+        );
+    }
+
+    private HeaderWithContentType headerWithContentType(FeedPageMetadataRepository.PageMetadata pageMetadata) {
+        var boundary = MultipartUtils.defaultBoundary(pageMetadata.pageId());
+        return new HeaderWithContentType(
+            feedPageHeader(pageMetadata),
+            MultipartUtils.pageContentType(boundary)
+        );
+    }
+
+    private Page<FeedPageHeader, FeedEntityHeader> page(
+        FeedPageMetadataRepository.PageMetadata pageMetadata,
+        List<Entity<FeedEntityHeader>> entities
+    ) {
+        return new Page<>(
+            feedPageHeader(pageMetadata),
+            MultipartUtils.defaultBoundary(pageMetadata.pageId()),
+            entities.subList(0, pageMetadata.numberOfEntities())
+        );
     }
 }
