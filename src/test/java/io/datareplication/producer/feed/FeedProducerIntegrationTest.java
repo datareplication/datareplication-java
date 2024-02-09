@@ -6,16 +6,16 @@ import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
-import io.datareplication.producer.feed.testhelper.FeedEntityInMemoryRepository;
-import io.datareplication.producer.feed.testhelper.FeedPageMetadataInMemoryRepository;
-import io.datareplication.producer.feed.testhelper.FeedProducerJournalInMemoryRepository;
+import io.datareplication.producer.feed.testhelper.*;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -162,5 +162,47 @@ public class FeedProducerIntegrationTest {
                 Optional.empty()
             )
         );
+    }
+
+    @Test
+    void shouldRollbackAndRedoChangesOnError() throws ExecutionException, InterruptedException {
+        var faultRepository = new FeedPageMetadataFaultRepository(feedPageMetadataRepository);
+        var feedProducer = FeedProducer
+            .builder(feedEntityRepository, faultRepository, feedProducerJournalRepository)
+            .maxEntitiesPerPage(1)
+            .maxBytesPerPage(Long.MAX_VALUE)
+            .build();
+        faultRepository.failOn(entity3.header().lastModified());
+
+        feedProducer.publish(entity1).toCompletableFuture().get();
+        feedProducer.publish(entity2).toCompletableFuture().get();
+        feedProducer.publish(entity3).toCompletableFuture().get();
+        assertThat(feedProducer.assignPages())
+            .failsWithin(TIMEOUT)
+            .withThrowableThat()
+            .withCauseInstanceOf(FaultRepositoryException.class);
+        assertThat(feedProducerJournalRepository.getBlocking()).isPresent();
+        assertThat(feedEntityRepository.getAll())
+            .filteredOn(entity -> entity.page().isEmpty())
+            .isEmpty();
+
+        faultRepository.succeed();
+        assertThat(feedProducer.assignPages())
+            .succeedsWithin(TIMEOUT, InstanceOfAssertFactories.INTEGER)
+            .isEqualTo(3);
+        assertThat(feedProducerJournalRepository.getBlocking()).isEmpty();
+        var sortedPageIds = feedPageMetadataRepository
+            .getAll()
+            .stream()
+            .sorted(Comparator.comparing(page -> page.lastModified().value()))
+            .map(FeedPageMetadataRepository.PageMetadata::pageId)
+            .collect(Collectors.toList());
+        var sortedEntityPageIds = feedEntityRepository
+            .getAll()
+            .stream()
+            .sorted(Comparator.comparing(entity -> entity.entity().header().lastModified().value()))
+            .map(feedEntityRecord -> feedEntityRecord.page().get())
+            .collect(Collectors.toList());
+        assertThat(sortedPageIds).isEqualTo(sortedEntityPageIds);
     }
 }
