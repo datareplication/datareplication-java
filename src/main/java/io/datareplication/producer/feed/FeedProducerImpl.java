@@ -74,7 +74,10 @@ class FeedProducerImpl implements FeedProducer {
             // Rotate generation if necessary.
             .flatMap(generationRotationService::rotateGenerationIfNecessary)
             // Also load all entities that currently aren't assigned to a page (up to a max).
-            .zipWith(Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimitPerRun)))
+            // NB: it's important that this is zipWhen, *not* zipWith - zipWith might call getUnassigned before rollbacks
+            // are done which would be very bad - by using a lambda with an unused parameter we make sure that this entire
+            // pipeline only proceeds once the things above are done
+            .zipWhen(left -> Mono.fromCompletionStage(() -> feedEntityRepository.getUnassigned(assignPagesLimitPerRun)))
             // Step 3: calculate page assignments to make, pages to create, and existing pages to update.
             .map((args) -> {
                 final var maybeLatest = args.getT1();
