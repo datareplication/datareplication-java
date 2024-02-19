@@ -1,21 +1,18 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.Body;
-import io.datareplication.model.Entity;
-import io.datareplication.model.Timestamp;
-import io.datareplication.model.feed.ContentId;
-import io.datareplication.model.feed.FeedEntityHeader;
-import io.datareplication.model.feed.OperationType;
+import io.datareplication.internal.multipart.MultipartUtils;
+import io.datareplication.model.*;
+import io.datareplication.model.feed.*;
 import io.datareplication.producer.feed.testhelper.*;
+import lombok.NonNull;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,6 +22,12 @@ public class FeedProducerIntegrationTest {
         new FeedPageMetadataInMemoryRepository();
     private final FeedProducerJournalInMemoryRepository feedProducerJournalRepository =
         new FeedProducerJournalInMemoryRepository();
+    private final FeedPageUrlBuilder feedPageUrlBuilder = new FeedPageUrlBuilder() {
+        @Override
+        public @NonNull Url pageUrl(@NonNull PageId pageId) {
+            return Url.of(pageId.value());
+        }
+    };
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
@@ -60,6 +63,9 @@ public class FeedProducerIntegrationTest {
             .maxEntitiesPerPage(2)
             .maxBytesPerPage(Long.MAX_VALUE)
             .build();
+        var feedPageProvider = FeedPageProvider
+            .builder(feedEntityRepository, feedPageMetadataRepository, feedPageUrlBuilder)
+            .build();
 
         // first batch
         feedProducer.publish(entity1).toCompletableFuture().get();
@@ -70,11 +76,11 @@ public class FeedProducerIntegrationTest {
                 Optional.empty()
             )
         );
+        assertThatFeedPageProviderHasNoPages(feedPageProvider);
 
         assertThat(feedProducer.assignPages())
             .succeedsWithin(TIMEOUT, InstanceOfAssertFactories.INTEGER)
             .isEqualTo(1);
-
         var pages1 = feedPageMetadataRepository.getAll();
         assertThat(pages1).hasSize(1);
         var pageId1 = pages1.get(0).pageId();
@@ -96,6 +102,7 @@ public class FeedProducerIntegrationTest {
                 Optional.empty()
             )
         );
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
 
         // second batch
         feedProducer.publish(entity2).toCompletableFuture().get();
@@ -162,6 +169,7 @@ public class FeedProducerIntegrationTest {
                 Optional.empty()
             )
         );
+        assertThatFeedPageProviderHasBothPages(feedPageProvider);
     }
 
     @Test
@@ -169,40 +177,143 @@ public class FeedProducerIntegrationTest {
         var faultRepository = new FeedPageMetadataFaultRepository(feedPageMetadataRepository);
         var feedProducer = FeedProducer
             .builder(feedEntityRepository, faultRepository, feedProducerJournalRepository)
-            .maxEntitiesPerPage(1)
+            .maxEntitiesPerPage(2)
             .maxBytesPerPage(Long.MAX_VALUE)
             .build();
-        faultRepository.failOn(entity3.header().lastModified());
+        var feedPageProvider = FeedPageProvider
+            .builder(feedEntityRepository, faultRepository, feedPageUrlBuilder)
+            .build();
 
+        // first batch
         feedProducer.publish(entity1).toCompletableFuture().get();
+        assertThat(feedProducer.assignPages())
+            .succeedsWithin(TIMEOUT, InstanceOfAssertFactories.INTEGER)
+            .isEqualTo(1);
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
+
+        // second batch - failure
         feedProducer.publish(entity2).toCompletableFuture().get();
         feedProducer.publish(entity3).toCompletableFuture().get();
+
+        faultRepository.failOn(entity2.header().lastModified());
         assertThat(feedProducer.assignPages())
             .failsWithin(TIMEOUT)
             .withThrowableThat()
             .withCauseInstanceOf(FaultRepositoryException.class);
+
         assertThat(feedProducerJournalRepository.getBlocking()).isPresent();
         assertThat(feedEntityRepository.getAll())
-            .filteredOn(entity -> entity.page().isEmpty())
+            .filteredOn(entity -> entity.page().isEmpty()) // test that all entities are assigned (even if not visible)
             .isEmpty();
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
 
+        // second batch - success
         faultRepository.succeed();
         assertThat(feedProducer.assignPages())
             .succeedsWithin(TIMEOUT, InstanceOfAssertFactories.INTEGER)
-            .isEqualTo(3);
+            .isEqualTo(2);
         assertThat(feedProducerJournalRepository.getBlocking()).isEmpty();
-        var sortedPageIds = feedPageMetadataRepository
-            .getAll()
-            .stream()
-            .sorted(Comparator.comparing(page -> page.lastModified().value()))
-            .map(FeedPageMetadataRepository.PageMetadata::pageId)
-            .collect(Collectors.toList());
-        var sortedEntityPageIds = feedEntityRepository
-            .getAll()
-            .stream()
-            .sorted(Comparator.comparing(entity -> entity.entity().header().lastModified().value()))
-            .map(feedEntityRecord -> feedEntityRecord.page().get())
-            .collect(Collectors.toList());
-        assertThat(sortedPageIds).isEqualTo(sortedEntityPageIds);
+        assertThatFeedPageProviderHasBothPages(feedPageProvider);
+    }
+
+    @Test
+    void shouldNotExposeIncompleteUpdates() throws ExecutionException, InterruptedException {
+        var pauseRepository = new FeedPageMetadataPauseRepository(feedPageMetadataRepository);
+        var feedProducer = FeedProducer
+            .builder(feedEntityRepository, pauseRepository, feedProducerJournalRepository)
+            .maxEntitiesPerPage(2)
+            .maxBytesPerPage(Long.MAX_VALUE)
+            .build();
+        var feedPageProvider = FeedPageProvider
+            .builder(feedEntityRepository, pauseRepository, feedPageUrlBuilder)
+            .build();
+
+        // first batch
+        feedProducer.publish(entity1).toCompletableFuture().get();
+        var future = feedProducer.assignPages();
+        pauseRepository.waitForPause();
+        assertThatFeedPageProviderHasNoPages(feedPageProvider);
+        pauseRepository.unpause();
+        pauseRepository.waitForPause();
+        assertThatFeedPageProviderHasNoPages(feedPageProvider);
+        pauseRepository.unpause();
+        pauseRepository.waitForPause();
+        // if no previous latest page, the changes become visible after the second page save operation because the final
+        // one is a noop
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
+        pauseRepository.unpause();
+        assertThat(future)
+            .succeedsWithin(TIMEOUT, InstanceOfAssertFactories.INTEGER)
+            .isEqualTo(1);
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
+
+        // second batch
+        feedProducer.publish(entity2).toCompletableFuture().get();
+        feedProducer.publish(entity3).toCompletableFuture().get();
+        future = feedProducer.assignPages();
+        pauseRepository.waitForPause();
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
+        pauseRepository.unpause();
+        pauseRepository.waitForPause();
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
+        pauseRepository.unpause();
+        pauseRepository.waitForPause();
+        // with a previous latest page, changes become visible after the final page save operation
+        assertThatFeedPageProviderHasOnePage(feedPageProvider);
+        pauseRepository.unpause();
+        assertThat(future)
+            .succeedsWithin(TIMEOUT, InstanceOfAssertFactories.INTEGER)
+            .isEqualTo(2);
+        assertThatFeedPageProviderHasBothPages(feedPageProvider);
+    }
+
+    private void assertThatFeedPageProviderHasNoPages(FeedPageProvider feedPageProvider) throws ExecutionException, InterruptedException {
+        assertThat(feedPageProvider.latestPageId().toCompletableFuture().get()).isEmpty();
+    }
+
+    private void assertThatFeedPageProviderHasOnePage(FeedPageProvider feedPageProvider) throws ExecutionException, InterruptedException {
+        var maybePageId = feedPageProvider.latestPageId().toCompletableFuture().get();
+        assertThat(maybePageId).isNotEmpty();
+        var latestPageId = maybePageId.get();
+
+        assertThat(feedPageProvider.page(latestPageId).toCompletableFuture().get()).contains(new Page<>(
+            new FeedPageHeader(
+                entity1.header().lastModified(),
+                Link.self(feedPageUrlBuilder.pageUrl(latestPageId)),
+                Optional.empty(),
+                Optional.empty()
+            ),
+            MultipartUtils.defaultBoundary(latestPageId),
+            List.of(entity1)
+        ));
+    }
+
+    private void assertThatFeedPageProviderHasBothPages(FeedPageProvider feedPageProvider) throws ExecutionException, InterruptedException {
+        var maybePageId = feedPageProvider.latestPageId().toCompletableFuture().get();
+        assertThat(maybePageId).isNotEmpty();
+        var latestPageId = maybePageId.get();
+
+        var latestPage = feedPageProvider.page(latestPageId).toCompletableFuture().get().get();
+        assertThat(latestPage).isEqualTo(new Page<>(
+            new FeedPageHeader(
+                entity3.header().lastModified(),
+                Link.self(feedPageUrlBuilder.pageUrl(latestPageId)),
+                latestPage.header().prev(),
+                Optional.empty()
+            ),
+            MultipartUtils.defaultBoundary(latestPageId),
+            List.of(entity3)
+        ));
+        var pageId2 = PageId.of(latestPage.header().prev().get().value().value());
+        assertThat(feedPageProvider.page(pageId2).toCompletableFuture().get()).contains(new Page<>(
+            new FeedPageHeader(
+                entity2.header().lastModified(),
+                Link.self(feedPageUrlBuilder.pageUrl(pageId2)),
+                Optional.empty(),
+                Optional.of(Link.next(feedPageUrlBuilder.pageUrl(latestPageId)))
+            ),
+            MultipartUtils.defaultBoundary(pageId2),
+            List.of(entity1, entity2)
+        ));
     }
 }
