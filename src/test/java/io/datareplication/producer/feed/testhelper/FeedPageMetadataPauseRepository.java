@@ -24,6 +24,9 @@ public class FeedPageMetadataPauseRepository implements FeedPageMetadataReposito
     }
 
     public synchronized void waitForPause() throws InterruptedException {
+        if (!paused.isEmpty()) {
+            return;
+        }
         this.wait();
     }
 
