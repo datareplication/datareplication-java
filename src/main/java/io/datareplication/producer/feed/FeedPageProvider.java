@@ -20,9 +20,8 @@ public interface FeedPageProvider {
     // to be included so we can't just use FeedPageHeader.
     // https://stackoverflow.com/questions/3854842/content-length-header-with-head-requests
 
-    // TODO: don't like the name
     @Value
-    class HeaderWithContentType implements ToHttpHeaders {
+    class HeaderAndContentType implements ToHttpHeaders {
         @NonNull FeedPageHeader header;
         @NonNull ContentType contentType;
 
@@ -36,7 +35,7 @@ public interface FeedPageProvider {
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageId>> latestPageId();
 
-    @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderWithContentType>> pageHeader(@NonNull PageId id);
+    @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderAndContentType>> pageHeader(@NonNull PageId id);
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(
         @NonNull PageId id);

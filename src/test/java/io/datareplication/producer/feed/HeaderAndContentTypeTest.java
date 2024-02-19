@@ -11,10 +11,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class HeaderWithContentTypeTest {
+class HeaderAndContentTypeTest {
     @Test
     void shouldReturnHttpHeaders() {
-        var header = new FeedPageProvider.HeaderWithContentType(
+        var header = new FeedPageProvider.HeaderAndContentType(
             new FeedPageHeader(
                 Timestamp.of(Instant.parse("2024-02-02T15:56:31Z")),
                 Link.self(Url.of("self-link")),

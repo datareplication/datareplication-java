@@ -110,7 +110,7 @@ class FeedPageProviderImplTest {
 
         StepVerifier
             .create(Mono.fromCompletionStage(result))
-            .expectNext(Optional.of(new FeedPageProvider.HeaderWithContentType(
+            .expectNext(Optional.of(new FeedPageProvider.HeaderAndContentType(
                 new FeedPageHeader(
                     timestamp,
                     Link.self(Url.of("https://datareplication.io/pageid-from-repo")),
@@ -143,7 +143,7 @@ class FeedPageProviderImplTest {
 
         StepVerifier
             .create(Mono.fromCompletionStage(result))
-            .expectNext(Optional.of(new FeedPageProvider.HeaderWithContentType(
+            .expectNext(Optional.of(new FeedPageProvider.HeaderAndContentType(
                 new FeedPageHeader(
                     timestamp,
                     Link.self(Url.of("https://datareplication.io/pageid")),

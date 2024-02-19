@@ -10,7 +10,6 @@ import io.datareplication.model.feed.Link;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +30,7 @@ class FeedPageProviderImpl implements FeedPageProvider {
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderWithContentType>> pageHeader(@NonNull PageId id) {
+    public @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderAndContentType>> pageHeader(@NonNull PageId id) {
         return feedPageMetadataRepository
             .get(id)
             .thenApply(maybePageMetadata -> maybePageMetadata.map(this::headerWithContentType));
@@ -62,9 +61,9 @@ class FeedPageProviderImpl implements FeedPageProvider {
         );
     }
 
-    private HeaderWithContentType headerWithContentType(FeedPageMetadataRepository.PageMetadata pageMetadata) {
+    private HeaderAndContentType headerWithContentType(FeedPageMetadataRepository.PageMetadata pageMetadata) {
         var boundary = MultipartUtils.defaultBoundary(pageMetadata.pageId());
-        return new HeaderWithContentType(
+        return new HeaderAndContentType(
             feedPageHeader(pageMetadata),
             MultipartUtils.pageContentType(boundary)
         );
@@ -77,6 +76,11 @@ class FeedPageProviderImpl implements FeedPageProvider {
         return new Page<>(
             feedPageHeader(pageMetadata),
             MultipartUtils.defaultBoundary(pageMetadata.pageId()),
+            // Updating the page header is the last step when updating a page, after the page ID has been set on its
+            // entities. For this reason, we only take as many entities as are known to the page header. Any further
+            // entities aren't supposed to be visible yet -- they're not included in the page header's lastModified
+            // field, they may be out of order, they may be rolled back in case of error -- so we have to make sure to
+            // exclude them from the returned page.
             entities.subList(0, pageMetadata.numberOfEntities())
         );
     }
