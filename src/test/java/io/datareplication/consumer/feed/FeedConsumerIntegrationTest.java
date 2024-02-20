@@ -13,6 +13,7 @@ import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
+import lombok.EqualsAndHashCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -357,14 +358,14 @@ class FeedConsumerIntegrationTest {
                     .withBodyFile("feed/3.content.multipart")));
     }
 
+    @EqualsAndHashCode(callSuper = false)
     private static class Pair {
-        OperationType operationType;
-        String message;
+        private final OperationType operationType;
+        private final String message;
 
         Pair(OperationType operationType, String message) {
             this.operationType = operationType;
             this.message = message;
         }
-
     }
 }
