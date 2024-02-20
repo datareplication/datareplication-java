@@ -92,8 +92,8 @@ class SnapshotConsumerImpl implements SnapshotConsumer {
         StreamingPage<HttpHeaders, HttpHeaders> page
     ) {
         return new WrappedStreamingPage<>(page,
-                                          new SnapshotPageHeader(page.header()),
-                                          SnapshotEntityHeader::new);
+            new SnapshotPageHeader(page.header()),
+            (index, httpHeaders) -> new SnapshotEntityHeader(httpHeaders));
     }
 
     private <T> Flux<T> rewrapCompositeErrors(Throwable exception) {

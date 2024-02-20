@@ -7,6 +7,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
+/**
+ * Represents the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link">link</a> from a feed page.
+ * Each page must have a "link; rel=self" set.
+ * If they exist, the links to the previous "link; rel=prev" and next "link; rel=next" pages must also be present.
+ */
 public abstract class Link {
     private Link() {
     }

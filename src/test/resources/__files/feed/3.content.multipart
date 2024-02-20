@@ -1,0 +1,41 @@
+--<random-boundary>
+Operation-Type: http-equiv=PUT
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-ID: <3-A@random-content-id>
+Last-Modified: Thu, 28 Nov 2023 01:00:00 GMT
+Content-Length: 1
+
+a
+--<random-boundary>
+Operation-Type: http-equiv=PUT
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-ID: <3-B@random-content-id>
+Last-Modified: Thu, 28 Nov 2023 12:00:00 GMT
+Content-Length: 8
+
+snapshot
+--<random-boundary>
+Operation-Type: http-equiv=DELETE
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-ID: <3-C@random-content-id>
+Last-Modified: Thu, 28 Nov 2023 12:30:01 GMT
+Content-Length: 8
+
+snapshot
+--<random-boundary>
+Operation-Type: http-equiv=PUT
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-ID: <3-D@random-content-id>
+Last-Modified: Thu, 28 Nov 2023 18:30:00 GMT
+Content-Length: 4
+
+feed
+--<random-boundary>--

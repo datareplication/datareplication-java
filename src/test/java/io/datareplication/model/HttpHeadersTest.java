@@ -1,8 +1,10 @@
 package io.datareplication.model;
 
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -124,5 +126,52 @@ class HttpHeadersTest {
             HttpHeader.of("ABC-2", "value2"),
             HttpHeader.of("abc-3", "value4")
         );
+    }
+
+    @Test
+    void get_shouldReturnHttpHeader() {
+        HttpHeader header1 = HttpHeader.of("abc-1", "value1");
+        final HttpHeaders headers = HttpHeaders.of(
+            header1,
+            HttpHeader.of("ABC-2", "value2")
+        );
+
+        Optional<@NonNull HttpHeader> optionalHttpHeader = headers.get("abc-1");
+
+        assertThat(optionalHttpHeader).hasValue(header1);
+    }
+
+    @Test
+    void get_shouldReturnHttpHeaderCaseInsensitive() {
+        HttpHeader header1 = HttpHeader.of("abc-1", "value1");
+        final HttpHeaders headers = HttpHeaders.of(
+            header1,
+            HttpHeader.of("ABC-2", "value2")
+        );
+
+        Optional<@NonNull HttpHeader> optionalHttpHeader = headers.get("AbC-1");
+
+        assertThat(optionalHttpHeader).hasValue(header1);
+    }
+
+    @Test
+    void get_shouldReturnNoneOnEmptyHttpHeaders() {
+        final HttpHeaders headers = HttpHeaders.EMPTY;
+
+        Optional<@NonNull HttpHeader> optionalHttpHeader = headers.get("abc-1");
+
+        assertThat(optionalHttpHeader).isNotPresent();
+    }
+
+    @Test
+    void get_shouldReturnNoneOnUnknownKey() {
+        final HttpHeaders headers = HttpHeaders.of(
+            HttpHeader.of("abc-1", "value1"),
+            HttpHeader.of("ABC-2", "value2")
+        );
+
+        Optional<@NonNull HttpHeader> optionalHttpHeader = headers.get("...-0");
+
+        assertThat(optionalHttpHeader).isNotPresent();
     }
 }

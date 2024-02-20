@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -29,7 +31,7 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
     @NonNull
     public static final HttpHeaders EMPTY = new HttpHeaders(Collections.emptyMap());
 
-    private HttpHeaders(Map<@NonNull String, @NonNull HttpHeader> headers) {
+    private HttpHeaders(@NonNull Map<@NonNull String, @NonNull HttpHeader> headers) {
         this.headers = headers;
     }
 
@@ -85,7 +87,8 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
         return update(new HashMap<>(this.headers), headers);
     }
 
-    private static HttpHeaders update(Map<String, HttpHeader> headerMap, Iterator<HttpHeader> headers) {
+    private static HttpHeaders update(@NonNull Map<String, HttpHeader> headerMap,
+                                      @NonNull Iterator<HttpHeader> headers) {
         while (headers.hasNext()) {
             final HttpHeader header = headers.next();
             headerMap.merge(header.name(), header, (present, added) -> present.append(added.values()));
@@ -103,6 +106,10 @@ public final class HttpHeaders implements Iterable<@NonNull HttpHeader>, ToHttpH
     @Override
     public @NonNull HttpHeaders toHttpHeaders() {
         return this;
+    }
+
+    public @NonNull Optional<@NonNull HttpHeader> get(@NonNull String key) {
+        return Optional.ofNullable(headers.get(key.toLowerCase(Locale.ENGLISH)));
     }
 
     /**
