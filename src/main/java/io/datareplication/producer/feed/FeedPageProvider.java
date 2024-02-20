@@ -11,19 +11,25 @@ import lombok.Value;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
+// TODO: what's a better name for this class?
 public interface FeedPageProvider {
-    // TODO: alternative: put content-* stuff into extraHeaders
-    // TODO: better name?
+    // About the question of "what headers on HEAD": the accepted answer states the opposite, but according to linked
+    // https://www.rfc-editor.org/rfc/rfc7231#section-4.3.2, HEAD requests may omit the content-length header. This is,
+    // uh, useful because we don't know the real content-length without loading all entities (the numberOfBytes field in
+    // the page metadata is wrong because it only includes entity bodies). However, it looks like content-type will have
+    // to be included so we can't just use FeedPageHeader.
+    // https://stackoverflow.com/questions/3854842/content-length-header-with-head-requests
+
+    // TODO: don't like the name
     @Value
-    class FeedPageHeaderWithContentType {
+    class HeaderWithContentType {
         @NonNull FeedPageHeader header;
         @NonNull ContentType contentType;
-        long contentLength;
     }
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageId>> latestPageId();
 
-    @NonNull CompletionStage<@NonNull Optional<@NonNull FeedPageHeaderWithContentType>> pageHeader(@NonNull PageId id);
+    @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderWithContentType>> pageHeader(@NonNull PageId id);
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(
             @NonNull PageId id);

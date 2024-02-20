@@ -69,7 +69,7 @@ public class SnapshotAcceptanceTest {
         };
         SnapshotProducer snapshotProducer = SnapshotProducer
             .builder()
-            .maxEntriesPerPage(2)
+            .maxEntitiesPerPage(2)
             .maxBytesPerPage(5)
             .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
         SnapshotIndex producedSnapshotIndex = snapshotProducer

@@ -19,6 +19,7 @@
         <exclude name="DefaultPackage"/>
         <exclude name="GenericsNaming"/>
         <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
     </rule>
     <rule ref="category/java/design.xml">
         <exclude name="LawOfDemeter"/>
@@ -54,14 +55,6 @@
     <rule ref="category/java/design.xml/NcssCount">
         <properties>
             <property name="methodReportLevel">
-                <value>30</value>
-            </property>
-        </properties>
-    </rule>
-
-    <rule ref="category/java/codestyle.xml/LongVariable">
-        <properties>
-            <property name="minimum">
                 <value>30</value>
             </property>
         </properties>
