@@ -1,6 +1,10 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.*;
+import io.datareplication.model.ContentType;
+import io.datareplication.model.HttpHeader;
+import io.datareplication.model.HttpHeaders;
+import io.datareplication.model.Timestamp;
+import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedPageHeader;
 import io.datareplication.model.feed.Link;
 import org.junit.jupiter.api.Test;

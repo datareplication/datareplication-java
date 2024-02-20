@@ -1,7 +1,18 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.*;
-import io.datareplication.model.feed.*;
+import io.datareplication.model.Body;
+import io.datareplication.model.ContentType;
+import io.datareplication.model.Entity;
+import io.datareplication.model.HttpHeaders;
+import io.datareplication.model.Page;
+import io.datareplication.model.PageId;
+import io.datareplication.model.Timestamp;
+import io.datareplication.model.Url;
+import io.datareplication.model.feed.ContentId;
+import io.datareplication.model.feed.FeedEntityHeader;
+import io.datareplication.model.feed.FeedPageHeader;
+import io.datareplication.model.feed.Link;
+import io.datareplication.model.feed.OperationType;
 import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;

@@ -28,17 +28,17 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
 
         private FeedEntityRecord updated(PageAssignment pageAssignment) {
             return new FeedEntityRecord(
-                new Entity<>(
-                    new FeedEntityHeader(
-                        pageAssignment.lastModified(),
-                        entity.header().operationType(),
-                        contentId(),
-                        entity.header().extraHeaders()
+                    new Entity<>(
+                            new FeedEntityHeader(
+                                    pageAssignment.lastModified(),
+                                    entity.header().operationType(),
+                                    contentId(),
+                                    entity.header().extraHeaders()
+                            ),
+                            entity.body()
                     ),
-                    entity.body()
-                ),
-                pageAssignment.pageId(),
-                pageAssignment.originalLastModified()
+                    pageAssignment.pageId(),
+                    pageAssignment.originalLastModified()
             );
         }
 
@@ -48,31 +48,31 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
 
         private PageAssignment pageAssignment() {
             return new PageAssignment(
-                contentId(),
-                entity.header().lastModified(),
-                originalLastModified,
-                (int) entity.body().contentLength(),
-                page
+                    contentId(),
+                    entity.header().lastModified(),
+                    originalLastModified,
+                    (int) entity.body().contentLength(),
+                    page
             );
         }
 
         @Override
         public int compareTo(FeedEntityRecord other) {
             var c1 = this
-                .entity
-                .header()
-                .lastModified()
-                .value()
-                .compareTo(other.entity.header().lastModified().value());
+                    .entity
+                    .header()
+                    .lastModified()
+                    .value()
+                    .compareTo(other.entity.header().lastModified().value());
             if (c1 != 0) { //NOPMD
                 return c1;
             } else {
                 return this
-                    .entity
-                    .header()
-                    .contentId()
-                    .value()
-                    .compareTo(other.entity.header().contentId().value());
+                        .entity
+                        .header()
+                        .contentId()
+                        .value()
+                        .compareTo(other.entity.header().contentId().value());
             }
         }
     }
@@ -87,50 +87,56 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
     }
 
     @Override
-    public synchronized @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(@NonNull PageId pageId) {
+    public synchronized
+    @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>>
+    get(@NonNull PageId pageId) {
         var result = contents
-            .values()
-            .stream()
-            .filter(r -> r.page.stream().anyMatch(pageId::equals))
-            .sorted()
-            .map(r -> r.entity)
-            .collect(Collectors.toList());
+                .values()
+                .stream()
+                .filter(r -> r.page.stream().anyMatch(pageId::equals))
+                .sorted()
+                .map(r -> r.entity)
+                .collect(Collectors.toList());
         return CompletableFuture.supplyAsync(() -> result);
     }
 
     @Override
     public synchronized @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned(int limit) {
         var result = contents
-            .values()
-            .stream()
-            .filter(r -> r.page.isEmpty())
-            .sorted()
-            .limit(limit)
-            .map(FeedEntityRecord::pageAssignment)
-            .collect(Collectors.toList());
+                .values()
+                .stream()
+                .filter(r -> r.page.isEmpty())
+                .sorted()
+                .limit(limit)
+                .map(FeedEntityRecord::pageAssignment)
+                .collect(Collectors.toList());
         return CompletableFuture.supplyAsync(() -> result);
     }
 
     @Override
-    public synchronized @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getPageAssignments(@NonNull PageId pageId) {
+    public synchronized
+    @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>>
+    getPageAssignments(@NonNull PageId pageId) {
         var result = contents
-            .values()
-            .stream()
-            .filter(r -> r.page.stream().anyMatch(pageId::equals))
-            .sorted()
-            .map(FeedEntityRecord::pageAssignment)
-            .collect(Collectors.toList());
+                .values()
+                .stream()
+                .filter(r -> r.page.stream().anyMatch(pageId::equals))
+                .sorted()
+                .map(FeedEntityRecord::pageAssignment)
+                .collect(Collectors.toList());
         return CompletableFuture.supplyAsync(() -> result);
     }
 
     @Override
-    public synchronized @NonNull CompletionStage<Void> savePageAssignments(@NonNull List<@NonNull PageAssignment> pageAssignments) {
+    public synchronized
+    @NonNull CompletionStage<Void>
+    savePageAssignments(@NonNull List<@NonNull PageAssignment> pageAssignments) {
         for (var assignment : pageAssignments) {
             contents.compute(assignment.contentId(), (a, record) -> {
                 if (record == null) {
                     throw new IllegalStateException(
                             "savePageAssignments should never be called for an entity that wasn't saved beforehand"
-                        );
+                    );
                 }
                 return record.updated(assignment);
             });

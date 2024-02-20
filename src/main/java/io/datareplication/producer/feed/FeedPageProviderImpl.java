@@ -37,7 +37,9 @@ class FeedPageProviderImpl implements FeedPageProvider {
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(@NonNull PageId id) {
+    public
+    @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>>
+    page(@NonNull PageId id) {
         var pageMetadataFuture = feedPageMetadataRepository
             .get(id);
         var entitiesFuture = feedEntityRepository.get(id);

@@ -1,6 +1,11 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.*;
+import io.datareplication.model.ContentType;
+import io.datareplication.model.HttpHeader;
+import io.datareplication.model.HttpHeaders;
+import io.datareplication.model.Page;
+import io.datareplication.model.PageId;
+import io.datareplication.model.ToHttpHeaders;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
 import lombok.AccessLevel;

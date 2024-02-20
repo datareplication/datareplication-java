@@ -3,8 +3,8 @@ package io.datareplication.internal.multipart;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.PageId;
 
-public class MultipartUtils {
-    private MultipartUtils() {}
+public final class MultipartUtils {
+    private MultipartUtils() { }
 
     // TODO?: maybe this should validate that this is a valid boundary; alternatively we should validate that when
     //  creating page IDs

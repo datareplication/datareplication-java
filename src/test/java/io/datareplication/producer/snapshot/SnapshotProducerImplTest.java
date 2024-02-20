@@ -156,18 +156,26 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
-        verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId1), entities("Hello"))
-        );
-        verify(snapshotPageRepository).save(id, pageId2,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId2), entities("World"))
-        );
-        verify(snapshotPageRepository).save(id, pageId3,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId3), entities("I", "am", "a"))
-        );
-        verify(snapshotPageRepository).save(id, pageId4,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId4), entities("Snapshot"))
-        );
+        verify(snapshotPageRepository).save(id, pageId1, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId1),
+            entities("Hello")
+        ));
+        verify(snapshotPageRepository).save(id, pageId2, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId2),
+            entities("World")
+        ));
+        verify(snapshotPageRepository).save(id, pageId3, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId3),
+            entities("I", "am", "a")
+        ));
+        verify(snapshotPageRepository).save(id, pageId4, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId4),
+            entities("Snapshot")
+        ));
     }
 
     @Test
@@ -199,15 +207,21 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
-        verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId1), entities("Hello", "World"))
-        );
-        verify(snapshotPageRepository).save(id, pageId2,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId2), entities("I", "am"))
-        );
-        verify(snapshotPageRepository).save(id, pageId3,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId3), entities("a", "Snapshot"))
-        );
+        verify(snapshotPageRepository).save(id, pageId1, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId1),
+            entities("Hello", "World")
+        ));
+        verify(snapshotPageRepository).save(id, pageId2, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId2),
+            entities("I", "am")
+        ));
+        verify(snapshotPageRepository).save(id, pageId3, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId3),
+            entities("a", "Snapshot")
+        ));
     }
 
     @Test
@@ -243,15 +257,21 @@ class SnapshotProducerImplTest {
         assertThat(snapshotIndex.id()).isEqualTo(id);
         assertThat(snapshotIndex.createdAt()).isEqualTo(createdAt);
 
-        verify(snapshotPageRepository).save(id, pageId1,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId1), entities("Hello World!"))
-        );
-        verify(snapshotPageRepository).save(id, pageId2,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId2), entities("Test", "of", "a"))
-        );
-        verify(snapshotPageRepository).save(id, pageId3,
-            new Page<>(new SnapshotPageHeader(HttpHeaders.EMPTY), MultipartUtils.defaultBoundary(pageId3), entities("Snapshot"))
-        );
+        verify(snapshotPageRepository).save(id, pageId1, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId1),
+            entities("Hello World!")
+        ));
+        verify(snapshotPageRepository).save(id, pageId2, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId2),
+            entities("Test", "of", "a")
+        ));
+        verify(snapshotPageRepository).save(id, pageId3, new Page<>(
+            new SnapshotPageHeader(HttpHeaders.EMPTY),
+            MultipartUtils.defaultBoundary(pageId3),
+            entities("Snapshot")
+        ));
     }
 
     @Test
@@ -259,7 +279,7 @@ class SnapshotProducerImplTest {
     void shouldConverseEntityHeaders()
         throws ExecutionException, InterruptedException {
 
-        Entity<SnapshotEntityHeader>  entity1 = entityWithHeaders(
+        Entity<SnapshotEntityHeader> entity1 = entityWithHeaders(
             new SnapshotEntityHeader(
                 HttpHeaders.of(
                     HttpHeader.contentLength(123),
@@ -300,10 +320,10 @@ class SnapshotProducerImplTest {
                 MultipartUtils.defaultBoundary(pageId1),
                 List.of(
                     entityWithHeaders(new SnapshotEntityHeader(
-                            HttpHeaders.of(
-                                HttpHeader.contentLength(123),
-                                HttpHeader.contentType(ContentType.of("application/json"))
-                            )), "Hello"
+                        HttpHeaders.of(
+                            HttpHeader.contentLength(123),
+                            HttpHeader.contentType(ContentType.of("application/json"))
+                        )), "Hello"
                     )
                 )
             )
