@@ -1,11 +1,16 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.ContentType;
+import io.datareplication.model.HttpHeader;
+import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
+import io.datareplication.model.ToHttpHeaders;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 import java.util.Optional;
@@ -20,17 +25,48 @@ public interface FeedPageProvider {
     // to be included so we can't just use FeedPageHeader.
     // https://stackoverflow.com/questions/3854842/content-length-header-with-head-requests
 
-    // TODO: don't like the name
     @Value
-    class HeaderWithContentType {
+    class HeaderAndContentType implements ToHttpHeaders {
         @NonNull FeedPageHeader header;
         @NonNull ContentType contentType;
+
+        @Override
+        public @NonNull HttpHeaders toHttpHeaders() {
+            return header
+                .toHttpHeaders()
+                .update(HttpHeader.contentType(contentType));
+        }
     }
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull PageId>> latestPageId();
 
-    @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderWithContentType>> pageHeader(@NonNull PageId id);
+    @NonNull CompletionStage<@NonNull Optional<@NonNull HeaderAndContentType>> pageHeader(@NonNull PageId id);
 
     @NonNull CompletionStage<@NonNull Optional<@NonNull Page<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>> page(
-            @NonNull PageId id);
+        @NonNull PageId id);
+
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    class Builder {
+        private final FeedEntityRepository feedEntityRepository;
+        private final FeedPageMetadataRepository feedPageMetadataRepository;
+        private final FeedPageUrlBuilder feedPageUrlBuilder;
+
+        public @NonNull FeedPageProvider build() {
+            return new FeedPageProviderImpl(
+                feedEntityRepository,
+                feedPageMetadataRepository,
+                feedPageUrlBuilder
+            );
+        }
+    }
+
+    static @NonNull Builder builder(@NonNull FeedEntityRepository feedEntityRepository,
+                                    @NonNull FeedPageMetadataRepository feedPageMetadataRepository,
+                                    @NonNull FeedPageUrlBuilder feedPageUrlBuilder) {
+        return new Builder(
+            feedEntityRepository,
+            feedPageMetadataRepository,
+            feedPageUrlBuilder
+        );
+    }
 }

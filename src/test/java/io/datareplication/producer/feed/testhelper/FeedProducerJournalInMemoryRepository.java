@@ -27,4 +27,8 @@ public class FeedProducerJournalInMemoryRepository implements FeedProducerJourna
         state.set(Optional.empty());
         return CompletableFuture.supplyAsync(() -> null);
     }
+
+    public Optional<JournalState> getBlocking() {
+        return state.get();
+    }
 }

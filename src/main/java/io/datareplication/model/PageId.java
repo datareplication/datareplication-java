@@ -18,8 +18,4 @@ import lombok.Value;
 @Value(staticConstructor = "of")
 public class PageId {
     @NonNull String value;
-
-    public String boundary() {
-        return String.format("_---_%s", value);
-    }
 }

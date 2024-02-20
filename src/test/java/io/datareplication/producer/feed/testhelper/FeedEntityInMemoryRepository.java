@@ -78,7 +78,7 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
     }
 
     @Override
-    public @NonNull CompletionStage<Void> append(@NonNull Entity<@NonNull FeedEntityHeader> entity) {
+    public synchronized @NonNull CompletionStage<Void> append(@NonNull Entity<@NonNull FeedEntityHeader> entity) {
         var record = new FeedEntityRecord(entity, Optional.empty(), Optional.empty());
         synchronized (this) {
             contents.put(record.contentId(), record);
@@ -87,70 +87,64 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(
-        @NonNull PageId pageId
-    ) {
-        synchronized (this) {
-            var result = contents
-                .values()
-                .stream()
-                .filter(r -> r.page.stream().anyMatch(pageId::equals))
-                .sorted()
-                .map(r -> r.entity)
-                .collect(Collectors.toList());
-            return CompletableFuture.supplyAsync(() -> result);
-        }
+    public synchronized
+    @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>>
+    get(@NonNull PageId pageId) {
+        var result = contents
+            .values()
+            .stream()
+            .filter(r -> r.page.stream().anyMatch(pageId::equals))
+            .sorted()
+            .map(r -> r.entity)
+            .collect(Collectors.toList());
+        return CompletableFuture.supplyAsync(() -> result);
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned(int limit) {
-        synchronized (this) {
-            var result = contents
-                .values()
-                .stream()
-                .filter(r -> r.page.isEmpty())
-                .sorted()
-                .limit(limit)
-                .map(FeedEntityRecord::pageAssignment)
-                .collect(Collectors.toList());
-            return CompletableFuture.supplyAsync(() -> result);
-        }
+    public synchronized @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned(int limit) {
+        var result = contents
+            .values()
+            .stream()
+            .filter(r -> r.page.isEmpty())
+            .sorted()
+            .limit(limit)
+            .map(FeedEntityRecord::pageAssignment)
+            .collect(Collectors.toList());
+        return CompletableFuture.supplyAsync(() -> result);
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getPageAssignments(@NonNull PageId pageId) {
-        synchronized (this) {
-            var result = contents
-                .values()
-                .stream()
-                .filter(r -> r.page.stream().anyMatch(pageId::equals))
-                .sorted()
-                .map(FeedEntityRecord::pageAssignment)
-                .collect(Collectors.toList());
-            return CompletableFuture.supplyAsync(() -> result);
-        }
+    public synchronized
+    @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>>
+    getPageAssignments(@NonNull PageId pageId) {
+        var result = contents
+            .values()
+            .stream()
+            .filter(r -> r.page.stream().anyMatch(pageId::equals))
+            .sorted()
+            .map(FeedEntityRecord::pageAssignment)
+            .collect(Collectors.toList());
+        return CompletableFuture.supplyAsync(() -> result);
     }
 
     @Override
-    public @NonNull CompletionStage<Void> savePageAssignments(@NonNull List<@NonNull PageAssignment> pageAssignments) {
+    public synchronized
+    @NonNull CompletionStage<Void>
+    savePageAssignments(@NonNull List<@NonNull PageAssignment> pageAssignments) {
         for (var assignment : pageAssignments) {
-            synchronized (this) {
-                contents.compute(assignment.contentId(), (a, record) -> {
-                    if (record == null) {
-                        throw new IllegalStateException(
-                            "savePageAssignments should never be called for an entity that wasn't saved beforehand"
-                        );
-                    }
-                    return record.updated(assignment);
-                });
-            }
+            contents.compute(assignment.contentId(), (a, record) -> {
+                if (record == null) {
+                    throw new IllegalStateException(
+                        "savePageAssignments should never be called for an entity that wasn't saved beforehand"
+                    );
+                }
+                return record.updated(assignment);
+            });
         }
         return CompletableFuture.supplyAsync(() -> null);
     }
 
-    public List<FeedEntityRecord> getAll() {
-        synchronized (this) {
-            return List.copyOf(contents.values());
-        }
+    public synchronized List<FeedEntityRecord> getAll() {
+        return List.copyOf(contents.values());
     }
 }
