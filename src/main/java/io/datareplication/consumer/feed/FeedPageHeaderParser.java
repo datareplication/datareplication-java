@@ -74,10 +74,12 @@ class FeedPageHeaderParser {
             .values()
             .stream()
             .map(HeaderFieldValue::parse)
-            .filter(fieldValue -> fieldValue
-                .parameter("rel")
-                .map(rel::equals)
-                .orElse(false))
+            .filter(fieldValue ->
+                fieldValue
+                    .parameter("rel")
+                    .map(rel::equals)
+                    .orElse(false)
+            )
             .findFirst()
             .map(FeedPageHeaderParser::toUrl)
             .filter(Optional::isPresent)
