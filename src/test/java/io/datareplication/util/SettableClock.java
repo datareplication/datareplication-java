@@ -15,6 +15,7 @@ public class SettableClock extends Clock {
     private Instant now;
 
     public SettableClock(final Instant initialTime, final Duration defaultTick) {
+        super();
         this.initialTime = initialTime;
         this.defaultTick = defaultTick;
         now = initialTime;

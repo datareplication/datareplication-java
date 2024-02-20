@@ -6,13 +6,14 @@ import lombok.NonNull;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 public class FeedPageMetadataInMemoryRepository implements FeedPageMetadataRepository {
-    private final HashMap<PageId, PageMetadata> contents = new HashMap<>();
+    private final Map<PageId, PageMetadata> contents = new HashMap<>();
 
     @Override
     public @NonNull CompletionStage<@NonNull Optional<@NonNull PageMetadata>> get(@NonNull PageId pageId) {

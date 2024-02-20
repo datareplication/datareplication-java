@@ -11,12 +11,15 @@ import lombok.Value;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 public final class FeedEntityInMemoryRepository implements FeedEntityRepository {
+    private final Map<ContentId, FeedEntityRecord> contents = new HashMap<>();
+
     @Value
     public static class FeedEntityRecord implements Comparable<FeedEntityRecord> {
         Entity<FeedEntityHeader> entity;
@@ -61,7 +64,7 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
                 .lastModified()
                 .value()
                 .compareTo(other.entity.header().lastModified().value());
-            if (c1 != 0) {
+            if (c1 != 0) { //NOPMD
                 return c1;
             } else {
                 return this
@@ -73,8 +76,6 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
             }
         }
     }
-
-    private final HashMap<ContentId, FeedEntityRecord> contents = new HashMap<>();
 
     @Override
     public @NonNull CompletionStage<Void> append(@NonNull Entity<@NonNull FeedEntityHeader> entity) {

@@ -147,7 +147,8 @@ class AssignPagesService {
         var pageEmpty = page.numberOfEntities() == 0;
         var wouldBeTooManyEntities = page.numberOfEntities() + 1 > maxEntitiesPerPage;
         var wouldBeTooManyBytes = page.contentLength() + entity.contentLength() > maxBytesPerPage;
-        return pageEmpty || (!wouldBeTooManyEntities && !wouldBeTooManyBytes);
+        // unnecessary parentheses for clarity
+        return pageEmpty || (!wouldBeTooManyEntities && !wouldBeTooManyBytes); //NOPMD
     }
 
     private static FeedEntityRepository.PageAssignment assignedEntity(
