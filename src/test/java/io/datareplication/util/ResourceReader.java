@@ -1,4 +1,4 @@
-package io.util;
+package io.datareplication.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;

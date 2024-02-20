@@ -32,7 +32,7 @@ class SnapshotProducerTest {
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(5)
-            .maxEntriesPerPage(2)
+            .maxEntitiesPerPage(2)
             .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
 
         assertThat(snapshotProducer).isInstanceOf(SnapshotProducerImpl.class);
@@ -58,21 +58,21 @@ class SnapshotProducerTest {
     }
 
     @Test
-    @DisplayName("should throw an error if maxEntriesPerPage is below minimum")
-    void shouldThrowErrorWhenmaxEntriesPerPageIsBelowMinimum() {
-        long pointlessValueForMaxEntriesPerPage = 0L;
+    @DisplayName("should throw an error if maxEntitiesPerPage is below minimum")
+    void shouldThrowErrorWhenmaxEntitiesPerPageIsBelowMinimum() {
+        long pointlessValueForMaxEntitiesPerPage = 0L;
 
         IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
             SnapshotProducer
                 .builder()
                 .pageIdProvider(pageIdProvider)
                 .snapshotIdProvider(snapshotIdProvider)
-                .maxEntriesPerPage(pointlessValueForMaxEntriesPerPage)
+                .maxEntitiesPerPage(pointlessValueForMaxEntitiesPerPage)
                 .build(snapshotIndexRepository,
                     snapshotPageRepository,
                     snapshotPageUrlBuilder
                 )
         );
-        assertEquals("maxEntriesPerPage must be >= 1", thrownException.getMessage());
+        assertEquals("maxEntitiesPerPage must be >= 1", thrownException.getMessage());
     }
 }
