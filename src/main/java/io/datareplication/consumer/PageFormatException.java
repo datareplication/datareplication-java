@@ -50,7 +50,7 @@ public class PageFormatException extends ConsumerException {
         public MissingLinkHeader(@NonNull final HttpHeaders httpHeaders) {
             super(String.format("Link header is missing from HTTP response: '%s'", httpHeaders));
             this.httpHeaders = httpHeaders;
-            this.rel = null;
+            this.rel = "";
         }
 
         public MissingLinkHeader(@NonNull final HttpHeaders httpHeaders, @NonNull final String rel) {
