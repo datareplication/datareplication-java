@@ -2,7 +2,6 @@ package io.datareplication.consumer.feed;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.Authorization;
-import io.datareplication.consumer.feed.testhelper.StringMessageInMemoryRepository;
 import io.datareplication.model.Body;
 import io.datareplication.model.BodyTestUtil;
 import io.datareplication.model.ContentType;
@@ -197,7 +196,6 @@ class FeedConsumerIntegrationTest {
 
     @Test
     void shouldConsumeFeedFromTimestamp() throws ExecutionException, InterruptedException {
-        StringMessageInMemoryRepository repository = new StringMessageInMemoryRepository();
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
@@ -211,33 +209,31 @@ class FeedConsumerIntegrationTest {
                 )))
             .map(entity -> {
                 try {
-                    repository.save(entity.body().toUtf8(), entity.header().operationType());
+                    return new Pair(entity.header().operationType(), entity.body().toUtf8());
                 } catch (IOException e) {
-                    fail(e);
+                    return fail(e);
                 }
-                return entity;
             })
             .collectList()
             .toFuture()
             .get();
 
-        var processedMessages = repository.getSortedMessages();
         assertThat(entities).hasSize(9);
-        assertThat(processedMessages).hasSize(7);
-        assertThat(processedMessages).containsExactly(
-            "First consumable entity, but in this case it's a delete operation-type",
-            "Hello",
-            "World",
-            "I",
-            "am",
-            "a",
-            "feed"
+        assertThat(entities).containsExactly(
+            new Pair(OperationType.PUT, "First consumable entity, but in this case it's a delete operation-type"),
+            new Pair(OperationType.PUT, "hello"),
+            new Pair(OperationType.PUT, "world"),
+            new Pair(OperationType.PUT, "I"),
+            new Pair(OperationType.PUT, "am"),
+            new Pair(OperationType.PUT, "a"),
+            new Pair(OperationType.PUT, "snapshot"),
+            new Pair(OperationType.DELETE, "snapshot"),
+            new Pair(OperationType.PUT, "feed")
         );
     }
 
     @Test
     void shouldConsumeFeedFromTimestampAndContentId() throws ExecutionException, InterruptedException {
-        StringMessageInMemoryRepository repository = new StringMessageInMemoryRepository();
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
@@ -254,26 +250,25 @@ class FeedConsumerIntegrationTest {
                 )))
             .map(entity -> {
                 try {
-                    repository.save(entity.body().toUtf8(), entity.header().operationType());
+                    return new Pair(entity.header().operationType(), entity.body().toUtf8());
                 } catch (IOException e) {
-                    fail(e);
+                    return fail(e);
                 }
-                return entity;
             })
             .collectList()
             .toFuture()
             .get();
 
-        var processedMessages = repository.getSortedMessages();
         assertThat(entities).hasSize(8);
-        assertThat(processedMessages).hasSize(6);
-        assertThat(processedMessages).containsExactly(
-            "Hello",
-            "World",
-            "I",
-            "am",
-            "a",
-            "feed"
+        assertThat(entities).containsExactly(
+            new Pair(OperationType.PUT, "hello"),
+            new Pair(OperationType.PUT, "world"),
+            new Pair(OperationType.PUT, "I"),
+            new Pair(OperationType.PUT, "am"),
+            new Pair(OperationType.PUT, "a"),
+            new Pair(OperationType.PUT, "snapshot"),
+            new Pair(OperationType.DELETE, "snapshot"),
+            new Pair(OperationType.PUT, "feed")
         );
     }
 
@@ -360,5 +355,16 @@ class FeedConsumerIntegrationTest {
                 .withHeader("User-Agent", equalTo(USER_AGENT))
                 .willReturn(aResponse().withHeaders(headers)
                     .withBodyFile("feed/3.content.multipart")));
+    }
+
+    private static class Pair {
+        OperationType operationType;
+        String message;
+
+        Pair(OperationType operationType, String message) {
+            this.operationType = operationType;
+            this.message = message;
+        }
+
     }
 }

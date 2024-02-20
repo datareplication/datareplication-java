@@ -25,6 +25,7 @@ class FeedPageHeaderParserTest {
     private static final String LINK_PREV = "<https://example.datareplication.io/1>; rel=prev";
     private static final String LINK_SELF = "<https://example.datareplication.io/2>; rel=self";
     private static final String LINK_NEXT = "<https://example.datareplication.io/3>; rel=next";
+    private static final Exception ANY_EXCEPTION = new Exception("any exception");
 
     private FeedPageHeaderParser feedPageHeaderParser;
 
@@ -82,12 +83,12 @@ class FeedPageHeaderParserTest {
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader);
 
         var missingSelfLinkHeader = assertThrows(
-            PageFormatException.MissingLinkHeader.class,
+            PageFormatException.MissingSelfLinkHeader.class,
             () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
         );
 
         assertThat(missingSelfLinkHeader)
-            .isEqualTo(new PageFormatException.MissingLinkHeader(httpHeaders));
+            .isEqualTo(new PageFormatException.MissingSelfLinkHeader(httpHeaders));
     }
 
     @Test
@@ -97,12 +98,12 @@ class FeedPageHeaderParserTest {
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkNextHttpHeader);
 
         var missingSelfLinkHeader = assertThrows(
-            PageFormatException.MissingLinkHeader.class,
+            PageFormatException.MissingSelfLinkHeader.class,
             () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
         );
 
         assertThat(missingSelfLinkHeader)
-            .isEqualTo(new PageFormatException.MissingLinkHeader(httpHeaders, "self"));
+            .isEqualTo(new PageFormatException.MissingSelfLinkHeader(httpHeaders));
     }
 
     @Test
@@ -131,7 +132,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModifiedInEntity)
-            .isEqualTo(new PageFormatException.InvalidLastModifiedHeader("not a valid date", null));
+            .isEqualTo(new PageFormatException.InvalidLastModifiedHeader("not a valid date", ANY_EXCEPTION));
     }
 
     @Test
@@ -195,7 +196,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModifiedInEntity)
-            .isEqualTo(new PageFormatException.InvalidLastModifiedHeaderInEntity(1, "not a valid date", null));
+            .isEqualTo(new PageFormatException.InvalidLastModifiedHeaderInEntity(1, "not a valid date", ANY_EXCEPTION));
     }
 
 
@@ -227,6 +228,6 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingOperationTypeInEntity)
-            .isEqualTo(new PageFormatException.UnparseableOperationTypeInEntity(1, "CUT", null));
+            .isEqualTo(new PageFormatException.UnparseableOperationTypeInEntity(1, "CUT", ANY_EXCEPTION));
     }
 }

@@ -46,7 +46,7 @@ class FeedPageHeaderParser {
 
         var pageLinkHeader = httpHeaders
             .get(LINK)
-            .orElseThrow(() -> new PageFormatException.MissingLinkHeader(httpHeaders));
+            .orElseThrow(() -> new PageFormatException.MissingSelfLinkHeader(httpHeaders));
         return new FeedPageHeader(
             extractLastModified(
                 httpHeaders,
@@ -60,7 +60,7 @@ class FeedPageHeaderParser {
             ).orElseThrow(() -> new PageFormatException.MissingLastModifiedHeader(httpHeaders)),
             fromHeaderValue(pageLinkHeader, "self")
                 .map(Link::self)
-                .orElseThrow(() -> new PageFormatException.MissingLinkHeader(httpHeaders, "self")),
+                .orElseThrow(() -> new PageFormatException.MissingSelfLinkHeader(httpHeaders)),
             fromHeaderValue(pageLinkHeader, "prev").map(Link::prev),
             fromHeaderValue(pageLinkHeader, "next").map(Link::next)
         );
@@ -73,9 +73,12 @@ class FeedPageHeaderParser {
         return httpHeader
             .values()
             .stream()
-            .filter(headerFieldValue -> headerFieldValue.contains("; rel=" + rel))
-            .findFirst()
             .map(HeaderFieldValue::parse)
+            .filter(fieldValue -> fieldValue
+                .parameter("rel")
+                .map(rel::equals)
+                .orElse(false))
+            .findFirst()
             .map(FeedPageHeaderParser::toUrl)
             .filter(Optional::isPresent)
             .flatMap(Function.identity());
