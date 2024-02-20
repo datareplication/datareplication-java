@@ -21,12 +21,17 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class FeedProducerImplTest {
     private final FeedEntityRepository feedEntityRepository = mock(FeedEntityRepository.class);
     private final FeedPageMetadataRepository feedPageMetadataRepository = mock(FeedPageMetadataRepository.class);
-    private final FeedProducerJournalRepository feedProducerJournalRepository = mock(FeedProducerJournalRepository.class);
+    private final FeedProducerJournalRepository feedProducerJournalRepository =
+        mock(FeedProducerJournalRepository.class);
     private final SettableClock clock = new SettableClock(SOME_TIME);
     private final RandomContentIdProvider contentIdProvider = mock(RandomContentIdProvider.class);
     private final RollbackService rollbackService = mock(RollbackService.class);
@@ -136,7 +141,11 @@ class FeedProducerImplTest {
             .isCompletedWithValue(2)
             .succeedsWithin(TEST_TIMEOUT);
         verifyNoInteractions(rollbackService);
-        final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
+        final var inOrder = Mockito.inOrder(
+            feedProducerJournalRepository,
+            feedEntityRepository,
+            feedPageMetadataRepository
+        );
         inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
             List.of(newPage1.pageId(), newPage2.pageId()),
             newLatestPage.pageId(),
@@ -179,7 +188,11 @@ class FeedProducerImplTest {
             .isCompletedWithValue(2)
             .succeedsWithin(TEST_TIMEOUT);
         verifyNoInteractions(rollbackService);
-        final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
+        final var inOrder = Mockito.inOrder(
+            feedProducerJournalRepository,
+            feedEntityRepository,
+            feedPageMetadataRepository
+        );
         inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
             List.of(newPage1.pageId(), newPage2.pageId()),
             newLatestPage.pageId(),
@@ -220,7 +233,11 @@ class FeedProducerImplTest {
             .isCompletedWithValue(1)
             .succeedsWithin(TEST_TIMEOUT);
         verifyNoInteractions(rollbackService);
-        final var inOrder = Mockito.inOrder(feedProducerJournalRepository, feedEntityRepository, feedPageMetadataRepository);
+        final var inOrder = Mockito.inOrder(
+            feedProducerJournalRepository,
+            feedEntityRepository,
+            feedPageMetadataRepository
+        );
         inOrder.verify(feedProducerJournalRepository).save(new FeedProducerJournalRepository.JournalState(
             List.of(),
             updatedLatestPage.pageId(),

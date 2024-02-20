@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EntityTimestampsServiceTest {
     private final EntityTimestampsService entityTimestampsService = new EntityTimestampsService();
 
-    private final Instant TIMESTAMP = Instant.parse("2024-01-09T12:00:00.000Z");
+    private static final Instant TIMESTAMP = Instant.parse("2024-01-09T12:00:00.000Z");
 
     @Test
     void shouldReturnEmptyList_whenEmptyList() {

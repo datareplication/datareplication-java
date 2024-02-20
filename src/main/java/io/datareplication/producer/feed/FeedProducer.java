@@ -49,11 +49,10 @@ public interface FeedProducer {
         }
 
         /**
-         * <p>Set the maximum number of entities to load and assign in a single {@link FeedProducer#assignPages()} call.</p>
-         *
-         * <p>This setting exists to prevent out-of-memory errors if a large amount of unassigned entities have accumulated.
-         * It defaults to {@link Integer#MAX_VALUE}, i.e. in practice unlimited.
-         * </p>
+         * Set the maximum number of entities to load and assign in a single {@link FeedProducer#assignPages()} call.
+         * <p>
+         * This setting exists to prevent out-of-memory errors if a large amount of unassigned entities have
+         * accumulated. It defaults to {@link Integer#MAX_VALUE}, i.e. in practice unlimited.
          *
          * @param limit the maximum number of entities to load and assign per run
          * @return this builder

@@ -26,8 +26,8 @@ class RollbackService {
 
     /**
      * Perform necessary cleanup actions to roll back a dirty journal state. This service does all its actions as
-     * side effects to keep the rollback handling out of the main code path as far as possible. This means once the returned
-     * Mono resolves, the repository state has been cleaned and the journal state can be deleted.
+     * side effects to keep the rollback handling out of the main code path as far as possible. This means once the
+     * returned Mono resolves, the repository state has been cleaned and the journal state can be deleted.
      *
      * @param journalState journal info for cleanup
      */
@@ -71,7 +71,9 @@ class RollbackService {
         // Otherwise (= the current latest page is the same as the latest page in the journal) we don't delete any
         // new pages because they're already visible. This means either the switchover happened or we didn't create any
         // new pages and only added entities to the old latest page (and that case we already handled above).
-        Flux<RollbackActions> pageDeletes = maybeLatestPage.stream().noneMatch(p -> p.pageId().equals(journalState.newLatestPage()))
+        Flux<RollbackActions> pageDeletes = maybeLatestPage
+            .stream()
+            .noneMatch(p -> p.pageId().equals(journalState.newLatestPage()))
             ? deletePages(journalState)
             : Flux.empty();
 
@@ -111,7 +113,9 @@ class RollbackService {
             });
     }
 
-    private FeedEntityRepository.PageAssignment resetPageAssignment(FeedEntityRepository.PageAssignment pageAssignment) {
+    private FeedEntityRepository.PageAssignment resetPageAssignment(
+        FeedEntityRepository.PageAssignment pageAssignment
+    ) {
         // To reset a page assignment, we:
         // * empty out the pageId field
         // * set lastModified to originalLastModified to revert any timestamp update that may have happened

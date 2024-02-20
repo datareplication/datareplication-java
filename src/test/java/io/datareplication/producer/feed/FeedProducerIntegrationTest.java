@@ -21,8 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class FeedProducerIntegrationTest {
     private final FeedEntityInMemoryRepository feedEntityRepository = new FeedEntityInMemoryRepository();
-    private final FeedPageMetadataInMemoryRepository feedPageMetadataRepository = new FeedPageMetadataInMemoryRepository();
-    private final FeedProducerJournalInMemoryRepository feedProducerJournalRepository = new FeedProducerJournalInMemoryRepository();
+    private final FeedPageMetadataInMemoryRepository feedPageMetadataRepository =
+        new FeedPageMetadataInMemoryRepository();
+    private final FeedProducerJournalInMemoryRepository feedProducerJournalRepository =
+        new FeedProducerJournalInMemoryRepository();
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 

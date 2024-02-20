@@ -337,7 +337,11 @@ class AssignPagesServiceTest {
         ));
     }
 
-    private static FeedEntityRepository.PageAssignment unassignedEntity(String id, Instant lastModified, int contentLength) {
+    private static FeedEntityRepository.PageAssignment unassignedEntity(
+        String id,
+        Instant lastModified,
+        int contentLength
+    ) {
         return new FeedEntityRepository.PageAssignment(
             ContentId.of(id),
             Timestamp.of(lastModified),
@@ -347,7 +351,10 @@ class AssignPagesServiceTest {
         );
     }
 
-    private static FeedEntityRepository.PageAssignment assignedEntity(FeedEntityRepository.PageAssignment entity, String page) {
+    private static FeedEntityRepository.PageAssignment assignedEntity(
+        FeedEntityRepository.PageAssignment entity,
+        String page
+    ) {
         return new FeedEntityRepository.PageAssignment(
             entity.contentId(),
             entity.lastModified(),

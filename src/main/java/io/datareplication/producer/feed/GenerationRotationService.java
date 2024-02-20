@@ -18,14 +18,18 @@ class GenerationRotationService {
      *
      * @see Generations
      */
-    Mono<Optional<FeedPageMetadataRepository.PageMetadata>> rotateGenerationIfNecessary(Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage) {
+    Mono<Optional<FeedPageMetadataRepository.PageMetadata>> rotateGenerationIfNecessary(
+        Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage
+    ) {
         return maybeLatestPage
             .filter(latestPage -> latestPage.generation() >= Generations.MAX_GENERATION)
             .map(this::rotateGeneration)
             .orElse(Mono.just(maybeLatestPage));
     }
 
-    private Mono<Optional<FeedPageMetadataRepository.PageMetadata>> rotateGeneration(FeedPageMetadataRepository.PageMetadata latestPage) {
+    private Mono<Optional<FeedPageMetadataRepository.PageMetadata>> rotateGeneration(
+        FeedPageMetadataRepository.PageMetadata latestPage
+    ) {
         final var newLatestPage = new FeedPageMetadataRepository.PageMetadata(
             latestPage.pageId(),
             latestPage.lastModified(),

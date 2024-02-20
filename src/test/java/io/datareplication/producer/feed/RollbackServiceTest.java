@@ -14,7 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class RollbackServiceTest {
     private final FeedEntityRepository feedEntityRepository = mock(FeedEntityRepository.class);
@@ -135,26 +139,26 @@ class RollbackServiceTest {
     @Test
     void shouldDeleteNewPagesAndAssignments_whenLatestPageWasNotSwitchedAndNewPagesWereCreated() {
         final var latestPage = somePageMetadata("latest", 2);
-        final var latest_entity1 = somePageAssignment("1");
-        final var latest_entity2 = somePageAssignment("2");
+        final var latestPageEntity1 = somePageAssignment("1");
+        final var latestPageEntity2 = somePageAssignment("2");
         final var newPage1 = somePageMetadata("new-1", 14);
         final var newPage2 = somePageMetadata("new-2", 15);
         final var newLatest = somePageMetadata("new-latest", 1);
-        final var newPage1_entity = new FeedEntityRepository.PageAssignment(
+        final var newPage1Entity = new FeedEntityRepository.PageAssignment(
             ContentId.of("3"),
             TIMESTAMP_1,
             Optional.of(TIMESTAMP_2),
             2,
             Optional.of(newPage1.pageId())
         );
-        final var newPage2_entity = new FeedEntityRepository.PageAssignment(
+        final var newPage2Entity = new FeedEntityRepository.PageAssignment(
             ContentId.of("4"),
             TIMESTAMP_3,
             Optional.empty(),
             2,
             Optional.of(newPage2.pageId())
         );
-        final var newLatest_entity = new FeedEntityRepository.PageAssignment(
+        final var newLatestPageEntity = new FeedEntityRepository.PageAssignment(
             ContentId.of("5"),
             TIMESTAMP_3,
             Optional.of(TIMESTAMP_1),
@@ -169,13 +173,13 @@ class RollbackServiceTest {
         when(feedPageMetadataRepository.getWithoutNextLink())
             .thenReturn(Mono.just(List.of(latestPage)).toFuture());
         when(feedEntityRepository.getPageAssignments(latestPage.pageId()))
-            .thenReturn(Mono.just(List.of(latest_entity1, latest_entity2)).toFuture());
+            .thenReturn(Mono.just(List.of(latestPageEntity1, latestPageEntity2)).toFuture());
         when(feedEntityRepository.getPageAssignments(newPage1.pageId()))
-            .thenReturn(Mono.just(List.of(newPage1_entity)).toFuture());
+            .thenReturn(Mono.just(List.of(newPage1Entity)).toFuture());
         when(feedEntityRepository.getPageAssignments(newPage2.pageId()))
-            .thenReturn(Mono.just(List.of(newPage2_entity)).toFuture());
+            .thenReturn(Mono.just(List.of(newPage2Entity)).toFuture());
         when(feedEntityRepository.getPageAssignments(newLatest.pageId()))
-            .thenReturn(Mono.just(List.of(newLatest_entity)).toFuture());
+            .thenReturn(Mono.just(List.of(newLatestPageEntity)).toFuture());
 
         final var result = rollbackService.rollback(journalState);
 

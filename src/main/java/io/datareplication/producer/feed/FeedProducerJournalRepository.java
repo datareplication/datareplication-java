@@ -1,11 +1,9 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;

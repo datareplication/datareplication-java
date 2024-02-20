@@ -15,8 +15,8 @@ class EntityTimestampsService {
 
     /**
      * Update entity timestamps to ensure that all entities that we're about to assign have timestamps at least as new
-     * as the current latest page. The current ordering of entities is preserved as far as possible, meaning entities are
-     * incrementally bumped to avoid any entity being skipped past an originally later entity.
+     * as the current latest page. The current ordering of entities is preserved as far as possible, meaning entities
+     * are incrementally bumped to avoid any entity being skipped past an originally later entity.
      *
      * @param latestPage the current latest page
      * @param entities   entities to update
@@ -35,7 +35,11 @@ class EntityTimestampsService {
         return entities
             .stream()
             .map(entity -> {
-                final var updatedTimestamp = updatedTimestamp(entity.lastModified(), state.prev, state.prevBeforeUpdate);
+                final var updatedTimestamp = updatedTimestamp(
+                    entity.lastModified(),
+                    state.prev,
+                    state.prevBeforeUpdate
+                );
                 state.prev = updatedTimestamp;
                 state.prevBeforeUpdate = entity.lastModified();
                 return updatedEntity(entity, updatedTimestamp);
@@ -50,9 +54,9 @@ class EntityTimestampsService {
             return current;
         } else {
             if (current.equals(prevBeforeUpdate)) {
-                // If the current entity's timestamp is the same as the previous entity's timestamp before it was updated,
-                // we use the previous entity's timestamp, i.e. entities that shared a timestamp before updating have the
-                // same updated timestamp.
+                // If the current entity's timestamp is the same as the previous entity's timestamp before it was
+                // updated, we use the previous entity's timestamp, i.e. entities that shared a timestamp before
+                // updating have the same updated timestamp.
                 return prev;
             } else {
                 // Otherwise we set the current entity's timestamp to slightly after the previous timestamp.
@@ -61,7 +65,10 @@ class EntityTimestampsService {
         }
     }
 
-    private static FeedEntityRepository.PageAssignment updatedEntity(FeedEntityRepository.PageAssignment entity, Timestamp lastModified) {
+    private static FeedEntityRepository.PageAssignment updatedEntity(
+        FeedEntityRepository.PageAssignment entity,
+        Timestamp lastModified
+    ) {
         if (entity.lastModified().equals(lastModified)) {
             return entity;
         } else {

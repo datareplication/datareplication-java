@@ -2,7 +2,10 @@ package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
 import io.datareplication.model.Timestamp;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Value;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -82,11 +85,12 @@ class AssignPagesService {
         List<FeedEntityRepository.PageAssignment> entityPageAssignments;
         // The bulk of new pages can be saved in any order because they're not immediately visible.
         List<FeedPageMetadataRepository.PageMetadata> newPages;
-        // The new latest page: if this is a new page, it won't be visible because it has a higher generation is higher than the
-        // old (technically-still-current) latest page. If this is same latest page as before, this will make all changes
-        // visible.
+        // The new latest page: if this is a new page, it won't be visible because it has a higher generation is higher
+        // than the old (technically-still-current) latest page. If this is same latest page as before, this will make
+        // all changes visible.
         FeedPageMetadataRepository.PageMetadata newLatestPage;
-        // The previous latest page, if it's different. In that case, this is the final step that will make everything visible.
+        // The previous latest page, if it's different. In that case, this is the final step that will make everything
+        // visible.
         Optional<FeedPageMetadataRepository.PageMetadata> previousLatestPage;
     }
 
@@ -146,7 +150,10 @@ class AssignPagesService {
         return pageEmpty || (!wouldBeTooManyEntities && !wouldBeTooManyBytes);
     }
 
-    private static FeedEntityRepository.PageAssignment assignedEntity(FeedEntityRepository.PageAssignment entity, PageId pageId) {
+    private static FeedEntityRepository.PageAssignment assignedEntity(
+        FeedEntityRepository.PageAssignment entity,
+        PageId pageId
+    ) {
         return new FeedEntityRepository.PageAssignment(
             entity.contentId(),
             entity.lastModified(),

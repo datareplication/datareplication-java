@@ -10,11 +10,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class GenerationRotationServiceTest {
     private final FeedPageMetadataRepository feedPageMetadataRepository = mock(FeedPageMetadataRepository.class);
-    private final GenerationRotationService generationRotationService = new GenerationRotationService(feedPageMetadataRepository);
+    private final GenerationRotationService generationRotationService =
+        new GenerationRotationService(feedPageMetadataRepository);
 
     @BeforeEach
     void setUp() {
@@ -118,7 +123,10 @@ class GenerationRotationServiceTest {
         );
     }
 
-    private static FeedPageMetadataRepository.PageMetadata copyOf(FeedPageMetadataRepository.PageMetadata page, int generation) {
+    private static FeedPageMetadataRepository.PageMetadata copyOf(
+        FeedPageMetadataRepository.PageMetadata page,
+        int generation
+    ) {
         return new FeedPageMetadataRepository.PageMetadata(
             page.pageId(),
             page.lastModified(),

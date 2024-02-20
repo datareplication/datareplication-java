@@ -55,11 +55,21 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
 
         @Override
         public int compareTo(FeedEntityRecord other) {
-            var c1 = this.entity.header().lastModified().value().compareTo(other.entity.header().lastModified().value());
+            var c1 = this
+                .entity
+                .header()
+                .lastModified()
+                .value()
+                .compareTo(other.entity.header().lastModified().value());
             if (c1 != 0) {
                 return c1;
             } else {
-                return this.entity.header().contentId().value().compareTo(other.entity.header().contentId().value());
+                return this
+                    .entity
+                    .header()
+                    .contentId()
+                    .value()
+                    .compareTo(other.entity.header().contentId().value());
             }
         }
     }
@@ -76,7 +86,9 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
     }
 
     @Override
-    public @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(@NonNull PageId pageId) {
+    public @NonNull CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(
+        @NonNull PageId pageId
+    ) {
         synchronized (this) {
             var result = contents
                 .values()
@@ -124,7 +136,9 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
             synchronized (this) {
                 contents.compute(assignment.contentId(), (a, record) -> {
                     if (record == null) {
-                        throw new IllegalStateException("savePageAssignments should never be called for an entity that wasn't saved beforehand");
+                        throw new IllegalStateException(
+                            "savePageAssignments should never be called for an entity that wasn't saved beforehand"
+                        );
                     }
                     return record.updated(assignment);
                 });

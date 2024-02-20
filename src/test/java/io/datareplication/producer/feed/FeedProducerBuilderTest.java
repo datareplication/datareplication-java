@@ -8,8 +8,13 @@ import static org.mockito.Mockito.mock;
 class FeedProducerBuilderTest {
     private final FeedEntityRepository feedEntityRepository = mock(FeedEntityRepository.class);
     private final FeedPageMetadataRepository feedPageMetadataRepository = mock(FeedPageMetadataRepository.class);
-    private final FeedProducerJournalRepository feedProducerJournalRepository = mock(FeedProducerJournalRepository.class);
-    private final FeedProducer.Builder builder = FeedProducer.builder(feedEntityRepository, feedPageMetadataRepository, feedProducerJournalRepository);
+    private final FeedProducerJournalRepository feedProducerJournalRepository =
+        mock(FeedProducerJournalRepository.class);
+    private final FeedProducer.Builder builder = FeedProducer.builder(
+        feedEntityRepository,
+        feedPageMetadataRepository,
+        feedProducerJournalRepository
+    );
 
     @Test
     void assignPagesLimitPerRun_shouldNotAllowZero() {
