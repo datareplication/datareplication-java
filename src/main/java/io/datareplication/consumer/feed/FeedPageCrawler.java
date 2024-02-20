@@ -9,7 +9,7 @@ import lombok.NonNull;
 import java.util.concurrent.CompletionStage;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class FeedPageCrawler {
+class FeedPageCrawler {
     private final HeaderLoader headerLoader;
 
     @NonNull CompletionStage<@NonNull FeedPageHeader> crawl(@NonNull final Url url,

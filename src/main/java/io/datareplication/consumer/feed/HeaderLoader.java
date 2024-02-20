@@ -11,7 +11,7 @@ import java.util.concurrent.CompletionStage;
 
 // TODO: Impl + Tests
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class HeaderLoader {
+class HeaderLoader {
     private final HttpClient httpClient;
 
     public @NonNull CompletionStage<@NonNull FeedPageHeader> load(@NonNull Url url) {

@@ -34,7 +34,7 @@ import static io.datareplication.model.HttpHeader.OPERATION_TYPE;
  * @see FeedConsumerImpl
  */
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class FeedPageHeaderParser {
+class FeedPageHeaderParser {
     /**
      * Parse the headers of a feed page.
      *
@@ -58,8 +58,9 @@ public class FeedPageHeaderParser {
                     }
                 }
             ).orElseThrow(() -> new PageFormatException.MissingLastModifiedHeader(httpHeaders)),
-            fromHeaderValue(pageLinkHeader, "self").map(Link::self)
-                .orElseThrow(() -> new PageFormatException.MissingSelfLinkHeader(httpHeaders)),
+            fromHeaderValue(pageLinkHeader, "self")
+                .map(Link::self)
+                .orElseThrow(() -> new PageFormatException.MissingLinkHeader(httpHeaders)),
             fromHeaderValue(pageLinkHeader, "prev").map(Link::prev),
             fromHeaderValue(pageLinkHeader, "next").map(Link::next)
         );
@@ -73,10 +74,10 @@ public class FeedPageHeaderParser {
             .values()
             .stream()
             .filter(headerFieldValue -> headerFieldValue.contains("; rel=" + rel))
+            .findFirst()
             .map(HeaderFieldValue::parse)
             .map(FeedPageHeaderParser::toUrl)
             .filter(Optional::isPresent)
-            .findFirst()
             .flatMap(Function.identity());
     }
 

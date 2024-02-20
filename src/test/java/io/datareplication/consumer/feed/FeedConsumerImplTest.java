@@ -56,7 +56,7 @@ class FeedConsumerImplTest {
     }
 
     @Test
-    void loadLatestSite_shouldConsumeOneEntry() {
+    void loadLatestPage_shouldConsumeOneEntry() {
         Timestamp lastModified = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:14 GMT");
         Url url = Url.of("dummy url");
         ContentId contentId = ContentId.of("any ID");

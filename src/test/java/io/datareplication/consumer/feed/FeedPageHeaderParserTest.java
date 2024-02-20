@@ -97,7 +97,7 @@ class FeedPageHeaderParserTest {
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkNextHttpHeader);
 
         var missingSelfLinkHeader = assertThrows(
-            PageFormatException.MissingSelfLinkHeader.class,
+            PageFormatException.MissingLinkHeader.class,
             () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
         );
 

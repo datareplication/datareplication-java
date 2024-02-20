@@ -54,16 +54,6 @@ public class PageFormatException extends ConsumerException {
     }
 
     @EqualsAndHashCode(callSuper = false)
-    public static final class MissingSelfLinkHeader extends PageFormatException {
-        private final HttpHeaders httpHeaders;
-
-        public MissingSelfLinkHeader(@NonNull final HttpHeaders httpHeaders) {
-            super(String.format("LINK; rel=self header is missing from HTTP response: '%s'", httpHeaders));
-            this.httpHeaders = httpHeaders;
-        }
-    }
-
-    @EqualsAndHashCode(callSuper = false)
     public static final class UnparseableContentTypeHeader extends PageFormatException {
         private final String contentTypeHeader;
 

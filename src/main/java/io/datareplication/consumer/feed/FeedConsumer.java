@@ -40,7 +40,6 @@ public interface FeedConsumer {
      */
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builder {
-        // TODO: threadpool
         private final List<HttpHeader> additionalHeaders;
         private AuthSupplier authSupplier;
 
