@@ -60,7 +60,7 @@ class FeedPageHeaderParser {
             ).orElseThrow(() -> new PageFormatException.MissingLastModifiedHeader(httpHeaders)),
             fromHeaderValue(pageLinkHeader, "self")
                 .map(Link::self)
-                .orElseThrow(() -> new PageFormatException.MissingLinkHeader(httpHeaders)),
+                .orElseThrow(() -> new PageFormatException.MissingLinkHeader(httpHeaders, "self")),
             fromHeaderValue(pageLinkHeader, "prev").map(Link::prev),
             fromHeaderValue(pageLinkHeader, "next").map(Link::next)
         );

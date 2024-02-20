@@ -10,7 +10,7 @@ public class PageFormatException extends ConsumerException {
         super(message);
     }
 
-    private PageFormatException(@NonNull final String message, @NonNull final Throwable cause) {
+    private PageFormatException(@NonNull final String message, final Throwable cause) {
         super(message, cause);
     }
 
@@ -36,9 +36,8 @@ public class PageFormatException extends ConsumerException {
 
     @EqualsAndHashCode(callSuper = false)
     public static final class InvalidLastModifiedHeader extends PageFormatException {
-
         public InvalidLastModifiedHeader(@NonNull final String lastModified,
-                                         @NonNull final Throwable cause) {
+                                         final Throwable cause) {
             super(String.format("Last-Modified header is invalid: '%s'", lastModified), cause);
         }
     }
@@ -46,10 +45,18 @@ public class PageFormatException extends ConsumerException {
     @EqualsAndHashCode(callSuper = false)
     public static final class MissingLinkHeader extends PageFormatException {
         private final HttpHeaders httpHeaders;
+        private final String rel;
 
         public MissingLinkHeader(@NonNull final HttpHeaders httpHeaders) {
             super(String.format("Link header is missing from HTTP response: '%s'", httpHeaders));
             this.httpHeaders = httpHeaders;
+            this.rel = null;
+        }
+
+        public MissingLinkHeader(@NonNull final HttpHeaders httpHeaders, @NonNull final String rel) {
+            super(String.format("LINK; rel=%s header is missing from HTTP response: '%s'", rel, httpHeaders));
+            this.httpHeaders = httpHeaders;
+            this.rel = rel;
         }
     }
 
@@ -63,7 +70,7 @@ public class PageFormatException extends ConsumerException {
         }
 
         public UnparseableContentTypeHeader(@NonNull final String contentTypeHeader,
-                                            @NonNull final Throwable cause) {
+                                            final Throwable cause) {
             super(String.format("unparseable Content-Type header: '%s'", contentTypeHeader), cause);
             this.contentTypeHeader = contentTypeHeader;
         }
@@ -93,7 +100,7 @@ public class PageFormatException extends ConsumerException {
     public static final class InvalidMultipart extends PageFormatException {
         private final Throwable cause;
 
-        public InvalidMultipart(@NonNull final Throwable cause) {
+        public InvalidMultipart(final Throwable cause) {
             super(String.format("invalid multipart document: '%s'", cause));
             this.cause = cause;
         }
@@ -115,7 +122,7 @@ public class PageFormatException extends ConsumerException {
 
         public InvalidLastModifiedHeaderInEntity(final int index,
                                                  @NonNull final String lastModified,
-                                                 @NonNull final Throwable cause) {
+                                                 final Throwable cause) {
             super(
                 String.format(
                     "unparseable Last-Modified header from entity at index %s: '%s'",
@@ -164,7 +171,7 @@ public class PageFormatException extends ConsumerException {
 
         public UnparseableOperationTypeInEntity(@NonNull final Integer index,
                                                 @NonNull final String contentTypeHeader,
-                                                @NonNull final Throwable cause) {
+                                                final Throwable cause) {
             super(
                 String.format(
                     "unparseable Operation-Type header from entity at index %s: '%s'",

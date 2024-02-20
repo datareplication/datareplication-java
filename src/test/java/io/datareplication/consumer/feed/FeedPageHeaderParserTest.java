@@ -87,7 +87,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingSelfLinkHeader)
-            .hasMessage("Link header is missing from HTTP response: '" + httpHeaders + "'");
+            .isEqualTo(new PageFormatException.MissingLinkHeader(httpHeaders));
     }
 
     @Test
@@ -102,7 +102,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingSelfLinkHeader)
-            .hasMessage("LINK; rel=self header is missing from HTTP response: '" + httpHeaders + "'");
+            .isEqualTo(new PageFormatException.MissingLinkHeader(httpHeaders, "self"));
     }
 
     @Test
@@ -116,7 +116,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModified)
-            .hasMessage("Last-Modified header is missing from HTTP response: '" + httpHeaders + "'");
+            .isEqualTo(new PageFormatException.MissingLastModifiedHeader(httpHeaders));
     }
 
     @Test
@@ -131,7 +131,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModifiedInEntity)
-            .hasMessage("Last-Modified header is invalid: 'not a valid date'");
+            .isEqualTo(new PageFormatException.InvalidLastModifiedHeader("not a valid date", null));
     }
 
     @Test
@@ -164,7 +164,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingContentIdInEntity)
-            .hasMessage("Content-Id header is missing from entity at index 1");
+            .isEqualTo(new PageFormatException.MissingContentIdInEntity(1));
     }
 
     @Test
@@ -179,7 +179,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModifiedInEntity)
-            .hasMessage("Last-Modified header is missing from entity at index 1");
+            .isEqualTo(new PageFormatException.MissingLastModifiedHeaderInEntity(1));
     }
 
     @Test
@@ -195,7 +195,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingLastModifiedInEntity)
-            .hasMessage("unparseable Last-Modified header from entity at index 1: 'not a valid date'");
+            .isEqualTo(new PageFormatException.InvalidLastModifiedHeaderInEntity(1, "not a valid date", null));
     }
 
 
@@ -211,7 +211,7 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingOperationTypeInEntity)
-            .hasMessage("Operation-Type header is missing from entity at index 1");
+            .isEqualTo(new PageFormatException.MissingOperationTypeInEntity(1));
     }
 
     @Test
@@ -227,6 +227,6 @@ class FeedPageHeaderParserTest {
         );
 
         assertThat(missingOperationTypeInEntity)
-            .hasMessage("unparseable Operation-Type header from entity at index 1: 'CUT'");
+            .isEqualTo(new PageFormatException.UnparseableOperationTypeInEntity(1, "CUT", null));
     }
 }
