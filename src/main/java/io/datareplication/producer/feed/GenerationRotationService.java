@@ -13,9 +13,9 @@ class GenerationRotationService {
 
     /**
      * If the page's generation is too large, we reset it and save that.
+     *
      * @param maybeLatestPage the current latest page, maybe
      * @return the effective latest page: the updated one if we rotated generations or the original one otherwise
-     *
      * @see Generations
      */
     Mono<Optional<FeedPageMetadataRepository.PageMetadata>> rotateGenerationIfNecessary(
