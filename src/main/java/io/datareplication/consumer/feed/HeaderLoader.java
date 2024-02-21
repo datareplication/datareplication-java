@@ -1,8 +1,6 @@
 package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.HttpException;
-import io.datareplication.consumer.PageFormatException;
-import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedPageHeader;

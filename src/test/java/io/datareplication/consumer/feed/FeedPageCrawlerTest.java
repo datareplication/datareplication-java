@@ -6,7 +6,6 @@ import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedPageHeader;
 import io.datareplication.model.feed.Link;
-import io.datareplication.model.snapshot.SnapshotIndex;
 import lombok.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
