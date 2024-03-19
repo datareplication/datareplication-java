@@ -10,6 +10,8 @@ jobs:
   maven_build:
     name: "Build and publish with Maven"
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
 
     steps:
     - uses: actions/checkout@v3
