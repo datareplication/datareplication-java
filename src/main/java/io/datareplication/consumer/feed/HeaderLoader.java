@@ -6,15 +6,20 @@ import io.datareplication.model.feed.FeedPageHeader;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-
-import java.util.concurrent.CompletionStage;
+import reactor.core.publisher.Mono;
 
 // TODO: Impl + Tests
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class HeaderLoader {
     private final HttpClient httpClient;
 
-    public @NonNull CompletionStage<@NonNull FeedPageHeader> load(@NonNull Url url) {
-        throw new UnsupportedOperationException("NIY");
+    /**
+     * Load the headers of a feed page.
+     *
+     * @param url the URL to download
+     * @return a {@link FeedPageHeader} for the given URL
+     */
+    public @NonNull Mono<@NonNull FeedPageHeader> load(@NonNull Url url) {
+        return Mono.error(new UnsupportedOperationException("NIY"));
     }
 }

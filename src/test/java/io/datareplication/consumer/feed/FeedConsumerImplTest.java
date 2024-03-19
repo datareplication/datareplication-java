@@ -31,7 +31,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -72,7 +71,7 @@ class FeedConsumerImplTest {
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders))
             .thenReturn(feedEntityHeader);
         when(feedPageCrawler.crawl(url, StartFrom.beginning()))
-            .thenReturn(CompletableFuture.supplyAsync(() -> feedPageHeader));
+            .thenReturn(Mono.just(feedPageHeader));
         when(pageLoader.load(url))
             .thenReturn(Mono.just(
                 new TestStreamingPage<>(defaultPagesHeaders,
