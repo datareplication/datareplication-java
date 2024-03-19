@@ -28,8 +28,8 @@ public class FeedConsumerImpl implements FeedConsumer {
         > streamPages(@NonNull final Url url,
                       @NonNull final StartFrom startFrom) {
         // TODO: Crawl back und respect NextLinks
-        Mono<StreamingPage<FeedPageHeader, FeedEntityHeader>> pageMono = Mono
-            .fromCompletionStage(feedPageCrawler.crawl(url, startFrom))
+        Mono<StreamingPage<FeedPageHeader, FeedEntityHeader>> pageMono = feedPageCrawler
+            .crawl(url, startFrom)
             .flatMap(feedPageHeader -> pageLoader.load(feedPageHeader.self().value()))
             .map(this::wrapPage);
         return JdkFlowAdapter.publisherToFlowPublisher(pageMono);

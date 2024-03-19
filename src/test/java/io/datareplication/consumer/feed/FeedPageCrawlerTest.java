@@ -13,11 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -62,42 +61,42 @@ class FeedPageCrawlerTest {
     void setUp() {
         lenient()
             .when(headerLoader.load(pageHeader1.self().value()))
-            .thenReturn(CompletableFuture.supplyAsync(() -> pageHeader1));
+            .thenReturn(Mono.just(pageHeader1));
         lenient()
             .when(headerLoader.load(pageHeader2.self().value()))
-            .thenReturn(CompletableFuture.supplyAsync(() -> pageHeader2));
+            .thenReturn(Mono.just(pageHeader2));
         lenient()
             .when(headerLoader.load(pageHeader3.self().value()))
-            .thenReturn(CompletableFuture.supplyAsync(() -> pageHeader3));
+            .thenReturn(Mono.just(pageHeader3));
     }
 
     @Test
     void startFromBeginningWithoutPrevLink_shouldStartWithThisPage() {
         Url url = pageHeader1.self().value();
 
-        CompletionStage<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
+        Mono<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
 
-        assertThat(result.toCompletableFuture()).isCompletedWithValue(pageHeader1);
+        assertThat(result.toFuture()).isCompletedWithValue(pageHeader1);
     }
 
     @Test
     void crawlToBeginning_shouldStartWithPageHeader1() {
         Url url = pageHeader3.self().value();
 
-        CompletionStage<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
+        Mono<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
 
-        assertThat(result.toCompletableFuture()).isCompletedWithValue(pageHeader1);
+        assertThat(result.toFuture()).isCompletedWithValue(pageHeader1);
     }
 
     @Test
     void crawlToBeginning_shouldThrowExceptionOnUnknownUrl() {
         Url url = Url.of("https://example.datareplication.io/unknown");
         HttpException.ClientError expectedException = new HttpException.ClientError(url, 404);
-        when(headerLoader.load(url)).thenReturn(CompletableFuture.failedFuture(expectedException));
+        when(headerLoader.load(url)).thenReturn(Mono.error(expectedException));
 
-        CompletionStage<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
+        Mono<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
 
-        assertThat(result.toCompletableFuture())
+        assertThat(result.toFuture())
             .isCompletedExceptionally()
             .failsWithin(10, TimeUnit.MILLISECONDS)
             .withThrowableOfType(ExecutionException.class)
