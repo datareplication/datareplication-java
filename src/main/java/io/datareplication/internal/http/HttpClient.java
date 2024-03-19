@@ -26,10 +26,10 @@ public class HttpClient {
     private static final int SERVER_ERRORS = 500;
 
     /**
-     * @param authSupplier provides Authorization, is called once per request
+     * @param authSupplier      provides Authorization, is called once per request
      * @param additionalHeaders additional request headers added to all requests
-     * @param headersTimeout timeout for receiving HTTP headers, infinite if empty
-     * @param readTimeout timeout for reads (network socket reads?), infinite if empty
+     * @param headersTimeout    timeout for receiving HTTP headers, infinite if empty
+     * @param readTimeout       timeout for reads (network socket reads?), infinite if empty
      */
     public HttpClient(@NonNull AuthSupplier authSupplier,
                       @NonNull HttpHeaders additionalHeaders,
@@ -49,9 +49,9 @@ public class HttpClient {
 
     public HttpClient() {
         this(AuthSupplier.none(),
-             HttpHeaders.EMPTY,
-             Optional.empty(),
-             Optional.empty());
+            HttpHeaders.EMPTY,
+            Optional.empty(),
+            Optional.empty());
     }
 
     private static void addDefaultHeaders(Methanol.Builder builder, HttpHeaders additionalHeaders) {
@@ -73,16 +73,24 @@ public class HttpClient {
      */
     @NonNull
     public <T> Mono<@NonNull HttpResponse<T>> get(@NonNull Url url,
-                                         @NonNull HttpResponse.BodyHandler<T> bodyHandler) {
+                                                  @NonNull HttpResponse.BodyHandler<T> bodyHandler) {
         return Mono
             .fromSupplier(() -> newRequest(url))
             .map(req -> req.GET().build())
             .flatMap(request -> send(url, request, bodyHandler));
     }
 
+    @NonNull
+    public Mono<@NonNull HttpResponse<Void>> head(@NonNull Url url) {
+        return Mono
+            .fromSupplier(() -> newRequest(url))
+            .map(req -> req.method("HEAD", HttpRequest.BodyPublishers.noBody()).build())
+            .flatMap(request -> send(url, request, HttpResponse.BodyHandlers.discarding()));
+    }
+
     private <T> Mono<HttpResponse<T>> send(Url url,
-                                             HttpRequest request,
-                                             HttpResponse.BodyHandler<T> bodyHandler) {
+                                           HttpRequest request,
+                                           HttpResponse.BodyHandler<T> bodyHandler) {
         return Mono
             .fromCompletionStage(httpClient.sendAsync(request, bodyHandler))
             .onErrorResume(exc -> {

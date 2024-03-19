@@ -107,6 +107,9 @@ class FeedConsumerImplTest {
             );
     }
 
+    // TODO: Load next pages tests
+    // TODO: Compare `streamPages` with ''streamEntities` will return a `Flux` of `Entities`
+
     private static ByteBuffer utf8(String s) {
         return ByteBuffer.wrap(s.getBytes(StandardCharsets.UTF_8));
     }

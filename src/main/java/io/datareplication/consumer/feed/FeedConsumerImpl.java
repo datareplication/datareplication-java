@@ -11,8 +11,9 @@ import io.datareplication.model.feed.FeedPageHeader;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.reactivestreams.FlowAdapters;
 import reactor.adapter.JdkFlowAdapter;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.util.concurrent.Flow;
 
@@ -27,12 +28,7 @@ public class FeedConsumerImpl implements FeedConsumer {
         @NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>
         > streamPages(@NonNull final Url url,
                       @NonNull final StartFrom startFrom) {
-        // TODO: Crawl back und respect NextLinks
-        Mono<StreamingPage<FeedPageHeader, FeedEntityHeader>> pageMono = feedPageCrawler
-            .crawl(url, startFrom)
-            .flatMap(feedPageHeader -> pageLoader.load(feedPageHeader.self().value()))
-            .map(this::wrapPage);
-        return JdkFlowAdapter.publisherToFlowPublisher(pageMono);
+        return JdkFlowAdapter.publisherToFlowPublisher(streamPagesFlux(url, startFrom));
     }
 
     @Override
@@ -40,12 +36,28 @@ public class FeedConsumerImpl implements FeedConsumer {
         @NonNull Entity<@NonNull FeedEntityHeader>
         > streamEntities(@NonNull final Url url,
                          @NonNull final StartFrom startFrom) {
-        throw new UnsupportedOperationException("NIY");
+        var entityFlux = streamPagesFlux(url, startFrom)
+            .map(StreamingPage::toCompleteEntities)
+            .map(FlowAdapters::toPublisher)
+            .flatMap(Flux::from);
+        return JdkFlowAdapter.publisherToFlowPublisher(entityFlux);
     }
 
-    private StreamingPage<FeedPageHeader, FeedEntityHeader> wrapPage(
-        StreamingPage<HttpHeaders, HttpHeaders> page
-    ) {
+    private @NonNull Flux<@NonNull StreamingPage<@NonNull FeedPageHeader,
+        @NonNull FeedEntityHeader>
+        > streamPagesFlux(@NonNull final Url url,
+                          @NonNull final StartFrom startFrom) {
+        // TODO: Follow next links
+        return Flux.concat(feedPageCrawler
+            .crawl(url, startFrom)
+            .flatMap(feedPageHeader -> pageLoader.load(feedPageHeader.self().value()))
+            .map(this::wrapPage));
+    }
+
+    private @NonNull StreamingPage<@NonNull FeedPageHeader,
+        @NonNull FeedEntityHeader
+        > wrapPage(@NonNull StreamingPage<@NonNull HttpHeaders,
+        @NonNull HttpHeaders> page) {
         return new WrappedStreamingPage<>(
             page,
             feedPageHeaderParser.feedPageHeader(page.header()),

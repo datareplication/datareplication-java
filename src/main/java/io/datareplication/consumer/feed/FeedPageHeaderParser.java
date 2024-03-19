@@ -153,11 +153,13 @@ class FeedPageHeaderParser {
     }
 
     private static @NonNull Optional<@NonNull OperationType> extractOperationType(
-        final HttpHeaders httpHeaders,
-        final OperationTypeParser operationTypeParser
+        final @NonNull HttpHeaders httpHeaders,
+        final @NonNull OperationTypeParser operationTypeParser
     ) {
         return httpHeaders.get(OPERATION_TYPE).flatMap(httpHeader ->
-            httpHeader.values().stream().findFirst()).map(operationTypeParser::parse);
+            httpHeader.values().stream().findFirst())
+            .map(value -> value.replace("http-equiv=", ""))
+            .map(operationTypeParser::parse);
     }
 
     private static @NonNull Optional<@NonNull Timestamp> extractLastModified(

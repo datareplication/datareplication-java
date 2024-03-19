@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class FeedPageHeaderParserTest {
     private static final String LAST_MODIFIED = "Thu, 5 Oct 2023 03:00:14 GMT";
     private static final String ANY_CONTENT_ID = "content-id-1234";
-    private static final String OPERATION_TYPE = "PUT";
+    private static final String OPERATION_TYPE_PUT = "http-equiv=PUT";
     private static final String LINK_PREV = "<https://example.datareplication.io/1>; rel=prev";
     private static final String LINK_SELF = "<https://example.datareplication.io/2>; rel=self";
     private static final String LINK_NEXT = "<https://example.datareplication.io/3>; rel=next";
@@ -139,7 +139,7 @@ class FeedPageHeaderParserTest {
     void shouldParseFeedEntityHttpHeader() {
         HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
         HttpHeader contentIdHttpHeader = HttpHeader.of(HttpHeader.CONTENT_ID, ANY_CONTENT_ID);
-        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE);
+        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE_PUT);
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, contentIdHttpHeader, operationTypeHttpHeader);
 
         FeedEntityHeader feedEntityHeader = feedPageHeaderParser.feedEntityHeader(1, httpHeaders);
@@ -147,7 +147,7 @@ class FeedPageHeaderParserTest {
         assertThat(feedEntityHeader).isEqualTo(
             new FeedEntityHeader(
                 Timestamp.fromRfc1123String(LAST_MODIFIED),
-                OperationType.valueOf(OPERATION_TYPE),
+                OperationType.PUT,
                 ContentId.of(ANY_CONTENT_ID)
             )
         );
@@ -156,7 +156,7 @@ class FeedPageHeaderParserTest {
     @Test
     void missingContentIdShouldThrowException() {
         HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
-        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE);
+        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE_PUT);
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, operationTypeHttpHeader);
 
         var missingContentIdInEntity = assertThrows(
@@ -171,7 +171,7 @@ class FeedPageHeaderParserTest {
     @Test
     void missingLastModifiedInEntityShouldThrowException() {
         HttpHeader contentIdHttpHeader = HttpHeader.of(HttpHeader.CONTENT_ID, ANY_CONTENT_ID);
-        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE);
+        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE_PUT);
         HttpHeaders httpHeaders = HttpHeaders.of(contentIdHttpHeader, operationTypeHttpHeader);
 
         var missingLastModifiedInEntity = assertThrows(
@@ -187,7 +187,7 @@ class FeedPageHeaderParserTest {
     void invalidLastModifiedInEntityShouldThrowException() {
         HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, "not a valid date");
         HttpHeader contentIdHttpHeader = HttpHeader.of(HttpHeader.CONTENT_ID, ANY_CONTENT_ID);
-        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE);
+        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, OPERATION_TYPE_PUT);
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, contentIdHttpHeader, operationTypeHttpHeader);
 
         var missingLastModifiedInEntity = assertThrows(
@@ -219,7 +219,7 @@ class FeedPageHeaderParserTest {
     void unknownOperationTypeShouldThrowException() {
         HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
         HttpHeader contentIdHttpHeader = HttpHeader.of(HttpHeader.CONTENT_ID, ANY_CONTENT_ID);
-        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, "CUT");
+        HttpHeader operationTypeHttpHeader = HttpHeader.of(HttpHeader.OPERATION_TYPE, "http-equiv=CUT");
         HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, contentIdHttpHeader, operationTypeHttpHeader);
 
         var missingOperationTypeInEntity = assertThrows(

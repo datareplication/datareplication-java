@@ -2,6 +2,7 @@ package io.datareplication.consumer.feed;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.Authorization;
+import io.datareplication.consumer.StreamingPage;
 import io.datareplication.model.Body;
 import io.datareplication.model.BodyTestUtil;
 import io.datareplication.model.ContentType;
@@ -21,7 +22,6 @@ import org.reactivestreams.FlowAdapters;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -39,7 +39,7 @@ class FeedConsumerIntegrationTest {
     private static final String PASSWORD = "feed-test-password";
     private static final Authorization AUTH = Authorization.basic(USERNAME, PASSWORD);
     private static final String USER_AGENT = "feed-consumer-integration-test";
-    private static final String FMT_LINK = "LINK; rel=%s";
+    private static final String FMT_LINK_REL_VALUE = "%s; rel=%s";
 
     private Url validFeedUrl;
 
@@ -61,7 +61,7 @@ class FeedConsumerIntegrationTest {
     }
 
     @Test
-    void shouldConsumeFeedFromBeginning() throws ExecutionException, InterruptedException {
+    void shouldConsumeFeedFromBeginning() {
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
@@ -69,12 +69,14 @@ class FeedConsumerIntegrationTest {
             .build();
 
         final var entities = Flux.concat(FlowAdapters.toPublisher(
-                consumer.streamEntities(validFeedUrl, StartFrom.beginning()))
+                consumer.streamPages(validFeedUrl, StartFrom.beginning()))
             )
+            .map(StreamingPage::toCompleteEntities)
+            .flatMap(FlowAdapters::toPublisher)
             .collectList()
-            .toFuture()
-            .get();
+            .block();
 
+        assertThat(entities).hasSize(10);
         assertThat(entities)
             .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
             .contains(
@@ -150,7 +152,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("am", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 01:00:00 GMT"),
+                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 01:00:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<3-A@random-content-id>"),
                         HttpHeaders.of(
@@ -161,7 +163,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("a", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 12:00:00 GMT"),
+                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 12:00:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<3-B@random-content-id>"),
                         HttpHeaders.of(
@@ -172,7 +174,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("snapshot", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 12:30:01 GMT"),
+                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 12:30:01 GMT"),
                         OperationType.DELETE,
                         ContentId.of("<3-C@random-content-id>"),
                         HttpHeaders.of(
@@ -183,7 +185,7 @@ class FeedConsumerIntegrationTest {
                     Body.fromUtf8("snapshot", ContentType.of("text/plain"))),
                 new Entity<>(
                     new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Thu, 28 Nov 2023 18:30:00 GMT"),
+                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 18:30:00 GMT"),
                         OperationType.PUT,
                         ContentId.of("<3-D@random-content-id>"),
                         HttpHeaders.of(
@@ -196,7 +198,7 @@ class FeedConsumerIntegrationTest {
     }
 
     @Test
-    void shouldConsumeFeedFromTimestamp() throws ExecutionException, InterruptedException {
+    void shouldConsumeFeedFromTimestamp() {
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
@@ -216,8 +218,7 @@ class FeedConsumerIntegrationTest {
                 }
             })
             .collectList()
-            .toFuture()
-            .get();
+            .block();
 
         assertThat(entities).hasSize(9);
         assertThat(entities).containsExactly(
@@ -234,7 +235,7 @@ class FeedConsumerIntegrationTest {
     }
 
     @Test
-    void shouldConsumeFeedFromTimestampAndContentId() throws ExecutionException, InterruptedException {
+    void shouldConsumeFeedFromTimestampAndContentId() {
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
@@ -257,8 +258,7 @@ class FeedConsumerIntegrationTest {
                 }
             })
             .collectList()
-            .toFuture()
-            .get();
+            .block();
 
         assertThat(entities).hasSize(8);
         assertThat(entities).containsExactly(
@@ -279,8 +279,8 @@ class FeedConsumerIntegrationTest {
         var headers = new com.github.tomakehurst.wiremock.http.HttpHeaders(
             httpHeader("Content-Type", PAGE_CONTENT_TYPE),
             httpHeader("Last-Modified", "Mon, 27 Nov 2023 02:41:07 GMT"),
-            httpHeader(String.format(FMT_LINK, "self"), WM.url("0.content.multipart")),
-            httpHeader(String.format(FMT_LINK, "prev"), WM.url("1.content.multipart"))
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("0.content.multipart"), "self")),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("1.content.multipart"), "next"))
         );
         WM.stubFor(
             head(urlPathEqualTo(testUrl))
@@ -292,16 +292,16 @@ class FeedConsumerIntegrationTest {
                 .withBasicAuth(USERNAME, PASSWORD)
                 .withHeader("User-Agent", equalTo(USER_AGENT))
                 .willReturn(aResponse().withHeaders(headers)
-                    .withBodyFile("feed/1.content.multipart")));
+                    .withBodyFile("feed/0.content.multipart")));
     }
 
     private void stubForContent1(String testUrl) {
         var headers = new com.github.tomakehurst.wiremock.http.HttpHeaders(
             httpHeader("Content-Type", PAGE_CONTENT_TYPE),
             httpHeader("Last-Modified", "Mon, 27 Nov 2023 03:10:00 GMT"),
-            httpHeader(String.format(FMT_LINK, "prev"), WM.url("0.content.multipart")),
-            httpHeader(String.format(FMT_LINK, "self"), WM.url("1.content.multipart")),
-            httpHeader(String.format(FMT_LINK, "prev"), WM.url("2.content.multipart"))
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("0.content.multipart"), "prev")),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("1.content.multipart"), "self")),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("2.content.multipart"), "next"))
         );
         WM.stubFor(
             head(urlPathEqualTo(testUrl))
@@ -320,9 +320,9 @@ class FeedConsumerIntegrationTest {
         var headers = new com.github.tomakehurst.wiremock.http.HttpHeaders(
             httpHeader("Content-Type", PAGE_CONTENT_TYPE),
             httpHeader("Last-Modified", "Mon, 27 Nov 2023 04:02:30 GMT"),
-            httpHeader(String.format(FMT_LINK, "prev"), WM.url("1.content.multipart")),
-            httpHeader(String.format(FMT_LINK, "self"), WM.url("2.content.multipart")),
-            httpHeader(String.format(FMT_LINK, "prev"), WM.url("3.content.multipart"))
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("1.content.multipart"), "prev")),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("2.content.multipart"), "self")),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("3.content.multipart"), "next"))
         );
         WM.stubFor(
             head(urlPathEqualTo(testUrl))
@@ -340,10 +340,9 @@ class FeedConsumerIntegrationTest {
     private void stubForContent3(String testUrl) {
         var headers = new com.github.tomakehurst.wiremock.http.HttpHeaders(
             httpHeader("Content-Type", PAGE_CONTENT_TYPE),
-            httpHeader("Last-Modified", "Thu, 28 Nov 2023 18:30:00 GMT"),
-            httpHeader(String.format(FMT_LINK, "prev"), WM.url("2.content.multipart")),
-            httpHeader(String.format(FMT_LINK, "self"), WM.url("3.content.multipart"))
-
+            httpHeader("Last-Modified", "Tue, 28 Nov 2023 18:30:00 GMT"),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("2.content.multipart"), "prev")),
+            httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("3.content.multipart"), "self"))
         );
         WM.stubFor(
             head(urlPathEqualTo(testUrl))
