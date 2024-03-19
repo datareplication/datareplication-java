@@ -101,7 +101,7 @@ public class PageLoader {
         };
     }
 
-    private HttpHeaders convertHeaders(HttpResponse<?> response) {
+    private @NonNull HttpHeaders convertHeaders(@NonNull HttpResponse<?> response) {
         final Stream<HttpHeader> headers = response
             .headers()
             .map()
