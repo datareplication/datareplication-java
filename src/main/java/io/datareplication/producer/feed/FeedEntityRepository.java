@@ -37,5 +37,8 @@ public interface FeedEntityRepository {
     // TODO: doc: entities must be sorted by (timestamp, disambiguator) ascending
     @NonNull CompletionStage<@NonNull List<@NonNull PageAssignment>> getPageAssignments(@NonNull PageId pageId);
 
+    // TODO: split? one to update the timestamp (annoying tho) and one to set or unset page ID
+    //  alternatively two parameters that each reflect the distinct update operations
+    //  is there a way to simplify the timestamp situation?
     @NonNull CompletionStage<Void> savePageAssignments(@NonNull List<@NonNull PageAssignment> pageAssignments);
 }
