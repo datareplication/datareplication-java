@@ -2,6 +2,7 @@ package io.datareplication.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.time.format.DateTimeParseException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,5 +26,29 @@ class TimestampTest {
         assertThatThrownBy(() -> Timestamp.fromRfc1123String(dateTime))
             .isInstanceOf(DateTimeParseException.class)
             .hasMessageContaining("Text 'Wtf, 50 Nov 3999 00:00:00 LOL' could not be parsed at index 0");
+    }
+
+    @Test
+    void shouldReturnTrueIfTimestampIsBeforeOtherTimestamp() {
+        Timestamp timestamp1 = Timestamp.of(Instant.parse("2023-11-27T00:00:00.00Z"));
+        Timestamp timestamp2 = Timestamp.of(Instant.parse("2023-11-28T00:00:00.00Z"));
+
+        assertThat(timestamp1.isBefore(timestamp2)).isTrue();
+    }
+
+    @Test
+    void shouldReturnFalseIfTimestampIsNotBeforeOtherTimestamp() {
+        Timestamp timestamp1 = Timestamp.of(Instant.parse("2023-11-27T00:00:00.00Z"));
+        Timestamp timestamp2 = Timestamp.of(Instant.parse("2023-11-26T00:00:00.00Z"));
+
+        assertThat(timestamp1.isBefore(timestamp2)).isFalse();
+    }
+
+    @Test
+    void shouldReturnFalseIfTimestampIsEqualOtherTimestamp() {
+        Timestamp timestamp1 = Timestamp.of(Instant.parse("2023-11-27T00:00:00.00Z"));
+        Timestamp timestamp2 = Timestamp.of(Instant.parse("2023-11-27T00:00:00.00Z"));
+
+        assertThat(timestamp1.isBefore(timestamp2)).isFalse();
     }
 }

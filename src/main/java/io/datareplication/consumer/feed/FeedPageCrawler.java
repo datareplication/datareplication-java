@@ -22,8 +22,7 @@ class FeedPageCrawler {
         @NonNull final Url url,
         @NonNull final StartFrom startFrom
     ) {
-
-        // TODO: Implement other StartFrom types (StartFrom.Timestamp, StartFrom.ContentId)
+        // TODO: Implement other StartFrom types (StartFrom.Timestamp, StartFrom.ContentId) and respect the timestamp
         var currentPageHeader = headerLoader.load(url);
 
         return currentPageHeader

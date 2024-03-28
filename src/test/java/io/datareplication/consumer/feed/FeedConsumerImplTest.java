@@ -51,6 +51,8 @@ FeedConsumerImplTest {
     @InjectMocks
     private FeedConsumerImpl feedConsumer;
     private Timestamp lastModified;
+    private Timestamp lastModifiedAfter;
+    private Timestamp lastModifiedBefore;
     private HttpHeaders defaultEntityHeaders1;
     private HttpHeaders defaultEntityHeaders2;
     private HttpHeaders defaultEntityHeaders3;
@@ -73,6 +75,8 @@ FeedConsumerImplTest {
     @BeforeEach
     void setUp() {
         lastModified = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:14 GMT");
+        lastModifiedBefore = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:13 GMT");
+        lastModifiedAfter = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:15 GMT");
         defaultEntityHeaders1 = HttpHeaders.of(HttpHeader.of("entity", "first"));
         defaultEntityHeaders2 = HttpHeaders.of(HttpHeader.of("entity", "second"));
         defaultEntityHeaders3 = HttpHeaders.of(HttpHeader.of("entity", "third"));
@@ -84,7 +88,7 @@ FeedConsumerImplTest {
         url3 = Url.of("url3");
         contentId1 = ContentId.of("contentId1");
         contentId2 = ContentId.of("contentId2");
-        contentId3 = ContentId.of("contentId2");
+        contentId3 = ContentId.of("contentId3");
         feedEntityHeader1 = new FeedEntityHeader(lastModified, OperationType.PUT, contentId1);
         feedEntityHeader2 = new FeedEntityHeader(lastModified, OperationType.PUT, contentId2);
         feedEntityHeader3 = new FeedEntityHeader(lastModified, OperationType.PUT, contentId2);
@@ -142,9 +146,11 @@ FeedConsumerImplTest {
             .single()
             .block();
 
-        assertEntities(pages).containsExactly(
-            new Entity<>(feedEntityHeader1, Body.fromUtf8("Hello World!", ContentType.of("text/plain")))
-        );
+        assertEntities(pages)
+            .hasSize(1)
+            .containsExactly(
+                new Entity<>(feedEntityHeader1, Body.fromUtf8("Hello World!", ContentType.of("text/plain")))
+            );
     }
 
     @Test
@@ -178,11 +184,13 @@ FeedConsumerImplTest {
             .single()
             .block();
 
-        assertEntities(pages).containsExactly(
-            new Entity<>(feedEntityHeader1, Body.fromUtf8("first entity", ContentType.of("text/plain"))),
-            new Entity<>(feedEntityHeader2, Body.fromUtf8("second entity", ContentType.of("text/plain"))),
-            new Entity<>(feedEntityHeader3, Body.fromUtf8("third entity", ContentType.of("text/plain")))
-        );
+        assertEntities(pages)
+            .hasSize(3)
+            .containsExactly(
+                new Entity<>(feedEntityHeader1, Body.fromUtf8("first entity", ContentType.of("text/plain"))),
+                new Entity<>(feedEntityHeader2, Body.fromUtf8("second entity", ContentType.of("text/plain"))),
+                new Entity<>(feedEntityHeader3, Body.fromUtf8("third entity", ContentType.of("text/plain")))
+            );
     }
 
     @Test
@@ -265,7 +273,88 @@ FeedConsumerImplTest {
             .verify();
     }
 
-    private static ListAssert<@NonNull Entity<@NonNull FeedEntityHeader>> assertEntities(final List<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> pages) {
+    @Test
+    void streamEntitiesFromTimestamp_shouldOnlyConsumeNewerEntities() {
+        StartFrom startFrom = StartFrom.timestamp(lastModified);
+        FeedPageHeader feedPageHeader = new FeedPageHeader(
+            lastModified,
+            Link.self(url1),
+            Optional.empty(),
+            Optional.empty()
+        );
+        var page1 = ofPlaintextEntities(
+            defaultPagesHeaders1,
+            "boundary-1",
+            PlaintextEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
+            PlaintextEntity.of(defaultEntityHeaders2, "now entity"),
+            PlaintextEntity.of(defaultEntityHeaders3, "newer entity")
+        );
+        FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
+
+        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
+        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1))
+            .thenReturn(new FeedEntityHeader(lastModifiedBefore, OperationType.PUT, contentId1));
+        when(feedPageHeaderParser.feedEntityHeader(1, defaultEntityHeaders2))
+            .thenReturn(new FeedEntityHeader(lastModified, OperationType.PUT, contentId2));
+        when(feedPageHeaderParser.feedEntityHeader(2, defaultEntityHeaders3))
+            .thenReturn(feedEntityHeader);
+        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(feedPageHeader));
+        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
+
+        List<@NonNull Entity<@NonNull FeedEntityHeader>> entities = JdkFlowAdapter
+            .flowPublisherToFlux(feedConsumer.streamEntities(url1, startFrom))
+            .collectList()
+            .single()
+            .block();
+
+        assertThat(entities)
+            .hasSize(2)
+            .extracting(entity -> entity.body().toUtf8())
+            .containsExactly("now entity", "newer entity");
+    }
+
+    @Test
+    void streamEntitiesFromContentId_shouldOnlyConsumeNewerEntities() {
+        StartFrom startFrom = StartFrom.contentId(contentId2, lastModified);
+        FeedPageHeader feedPageHeader = new FeedPageHeader(
+            lastModified,
+            Link.self(url1),
+            Optional.empty(),
+            Optional.empty()
+        );
+        var page1 = ofPlaintextEntities(
+            defaultPagesHeaders1,
+            "boundary-1",
+            PlaintextEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
+            PlaintextEntity.of(defaultEntityHeaders2, "already consumed ContentId"),
+            PlaintextEntity.of(defaultEntityHeaders3, "new entity")
+        );
+        FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
+
+        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
+        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1))
+            .thenReturn(new FeedEntityHeader(lastModifiedBefore, OperationType.PUT, contentId1));
+        when(feedPageHeaderParser.feedEntityHeader(1, defaultEntityHeaders2))
+            .thenReturn(new FeedEntityHeader(lastModified, OperationType.PUT, contentId2));
+        when(feedPageHeaderParser.feedEntityHeader(2, defaultEntityHeaders3))
+            .thenReturn(feedEntityHeader);
+        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(feedPageHeader));
+        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
+
+        List<@NonNull Entity<@NonNull FeedEntityHeader>> entities = JdkFlowAdapter
+            .flowPublisherToFlux(feedConsumer.streamEntities(url1, startFrom))
+            .collectList()
+            .single()
+            .block();
+
+        assertThat(entities)
+            .hasSize(1)
+            .extracting(entity -> entity.body().toUtf8())
+            .containsExactly("new entity");
+    }
+
+    private static ListAssert<@NonNull Entity<@NonNull FeedEntityHeader>>
+    assertEntities(final List<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> pages) {
         return assertThat(
             Flux
                 .fromIterable(pages)

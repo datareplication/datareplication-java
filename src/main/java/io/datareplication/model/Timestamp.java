@@ -16,6 +16,16 @@ public class Timestamp {
     @NonNull Instant value;
 
     /**
+     * Return a boolean indicating whether this Timestamp is before the given Timestamp.
+     *
+     * @param other the other Timestamp to compare to
+     * @return <code>true</code> if this Timestamp is before the other Timestamp, <code>false</code> otherwise
+     */
+    public boolean isBefore(@NonNull Timestamp other) {
+        return value.isBefore(other.value);
+    }
+
+    /**
      * Return a new Timestamp for the current instant (according to the system clock).
      *
      * @return the Timestamp
