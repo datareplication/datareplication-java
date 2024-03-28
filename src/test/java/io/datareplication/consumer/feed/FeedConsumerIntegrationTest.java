@@ -2,19 +2,13 @@ package io.datareplication.consumer.feed;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.Authorization;
-import io.datareplication.consumer.StreamingPage;
-import io.datareplication.model.Body;
 import io.datareplication.model.BodyTestUtil;
-import io.datareplication.model.ContentType;
-import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
-import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
-import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
-import lombok.EqualsAndHashCode;
+import lombok.Data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -69,131 +63,37 @@ class FeedConsumerIntegrationTest {
             .build();
 
         final var entities = Flux.concat(FlowAdapters.toPublisher(
-                consumer.streamPages(validFeedUrl, StartFrom.beginning()))
-            )
-            .map(StreamingPage::toCompleteEntities)
-            .flatMap(FlowAdapters::toPublisher)
+                consumer.streamEntities(
+                    validFeedUrl,
+                    StartFrom.contentId(
+                        ContentId.of("0-B@random-content-id"),
+                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
+                    )
+                )))
+            .map(entity -> {
+                try {
+                    return new Pair(entity.header().operationType(), entity.body().toUtf8());
+                } catch (IOException e) {
+                    return fail(e);
+                }
+            })
             .collectList()
             .block();
 
         assertThat(entities).hasSize(10);
         assertThat(entities)
             .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
-            .contains(
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<0-A@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "44")
-                        )),
-                    Body.fromUtf8("only consumable with \"StartFrom.beginning()\"", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 02:41:07 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<0-B@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "70")
-                        )),
-                    Body.fromUtf8(
-                        "First consumable entity, but in this case it's a delete operation-type",
-                        ContentType.of("text/plain")
-                    )
-                ),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<1-A@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "5")
-                        )),
-                    Body.fromUtf8("hello", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<1-B@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "5")
-                        )),
-                    Body.fromUtf8("world", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<2-A@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "1")
-                        )),
-                    Body.fromUtf8("I", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 04:02:30 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<2-B@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "2")
-                        )),
-                    Body.fromUtf8("am", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 01:00:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<3-A@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "1")
-                        )),
-                    Body.fromUtf8("a", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 12:00:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<3-B@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "8")
-                        )),
-                    Body.fromUtf8("snapshot", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 12:30:01 GMT"),
-                        OperationType.DELETE,
-                        ContentId.of("<3-C@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "8")
-                        )),
-                    Body.fromUtf8("snapshot", ContentType.of("text/plain"))),
-                new Entity<>(
-                    new FeedEntityHeader(
-                        Timestamp.fromRfc1123String("Tue, 28 Nov 2023 18:30:00 GMT"),
-                        OperationType.PUT,
-                        ContentId.of("<3-D@random-content-id>"),
-                        HttpHeaders.of(
-                            HttpHeader.of("Content-Disposition", "inline"),
-                            HttpHeader.of("Content-Transfer-Encoding", "8bit"),
-                            HttpHeader.of("Content-Length", "8")
-                        )),
-                    Body.fromUtf8("feed", ContentType.of("text/plain")))
+            .containsExactly(
+                new Pair(OperationType.PUT, "only consumable with \"StartFrom.beginning()\""),
+                new Pair(OperationType.DELETE, "First consumable entity, but in this case it's a delete operation-type"),
+                new Pair(OperationType.PUT, "hello"),
+                new Pair(OperationType.PUT, "world"),
+                new Pair(OperationType.PUT, "I"),
+                new Pair(OperationType.PUT, "am"),
+                new Pair(OperationType.PUT, "a"),
+                new Pair(OperationType.PUT, "snapshot"),
+                new Pair(OperationType.DELETE, "snapshot"),
+                new Pair(OperationType.PUT, "feed")
             );
     }
 
@@ -222,7 +122,7 @@ class FeedConsumerIntegrationTest {
 
         assertThat(entities).hasSize(9);
         assertThat(entities).containsExactly(
-            new Pair(OperationType.PUT, "First consumable entity, but in this case it's a delete operation-type"),
+            new Pair(OperationType.DELETE, "First consumable entity, but in this case it's a delete operation-type"),
             new Pair(OperationType.PUT, "hello"),
             new Pair(OperationType.PUT, "world"),
             new Pair(OperationType.PUT, "I"),
@@ -272,8 +172,6 @@ class FeedConsumerIntegrationTest {
             new Pair(OperationType.PUT, "feed")
         );
     }
-
-    // TODO: IntegrationTest only for an error!?
 
     private void stubForContent0(String testUrl) {
         var headers = new com.github.tomakehurst.wiremock.http.HttpHeaders(
@@ -357,14 +255,9 @@ class FeedConsumerIntegrationTest {
                     .withBodyFile("feed/3.content.multipart")));
     }
 
-    @EqualsAndHashCode(callSuper = false)
+    @Data
     private static class Pair {
         private final OperationType operationType;
         private final String message;
-
-        Pair(OperationType operationType, String message) {
-            this.operationType = operationType;
-            this.message = message;
-        }
     }
 }

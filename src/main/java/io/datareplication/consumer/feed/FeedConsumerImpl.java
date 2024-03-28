@@ -14,6 +14,7 @@ import lombok.NonNull;
 import org.reactivestreams.FlowAdapters;
 import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.Flow;
 
@@ -24,18 +25,14 @@ public class FeedConsumerImpl implements FeedConsumer {
     private final FeedPageHeaderParser feedPageHeaderParser;
 
     @Override
-    public @NonNull Flow.Publisher<
-        @NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>
-        > streamPages(@NonNull final Url url,
-                      @NonNull final StartFrom startFrom) {
+    public @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>
+    streamPages(@NonNull final Url url, @NonNull final StartFrom startFrom) {
         return JdkFlowAdapter.publisherToFlowPublisher(streamPagesFlux(url, startFrom));
     }
 
     @Override
-    public @NonNull Flow.Publisher<
-        @NonNull Entity<@NonNull FeedEntityHeader>
-        > streamEntities(@NonNull final Url url,
-                         @NonNull final StartFrom startFrom) {
+    public @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>>
+    streamEntities(@NonNull final Url url, @NonNull final StartFrom startFrom) {
         var entityFlux = streamPagesFlux(url, startFrom)
             .map(StreamingPage::toCompleteEntities)
             .map(FlowAdapters::toPublisher)
@@ -43,25 +40,33 @@ public class FeedConsumerImpl implements FeedConsumer {
         return JdkFlowAdapter.publisherToFlowPublisher(entityFlux);
     }
 
-    private @NonNull Flux<@NonNull StreamingPage<@NonNull FeedPageHeader,
-        @NonNull FeedEntityHeader>
-        > streamPagesFlux(@NonNull final Url url,
-                          @NonNull final StartFrom startFrom) {
-        // TODO: Follow next links
+    private @NonNull Flux<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>
+    streamPagesFlux(@NonNull final Url url, @NonNull final StartFrom startFrom) {
         return Flux.concat(feedPageCrawler
-            .crawl(url, startFrom)
-            .flatMap(feedPageHeader -> pageLoader.load(feedPageHeader.self().value()))
-            .map(this::wrapPage));
+                .crawl(url, startFrom)
+                .flatMap(feedPageHeader -> pageLoader.load(feedPageHeader.self().value()))
+                .map(this::wrapPage))
+            .expand(this::expandNextPageIfExists);
     }
 
-    private @NonNull StreamingPage<@NonNull FeedPageHeader,
-        @NonNull FeedEntityHeader
-        > wrapPage(@NonNull StreamingPage<@NonNull HttpHeaders,
+    private @NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>
+    wrapPage(@NonNull StreamingPage<@NonNull HttpHeaders,
         @NonNull HttpHeaders> page) {
         return new WrappedStreamingPage<>(
             page,
             feedPageHeaderParser.feedPageHeader(page.header()),
             feedPageHeaderParser::feedEntityHeader
         );
+    }
+
+    private Mono<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>
+    expandNextPageIfExists(@NonNull final StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader> page) {
+        return page
+            .header()
+            .next()
+            .map(next -> pageLoader
+                .load(next.value())
+                .map(this::wrapPage))
+            .orElseGet(Mono::empty);
     }
 }
