@@ -6,6 +6,7 @@ import io.datareplication.internal.page.WrappedStreamingPage;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
+import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
 import lombok.AccessLevel;
@@ -36,8 +37,29 @@ public class FeedConsumerImpl implements FeedConsumer {
         var entityFlux = streamPagesFlux(url, startFrom)
             .map(StreamingPage::toCompleteEntities)
             .map(FlowAdapters::toPublisher)
-            .flatMap(Flux::from);
+            .flatMap(Flux::from)
+            .skipUntil(entity -> skipUntil(entity.header(), startFrom))
+            .filter(entity -> !containsContentId(entity.header().contentId(), startFrom));
+
         return JdkFlowAdapter.publisherToFlowPublisher(entityFlux);
+    }
+
+    private boolean containsContentId(final ContentId contentId, final StartFrom startFrom) {
+        if (startFrom instanceof StartFrom.ContentId) {
+            return ((StartFrom.ContentId) startFrom).contentId().equals(contentId);
+        } else {
+            return false;
+        }
+    }
+
+    private boolean skipUntil(final FeedEntityHeader header, final StartFrom startFrom) {
+        if (startFrom instanceof StartFrom.Timestamp) {
+            return !header.lastModified().isBefore(((StartFrom.Timestamp) startFrom).timestamp());
+        } else if (startFrom instanceof StartFrom.ContentId) {
+            return ((StartFrom.ContentId) startFrom).contentId().equals(header.contentId());
+        } else {
+            return true;
+        }
     }
 
     private @NonNull Flux<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>

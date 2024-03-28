@@ -50,7 +50,8 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
 
 
     @SafeVarargs
-    public static <PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders> TestStreamingPage<PageHeader, EntityHeader>
+    public static <PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders>
+    TestStreamingPage<PageHeader, EntityHeader>
     ofPlaintextEntities(final PageHeader pageHeader,
                         final String boundary,
                         final PlaintextEntity<EntityHeader>... entityHttpHeaders) {

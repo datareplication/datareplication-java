@@ -24,6 +24,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.github.tomakehurst.wiremock.http.HttpHeader.httpHeader;
+import static io.datareplication.model.feed.OperationType.DELETE;
+import static io.datareplication.model.feed.OperationType.PUT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -55,21 +57,16 @@ class FeedConsumerIntegrationTest {
     }
 
     @Test
-    void shouldConsumeFeedFromBeginning() {
+    void shouldConsumeFeed_startFromBeginning() {
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
+        StartFrom startFrom = StartFrom.beginning();
 
-        final var entities = Flux.concat(FlowAdapters.toPublisher(
-                consumer.streamEntities(
-                    validFeedUrl,
-                    StartFrom.contentId(
-                        ContentId.of("0-B@random-content-id"),
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
-                    )
-                )))
+        final var entities = Flux
+            .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
             .map(entity -> {
                 try {
                     return new Pair(entity.header().operationType(), entity.body().toUtf8());
@@ -80,36 +77,34 @@ class FeedConsumerIntegrationTest {
             .collectList()
             .block();
 
-        assertThat(entities).hasSize(10);
         assertThat(entities)
+            .hasSize(10)
             .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
             .containsExactly(
-                new Pair(OperationType.PUT, "only consumable with \"StartFrom.beginning()\""),
-                new Pair(OperationType.DELETE, "First consumable entity, but in this case it's a delete operation-type"),
-                new Pair(OperationType.PUT, "hello"),
-                new Pair(OperationType.PUT, "world"),
-                new Pair(OperationType.PUT, "I"),
-                new Pair(OperationType.PUT, "am"),
-                new Pair(OperationType.PUT, "a"),
-                new Pair(OperationType.PUT, "snapshot"),
-                new Pair(OperationType.DELETE, "snapshot"),
-                new Pair(OperationType.PUT, "feed")
+                new Pair(PUT, "only consumable with \"StartFrom.beginning()\""),
+                new Pair(DELETE, "First consumable entity, but in this case it's a delete operation-type"),
+                new Pair(PUT, "hello"),
+                new Pair(PUT, "world"),
+                new Pair(PUT, "I"),
+                new Pair(PUT, "am"),
+                new Pair(PUT, "a"),
+                new Pair(PUT, "snapshot"),
+                new Pair(DELETE, "snapshot"),
+                new Pair(PUT, "feed")
             );
     }
 
     @Test
-    void shouldConsumeFeedFromTimestamp() {
+    void shouldConsumeFeed_startFromTimestamp() {
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
+        StartFrom startFrom = StartFrom.timestamp(Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT"));
 
-        final var entities = Flux.concat(FlowAdapters.toPublisher(
-                consumer.streamEntities(
-                    validFeedUrl,
-                    StartFrom.timestamp(Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT"))
-                )))
+        final var entities = Flux
+            .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
             .map(entity -> {
                 try {
                     return new Pair(entity.header().operationType(), entity.body().toUtf8());
@@ -120,36 +115,35 @@ class FeedConsumerIntegrationTest {
             .collectList()
             .block();
 
-        assertThat(entities).hasSize(9);
-        assertThat(entities).containsExactly(
-            new Pair(OperationType.DELETE, "First consumable entity, but in this case it's a delete operation-type"),
-            new Pair(OperationType.PUT, "hello"),
-            new Pair(OperationType.PUT, "world"),
-            new Pair(OperationType.PUT, "I"),
-            new Pair(OperationType.PUT, "am"),
-            new Pair(OperationType.PUT, "a"),
-            new Pair(OperationType.PUT, "snapshot"),
-            new Pair(OperationType.DELETE, "snapshot"),
-            new Pair(OperationType.PUT, "feed")
-        );
+        assertThat(entities)
+            .hasSize(9)
+            .containsExactly(
+                new Pair(DELETE, "First consumable entity, but in this case it's a delete operation-type"),
+                new Pair(PUT, "hello"),
+                new Pair(PUT, "world"),
+                new Pair(PUT, "I"),
+                new Pair(PUT, "am"),
+                new Pair(PUT, "a"),
+                new Pair(PUT, "snapshot"),
+                new Pair(DELETE, "snapshot"),
+                new Pair(PUT, "feed")
+            );
     }
 
     @Test
-    void shouldConsumeFeedFromTimestampAndContentId() {
+    void shouldConsumeFeed_startFromContentId() {
         FeedConsumer consumer = FeedConsumer
             .builder()
             .authorization(() -> AUTH)
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
 
-        final var entities = Flux.concat(FlowAdapters.toPublisher(
-                consumer.streamEntities(
-                    validFeedUrl,
-                    StartFrom.contentId(
-                        ContentId.of("0-B@random-content-id"),
-                        Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
-                    )
-                )))
+        StartFrom startFrom = StartFrom.contentId(
+            ContentId.of("0-B@random-content-id"),
+            Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
+        );
+        final var entities = Flux
+            .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
             .map(entity -> {
                 try {
                     return new Pair(entity.header().operationType(), entity.body().toUtf8());
@@ -160,17 +154,18 @@ class FeedConsumerIntegrationTest {
             .collectList()
             .block();
 
-        assertThat(entities).hasSize(8);
-        assertThat(entities).containsExactly(
-            new Pair(OperationType.PUT, "hello"),
-            new Pair(OperationType.PUT, "world"),
-            new Pair(OperationType.PUT, "I"),
-            new Pair(OperationType.PUT, "am"),
-            new Pair(OperationType.PUT, "a"),
-            new Pair(OperationType.PUT, "snapshot"),
-            new Pair(OperationType.DELETE, "snapshot"),
-            new Pair(OperationType.PUT, "feed")
-        );
+        assertThat(entities)
+            .hasSize(8)
+            .containsExactly(
+                new Pair(PUT, "hello"),
+                new Pair(PUT, "world"),
+                new Pair(PUT, "I"),
+                new Pair(PUT, "am"),
+                new Pair(PUT, "a"),
+                new Pair(PUT, "snapshot"),
+                new Pair(DELETE, "snapshot"),
+                new Pair(PUT, "feed")
+            );
     }
 
     private void stubForContent0(String testUrl) {
