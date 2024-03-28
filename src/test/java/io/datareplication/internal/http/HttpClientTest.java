@@ -21,6 +21,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.havingExactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.head;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HttpClientTest {
@@ -34,14 +36,15 @@ class HttpClientTest {
     private final HttpClient httpClient = new HttpClient();
 
     @Test
-    void shouldGet() {
+    void onGet_shouldReturnSuccessfulResponse() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse()
                     .withStatus(200)
                     .withBody("body content")
                     .withHeader("Content-Type", "text/plain")
-                    .withHeader("Test-Header", "value1", "value2"))
+                    .withHeader("Test-Header", "value1", "value2")
+                    .withHeader("Link", "https://example.datareplication.io/prev; rel=prev"))
         );
 
         final var response = httpClient
@@ -53,13 +56,14 @@ class HttpClientTest {
         assertThat(response.headers().map())
             .containsAllEntriesOf(Map.of(
                 "Content-Type", List.of("text/plain"),
-                "Test-Header", List.of("value1", "value2")
+                "Test-Header", List.of("value1", "value2"),
+                "Link", List.of("https://example.datareplication.io/prev; rel=prev")
             ));
         assertThat(response.body()).isEqualTo("body content");
     }
 
     @Test
-    void shouldThrowHttpException_whenInvalidUrl() {
+    void onGet_shouldThrowHttpException_whenInvalidUrl() {
         final Url url = Url.of("I'm an invalid URL");
 
         final var result = httpClient
@@ -72,7 +76,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenInvalidScheme() {
+    void onGet_shouldThrowHttpException_whenInvalidScheme() {
         final Url url = Url.of("ftp://example.com/a/b/c");
 
         final var result = httpClient
@@ -85,7 +89,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenHttp404() {
+    void onGet_shouldThrowHttpException_whenHttp404() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse()
@@ -104,7 +108,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenHttp500() {
+    void onGet_shouldThrowHttpException_whenHttp500() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse()
@@ -123,7 +127,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenEmptyResponse() {
+    void onGet_shouldThrowHttpException_whenEmptyResponse() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.EMPTY_RESPONSE)
@@ -140,7 +144,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenMalformedResponseChunk() {
+    void onGet_shouldThrowHttpException_whenMalformedResponseChunk() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)
@@ -157,7 +161,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenRandomDataThenClose() {
+    void onGet_shouldThrowHttpException_whenRandomDataThenClose() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE)
@@ -174,7 +178,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenConnectionResetByPeer() {
+    void onGet_shouldThrowHttpException_whenConnectionResetByPeer() {
         WM.stubFor(
             get("/").willReturn(
                 aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)
@@ -191,7 +195,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenHeaderTimeout() {
+    void onGet_shouldThrowHttpException_whenHeaderTimeout() {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
             HttpHeaders.EMPTY,
@@ -214,7 +218,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldThrowHttpException_whenReadTimeout() {
+    void onGet_shouldThrowHttpException_whenReadTimeout() {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
             HttpHeaders.EMPTY,
@@ -239,7 +243,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldCallAuthSupplierForEveryRequest() {
+    void onGet_shouldCallAuthSupplierForEveryRequest() {
         final HttpClient httpClient = new HttpClient(
             (url) -> {
                 final var idx = url.value().lastIndexOf('/');
@@ -281,7 +285,7 @@ class HttpClientTest {
     }
 
     @Test
-    void shouldAddAdditionalHeadersToRequest() {
+    void onGet_shouldAddAdditionalHeadersToRequest() {
         final HttpClient httpClient = new HttpClient(
             AuthSupplier.none(),
             HttpHeaders.of(
@@ -312,5 +316,243 @@ class HttpClientTest {
                 .single()
                 .block()
         ).isEqualTo("headers");
+    }
+
+    @Test
+    void onHead_shouldReturnSuccessfulResponse() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "text/plain")
+                    .withHeader("Test-Header", "value1", "value2"))
+        );
+
+        final var response = httpClient
+            .head(Url.of(WM.url("/")))
+            .single()
+            .block();
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.headers().map())
+            .containsAllEntriesOf(Map.of(
+                "Content-Type", List.of("text/plain"),
+                "Test-Header", List.of("value1", "value2")
+            ));
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenInvalidUrl() {
+        final Url url = Url.of("I'm an invalid URL");
+
+        final var result = httpClient
+            .head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.InvalidUrl(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenInvalidScheme() {
+        final Url url = Url.of("ftp://example.com/a/b/c");
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.InvalidUrl(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenHttp404() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse()
+                    .withStatus(404)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.ClientError(url, 404)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenHttp500() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse()
+                    .withStatus(500)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.ServerError(url, 500)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenEmptyResponse() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse().withFault(Fault.EMPTY_RESPONSE)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.NetworkError(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenMalformedResponseChunk() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse().withFault(Fault.MALFORMED_RESPONSE_CHUNK)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.NetworkError(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenRandomDataThenClose() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.NetworkError(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenConnectionResetByPeer() {
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.NetworkError(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldThrowHttpException_whenHeaderTimeout() {
+        final HttpClient httpClient = new HttpClient(
+            AuthSupplier.none(),
+            HttpHeaders.EMPTY,
+            Optional.of(Duration.ofMillis(5)),
+            Optional.empty()
+        );
+        WM.stubFor(
+            head(urlEqualTo("/")).willReturn(
+                aResponse().withFixedDelay(500)
+            ));
+        final var url = Url.of(WM.url("/"));
+
+        final var result = httpClient.head(url);
+
+        StepVerifier
+            .create(result)
+            .expectErrorMatches(new HttpException.NetworkError(url, ANY_EXCEPTION)::equals)
+            .verify();
+    }
+
+    @Test
+    void onHead_shouldCallAuthSupplierForEveryRequest() {
+        final HttpClient httpClient = new HttpClient(
+            (url) -> {
+                final var idx = url.value().lastIndexOf('/');
+                return Optional.of(Authorization.of("Test", url.value().substring(idx)));
+            },
+            HttpHeaders.EMPTY,
+            Optional.empty(),
+            Optional.empty()
+        );
+
+        WM.stubFor(
+            head(urlEqualTo("/1"))
+                .withHeader("Authorization", equalTo("Test /1"))
+                .willReturn(aResponse().withStatus(200))
+        );
+        WM.stubFor(
+            head(urlEqualTo(("/2")))
+                .withHeader("Authorization", equalTo("Test /2"))
+                .willReturn(aResponse().withStatus(200))
+        );
+
+        assertThat(
+            httpClient
+                .head(Url.of(WM.url("/1")))
+                .map(HttpResponse::statusCode)
+                .single()
+                .block()
+        ).isEqualTo(200);
+
+        assertThat(
+            httpClient
+                .head(Url.of(WM.url("/2")))
+                .map(HttpResponse::statusCode)
+                .single()
+                .block()
+        ).isEqualTo(200);
+    }
+
+    @Test
+    void onHead_shouldAddAdditionalHeadersToRequest() {
+        final HttpClient httpClient = new HttpClient(
+            AuthSupplier.none(),
+            HttpHeaders.of(
+                HttpHeader.of("h1", "v1"),
+                HttpHeader.of("h2", List.of("v1", "v2")),
+                HttpHeader.of("user-agent", "test")
+            ),
+            Optional.empty(),
+            Optional.empty()
+        );
+
+        WM.stubFor(
+            head(urlEqualTo(("/")))
+                .withHeader("h1", equalTo("v1"))
+                .withHeader("h2", havingExactly("v1", "v2"))
+                .withHeader("User-Agent", equalTo("test"))
+                .willReturn(aResponse().withStatus(200))
+        );
+
+        assertThat(
+            httpClient
+                .head(Url.of(WM.url("/")))
+                .map(HttpResponse::statusCode)
+                .single()
+                .block()
+        ).isEqualTo(200);
     }
 }

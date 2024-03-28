@@ -30,6 +30,7 @@ public interface FeedConsumer {
 
     @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
                                                                                        @NonNull StartFrom startFrom);
+
     /**
      * A builder for {@link FeedConsumer}.
      *
@@ -97,10 +98,10 @@ public interface FeedConsumer {
                 Optional.empty(),
                 Optional.empty()
             );
-            final var pageLoader = new PageLoader(httpClient);
-            final var headerLoader = new HeaderLoader(httpClient);
-            final var feedCrawler = new FeedPageCrawler(headerLoader);
             final var feedPageHeaderParser = new FeedPageHeaderParser();
+            final var pageLoader = new PageLoader(httpClient);
+            final var headerLoader = new HeaderLoader(httpClient, feedPageHeaderParser);
+            final var feedCrawler = new FeedPageCrawler(headerLoader);
             return new FeedConsumerImpl(pageLoader, feedCrawler, feedPageHeaderParser);
         }
     }
