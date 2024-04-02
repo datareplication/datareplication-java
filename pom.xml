@@ -153,8 +153,6 @@
                         <include>**/*AcceptanceTest</include>
                     </includes>
                     <excludes>
-                        <!-- TODO: Delete when integration is finished -->
-                        <exclude>**/FeedConsumerIntegrationTest</exclude>
                     </excludes>
                 </configuration>
             </plugin>

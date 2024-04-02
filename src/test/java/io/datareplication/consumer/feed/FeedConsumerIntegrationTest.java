@@ -101,7 +101,7 @@ class FeedConsumerIntegrationTest {
             .authorization(() -> AUTH)
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
-        StartFrom startFrom = StartFrom.timestamp(Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT"));
+        StartFrom startFrom = StartFrom.timestamp(Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:01 GMT"));
 
         final var entities = Flux
             .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
@@ -139,9 +139,10 @@ class FeedConsumerIntegrationTest {
             .build();
 
         StartFrom startFrom = StartFrom.contentId(
-            ContentId.of("0-B@random-content-id"),
+            ContentId.of("<0-B@random-content-id>"),
             Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
         );
+        //StartFrom startFrom = StartFrom.beginning();
         final var entities = Flux
             .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
             .map(entity -> {
