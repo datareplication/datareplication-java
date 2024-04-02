@@ -36,8 +36,8 @@ class FeedPageCrawler {
         var currentPageHeader = headerLoader.load(url);
         return currentPageHeader
             .flatMap(pageHeader -> {
-                var startingFeedPageHeader = hasStartUrl(pageHeader, startFrom);
-                return Objects.requireNonNullElseGet(startingFeedPageHeader, () -> pageHeader
+                var nullableStartUrl = nullableStartUrl(pageHeader, startFrom);
+                return Objects.requireNonNullElseGet(nullableStartUrl, () -> pageHeader
                     .prev()
                     .map(prev -> crawl(prev.value(), startFrom))
                     .orElse(currentPageHeader.map(header -> returnLastUrl(startFrom, header))));
@@ -65,7 +65,7 @@ class FeedPageCrawler {
         }
     }
 
-    private static Mono<@NonNull Url> hasStartUrl(
+    private static Mono<@NonNull Url> nullableStartUrl(
         final @NonNull FeedPageHeader pageHeader,
         final @NonNull StartFrom startFrom
     ) {

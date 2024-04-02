@@ -107,6 +107,21 @@ class FeedPageHeaderParserTest {
     }
 
     @Test
+    void emptySelfHttpHeaderShouldThrowException() {
+        HttpHeader lastModifiedHttpHeader = HttpHeader.of(HttpHeader.LAST_MODIFIED, LAST_MODIFIED);
+        HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, "; rel=self");
+        HttpHeaders httpHeaders = HttpHeaders.of(lastModifiedHttpHeader, linkSelfHttpHeader);
+
+        var missingSelfLinkHeader = assertThrows(
+            PageFormatException.MissingSelfLinkHeader.class,
+            () -> feedPageHeaderParser.feedPageHeader(httpHeaders)
+        );
+
+        assertThat(missingSelfLinkHeader)
+            .isEqualTo(new PageFormatException.MissingSelfLinkHeader(httpHeaders));
+    }
+
+    @Test
     void missingLastModifiedShouldThrowException() {
         HttpHeader linkSelfHttpHeader = HttpHeader.of(HttpHeader.LINK, LINK_SELF);
         HttpHeaders httpHeaders = HttpHeaders.of(linkSelfHttpHeader);
