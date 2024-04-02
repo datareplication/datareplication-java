@@ -78,11 +78,10 @@ class FeedConsumerIntegrationTest {
             .block();
 
         assertThat(entities)
-            .hasSize(10)
+            .hasSize(9)
             .usingRecursiveFieldByFieldElementComparator(BodyTestUtil.bodyContentsComparator())
             .containsExactly(
                 new Pair(PUT, "only consumable with \"StartFrom.beginning()\""),
-                new Pair(DELETE, "First consumable entity, but in this case it's a delete operation-type"),
                 new Pair(PUT, "hello"),
                 new Pair(PUT, "world"),
                 new Pair(PUT, "I"),
@@ -116,9 +115,8 @@ class FeedConsumerIntegrationTest {
             .block();
 
         assertThat(entities)
-            .hasSize(9)
+            .hasSize(8)
             .containsExactly(
-                new Pair(DELETE, "First consumable entity, but in this case it's a delete operation-type"),
                 new Pair(PUT, "hello"),
                 new Pair(PUT, "world"),
                 new Pair(PUT, "I"),
@@ -139,10 +137,9 @@ class FeedConsumerIntegrationTest {
             .build();
 
         StartFrom startFrom = StartFrom.contentId(
-            ContentId.of("<0-B@random-content-id>"),
-            Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:00 GMT")
+            ContentId.of("<1-B@random-content-id>"),
+            Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT")
         );
-        //StartFrom startFrom = StartFrom.beginning();
         final var entities = Flux
             .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
             .map(entity -> {
@@ -156,10 +153,8 @@ class FeedConsumerIntegrationTest {
             .block();
 
         assertThat(entities)
-            .hasSize(8)
+            .hasSize(6)
             .containsExactly(
-                new Pair(PUT, "hello"),
-                new Pair(PUT, "world"),
                 new Pair(PUT, "I"),
                 new Pair(PUT, "am"),
                 new Pair(PUT, "a"),
@@ -172,7 +167,7 @@ class FeedConsumerIntegrationTest {
     private void stubForContent0(String testUrl) {
         var headers = new com.github.tomakehurst.wiremock.http.HttpHeaders(
             httpHeader("Content-Type", PAGE_CONTENT_TYPE),
-            httpHeader("Last-Modified", "Mon, 27 Nov 2023 02:41:07 GMT"),
+            httpHeader("Last-Modified", "Mon, 27 Nov 2023 00:00:00 GMT"),
             httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("0.content.multipart"), "self")),
             httpHeader("link", String.format(FMT_LINK_REL_VALUE, WM.url("1.content.multipart"), "next"))
         );

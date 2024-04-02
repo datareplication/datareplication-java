@@ -137,7 +137,7 @@ FeedConsumerImplTest {
 
         when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
-        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.just(feedPageHeader));
+        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.just(url1));
         when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
 
         List<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> pages = JdkFlowAdapter
@@ -170,7 +170,7 @@ FeedConsumerImplTest {
             "boundary-1",
             PlaintextEntity.of(defaultEntityHeaders3, "third entity")
         );
-        when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(feedPageHeader1));
+        when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(url1));
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders2)).thenReturn(feedEntityHeader2);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders3)).thenReturn(feedEntityHeader3);
@@ -195,7 +195,7 @@ FeedConsumerImplTest {
 
     @Test
     void streamPage_shouldContainTheSameEntitiesAsStreamEntities() {
-        when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(feedPageHeader1));
+        when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(url1));
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders2)).thenReturn(feedEntityHeader2);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders3)).thenReturn(feedEntityHeader3);
@@ -260,7 +260,7 @@ FeedConsumerImplTest {
     @Test
     void loadPage_shouldThrowHttpException_fromUnderlyingHttpClient() {
         HttpException.NetworkError expectedNetworkError = new HttpException.NetworkError(url1, new IOException());
-        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.just(feedPageHeader1));
+        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.just(url1));
         when(pageLoader.load(url1)).thenReturn(Mono.error(expectedNetworkError));
 
         final var result = JdkFlowAdapter
@@ -276,7 +276,7 @@ FeedConsumerImplTest {
     @Test
     void streamEntitiesFromTimestamp_shouldOnlyConsumeNewerEntities() {
         StartFrom startFrom = StartFrom.timestamp(lastModified);
-        FeedPageHeader feedPageHeader = new FeedPageHeader(
+        FeedPageHeader feedPageHeader1 = new FeedPageHeader(
             lastModified,
             Link.self(url1),
             Optional.empty(),
@@ -291,14 +291,14 @@ FeedConsumerImplTest {
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
 
-        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
+        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader1);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1))
             .thenReturn(new FeedEntityHeader(lastModifiedBefore, OperationType.PUT, contentId1));
         when(feedPageHeaderParser.feedEntityHeader(1, defaultEntityHeaders2))
             .thenReturn(new FeedEntityHeader(lastModified, OperationType.PUT, contentId2));
         when(feedPageHeaderParser.feedEntityHeader(2, defaultEntityHeaders3))
             .thenReturn(feedEntityHeader);
-        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(feedPageHeader));
+        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(url1));
         when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
 
         List<@NonNull Entity<@NonNull FeedEntityHeader>> entities = JdkFlowAdapter
@@ -316,7 +316,7 @@ FeedConsumerImplTest {
     @Test
     void streamEntitiesFromContentId_shouldOnlyConsumeNewerEntities() {
         StartFrom startFrom = StartFrom.contentId(contentId2, lastModified);
-        FeedPageHeader feedPageHeader = new FeedPageHeader(
+        FeedPageHeader feedPageHeader1 = new FeedPageHeader(
             lastModified,
             Link.self(url1),
             Optional.empty(),
@@ -331,14 +331,14 @@ FeedConsumerImplTest {
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
 
-        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
+        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader1);
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1))
             .thenReturn(new FeedEntityHeader(lastModifiedBefore, OperationType.PUT, contentId1));
         when(feedPageHeaderParser.feedEntityHeader(1, defaultEntityHeaders2))
             .thenReturn(new FeedEntityHeader(lastModified, OperationType.PUT, contentId2));
         when(feedPageHeaderParser.feedEntityHeader(2, defaultEntityHeaders3))
             .thenReturn(feedEntityHeader);
-        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(feedPageHeader));
+        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(url1));
         when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
 
         List<@NonNull Entity<@NonNull FeedEntityHeader>> entities = JdkFlowAdapter

@@ -66,7 +66,7 @@ public class FeedConsumerImpl implements FeedConsumer {
     streamPagesFlux(@NonNull final Url url, @NonNull final StartFrom startFrom) {
         return Flux.concat(feedPageCrawler
                 .crawl(url, startFrom)
-                .flatMap(feedPageHeader -> pageLoader.load(feedPageHeader.self().value()))
+                .flatMap(pageLoader::load)
                 .map(this::wrapPage))
             .expand(this::expandNextPageIfExists);
     }

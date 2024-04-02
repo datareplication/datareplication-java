@@ -8,14 +8,4 @@ Last-Modified: Mon, 27 Nov 2023 00:00:00 GMT
 Content-Length: 44
 
 only consumable with "StartFrom.beginning()"
---<random-boundary>
-Operation-Type: http-equiv=DELETE
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-Content-ID: <0-B@random-content-id>
-Last-Modified: Mon, 27 Nov 2023 02:41:07 GMT
-Content-Length: 70
-
-First consumable entity, but in this case it's a delete operation-type
 --<random-boundary>--
