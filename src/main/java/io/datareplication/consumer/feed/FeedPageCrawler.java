@@ -12,18 +12,22 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
+/**
+ * A crawler which searches for the {@link Url} by making head requests to the feed pages
+ * and recursively following the prev links until the start {@link Url} is found.
+ */
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 class FeedPageCrawler {
     private final HeaderLoader headerLoader;
 
     /**
-     * Crawls the feed page starting from the given URL.
+     * Crawls the feed page starting from the given {@link Url}.
      *
-     * @param url       the URL to start crawling from
-     * @param startFrom the StartFrom parameter
-     * @return the last URL of the feed page
-     * @throws CrawlingException if the last modified date of the last feed page
-     *                           is not older than the StartFrom timestamp
+     * @param url       the {@link Url} to start crawling from
+     * @param startFrom the {@link StartFrom} parameter
+     * @return the {@link Url} to start streaming from
+     * @throws CrawlingException if the last modified date of the last page is not older
+     *                           and {@link StartFrom} is not {@link StartFrom.Beginning
      */
     @NonNull Mono<@NonNull Url> crawl(
         @NonNull final Url url,

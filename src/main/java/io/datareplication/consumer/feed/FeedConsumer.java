@@ -1,6 +1,9 @@
 package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.Authorization;
+import io.datareplication.consumer.CrawlingException;
+import io.datareplication.consumer.HttpException;
+import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.AuthSupplier;
 import io.datareplication.internal.http.HttpClient;
@@ -22,12 +25,48 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.function.Supplier;
 
+/**
+ * An interface for consuming a Feed provided by the {@link io.datareplication.producer.feed.FeedProducer}.
+ *
+ * <p>Feed pages are paginated collections of feed entities. Each page contains a list of feed entities and an optional
+ * link to the next page.</p>
+ *
+ * <p>Feed pages are streamed in the order they were published. The consumer can skip already consumed entities by
+ * providing a {@link StartFrom} entry point.</p>
+ */
 public interface FeedConsumer {
-    // TODO: error handling
+    /**
+     * Stream the feed pages starting from the given {@link Url}.
+     * Streaming a {@link StreamingPage} will result into receiving already consumed entities
+     * with an older last modified date of the current FeedPage again.
+     * The {@link io.datareplication.model.feed.ContentId} from the {@link StartFrom.ContentId}
+     * will not respected in streamPages use {@link #streamEntities(Url, StartFrom)} instead.
+     *
+     * @param url       the {@link Url} to start streaming from
+     * @param startFrom the {@link StartFrom} parameter
+     * @return a {@link Flow.Publisher} of {@link StreamingPage} of {@link FeedPageHeader} and {@link FeedEntityHeader}
+     * @throws CrawlingException   @see {@link FeedPageCrawler#crawl(Url, StartFrom)}
+     * @throws HttpException       @see {@link PageLoader#load(Url)}
+     * @throws PageFormatException @see {@link PageLoader#load(Url)}
+     */
     @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(
         @NonNull Url url,
         @NonNull StartFrom startFrom);
 
+    /**
+     * Stream the entities of the feed starting from the given {@link Url}.
+     * Streaming entities will result into skipping already consumed entities
+     * with an older last modified date of the current FeedPage.
+     * Streaming entities will respect the {@link io.datareplication.model.feed.ContentId}
+     * from the {@link StartFrom.ContentId}.
+     *
+     * @param url       the {@link Url} to start streaming from
+     * @param startFrom the {@link StartFrom} parameter
+     * @return a {@link Flow.Publisher} of {@link Entity} of {@link FeedEntityHeader}
+     * @throws CrawlingException   @see {@link FeedPageCrawler#crawl(Url, StartFrom)}
+     * @throws HttpException       @see {@link PageLoader#load(Url)}
+     * @throws PageFormatException @see {@link PageLoader#load(Url)}
+     */
     @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
                                                                                        @NonNull StartFrom startFrom);
 

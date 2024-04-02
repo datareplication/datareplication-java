@@ -37,6 +37,7 @@ public class Timestamp {
     /**
      * Parses a RFC-1123 date-time, such as 'Tue, 3 Jun 2008 11:05:30 GMT'.
      *
+     * @param string the date-time string to parse
      * @return the Timestamp
      * @throws DateTimeParseException when the given string can't be parsed
      */

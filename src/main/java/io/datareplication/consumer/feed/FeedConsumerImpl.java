@@ -19,18 +19,29 @@ import reactor.core.publisher.Mono;
 
 import java.util.concurrent.Flow;
 
+/**
+ * A consumer for a Feed provided by the {@link io.datareplication.producer.feed.FeedProducer}.
+ *
+ * @see FeedConsumer
+ */
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class FeedConsumerImpl implements FeedConsumer {
     private final PageLoader pageLoader;
     private final FeedPageCrawler feedPageCrawler;
     private final FeedPageHeaderParser feedPageHeaderParser;
 
+    /**
+     * @see FeedConsumer#streamPages(Url, StartFrom)
+     */
     @Override
     public @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>
     streamPages(@NonNull final Url url, @NonNull final StartFrom startFrom) {
         return JdkFlowAdapter.publisherToFlowPublisher(streamPagesFlux(url, startFrom));
     }
 
+    /**
+     * @see FeedConsumer#streamEntities(Url, StartFrom)
+     */
     @Override
     public @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>>
     streamEntities(@NonNull final Url url, @NonNull final StartFrom startFrom) {
