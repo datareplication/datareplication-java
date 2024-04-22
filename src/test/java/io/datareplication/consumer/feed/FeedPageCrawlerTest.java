@@ -2,6 +2,7 @@ package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.CrawlingException;
 import io.datareplication.consumer.HttpException;
+import io.datareplication.consumer.PageFormatException;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
@@ -54,6 +55,15 @@ class FeedPageCrawlerTest {
         Optional.of(Link.next(Url.of("https://example.datareplication.io/3"))),
         HttpHeaders.EMPTY
     );
+
+    private final FeedPageHeader pageHeader2NoNextLink = new FeedPageHeader(
+        timestampPage2,
+        Link.self(Url.of("https://example.datareplication.io/2")),
+        Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
+        Optional.empty(),
+        HttpHeaders.EMPTY
+    );
+
 
     private final FeedPageHeader pageHeader3 = new FeedPageHeader(
         timestampPage3,
@@ -140,6 +150,23 @@ class FeedPageCrawlerTest {
             .withThrowableOfType(ExecutionException.class)
             .withCauseInstanceOf(CrawlingException.class)
             .withCause(new CrawlingException(pageHeader1.self().value(), timestampPage1, timestampPage1));
+    }
+
+    @Test
+    void startFromTimestamp_withNoNextLinkOnOlderPage_shouldThrowException() {
+        when(headerLoader.load(pageHeader2.self().value()))
+            .thenReturn(Mono.just(pageHeader2NoNextLink));
+
+        Url url = pageHeader3.self().value();
+
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.timestamp(timestampPage3));
+
+        assertThat(result.toFuture())
+            .isCompletedExceptionally()
+            .failsWithin(10, TimeUnit.MILLISECONDS)
+            .withThrowableOfType(ExecutionException.class)
+            .withCauseInstanceOf(PageFormatException.MissingNextLinkHeader.class)
+            .withCause(new PageFormatException.MissingNextLinkHeader(pageHeader2NoNextLink.toHttpHeaders()));
     }
 
     @Test
