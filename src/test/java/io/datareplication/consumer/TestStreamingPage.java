@@ -51,10 +51,9 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
 
     @SafeVarargs
     public static <PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders>
-    TestStreamingPage<PageHeader, EntityHeader>
-    ofPlaintextEntities(final PageHeader pageHeader,
-                        final String boundary,
-                        final PlaintextEntity<EntityHeader>... entityHttpHeaders) {
+    TestStreamingPage<PageHeader, EntityHeader> testStreamingPageOf(final PageHeader pageHeader,
+                                                                    final String boundary,
+                                                                    final TestEntity<EntityHeader>... entityHttpHeaders) {
         var chunks = Arrays
             .stream(entityHttpHeaders)
             .map(entity ->
@@ -70,7 +69,7 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
     }
 
     @AllArgsConstructor(staticName = "of")
-    public static class PlaintextEntity<EntityHeader extends ToHttpHeaders> {
+    public static class TestEntity<EntityHeader> {
         private final EntityHeader httpHeaders;
         private final String entity;
     }

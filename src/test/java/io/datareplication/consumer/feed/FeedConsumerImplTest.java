@@ -2,7 +2,7 @@ package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.StreamingPage;
-import io.datareplication.consumer.TestStreamingPage.PlaintextEntity;
+import io.datareplication.consumer.TestStreamingPage.TestEntity;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Body;
 import io.datareplication.model.BodyTestUtil;
@@ -34,7 +34,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static io.datareplication.consumer.TestStreamingPage.ofPlaintextEntities;
+import static io.datareplication.consumer.TestStreamingPage.testStreamingPageOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -129,10 +129,10 @@ FeedConsumerImplTest {
             Optional.empty(),
             Optional.empty()
         );
-        var page1 = ofPlaintextEntities(
+        var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders1, "Hello World!")
+            TestEntity.of(defaultEntityHeaders1, "Hello World!")
         );
 
         when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
@@ -155,20 +155,20 @@ FeedConsumerImplTest {
 
     @Test
     void streamPagesFromBeginning_shouldFollowAndConsumeNextLinks() {
-        var page1 = ofPlaintextEntities(
+        var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders1, "first entity")
+            TestEntity.of(defaultEntityHeaders1, "first entity")
         );
-        var page2 = ofPlaintextEntities(
+        var page2 = testStreamingPageOf(
             defaultPagesHeaders2,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders2, "second entity")
+            TestEntity.of(defaultEntityHeaders2, "second entity")
         );
-        var page3 = ofPlaintextEntities(
+        var page3 = testStreamingPageOf(
             defaultPagesHeaders3,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders3, "third entity")
+            TestEntity.of(defaultEntityHeaders3, "third entity")
         );
         when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(url1));
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
@@ -222,20 +222,20 @@ FeedConsumerImplTest {
      * A stream can only be consumed once.
      */
     private void preparePageToStream() {
-        var page1 = ofPlaintextEntities(
+        var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders1, "first entity")
+            TestEntity.of(defaultEntityHeaders1, "first entity")
         );
-        var page2 = ofPlaintextEntities(
+        var page2 = testStreamingPageOf(
             defaultPagesHeaders2,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders2, "second entity")
+            TestEntity.of(defaultEntityHeaders2, "second entity")
         );
-        var page3 = ofPlaintextEntities(
+        var page3 = testStreamingPageOf(
             defaultPagesHeaders3,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders3, "third entity")
+            TestEntity.of(defaultEntityHeaders3, "third entity")
         );
         when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
         when(pageLoader.load(url2)).thenReturn(Mono.just(page2));
@@ -282,12 +282,12 @@ FeedConsumerImplTest {
             Optional.empty(),
             Optional.empty()
         );
-        var page1 = ofPlaintextEntities(
+        var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            PlaintextEntity.of(defaultEntityHeaders2, "now entity"),
-            PlaintextEntity.of(defaultEntityHeaders3, "newer entity")
+            TestEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
+            TestEntity.of(defaultEntityHeaders2, "now entity"),
+            TestEntity.of(defaultEntityHeaders3, "newer entity")
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
 
@@ -322,12 +322,12 @@ FeedConsumerImplTest {
             Optional.empty(),
             Optional.empty()
         );
-        var page1 = ofPlaintextEntities(
+        var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            PlaintextEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            PlaintextEntity.of(defaultEntityHeaders2, "already consumed ContentId"),
-            PlaintextEntity.of(defaultEntityHeaders3, "new entity")
+            TestEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
+            TestEntity.of(defaultEntityHeaders2, "already consumed ContentId"),
+            TestEntity.of(defaultEntityHeaders3, "new entity")
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
 
