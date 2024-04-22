@@ -25,7 +25,7 @@ import java.util.concurrent.Flow;
  * @see FeedConsumer
  */
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class FeedConsumerImpl implements FeedConsumer {
+class FeedConsumerImpl implements FeedConsumer {
     private final PageLoader pageLoader;
     private final FeedPageCrawler feedPageCrawler;
     private final FeedPageHeaderParser feedPageHeaderParser;
@@ -75,10 +75,10 @@ public class FeedConsumerImpl implements FeedConsumer {
 
     private @NonNull Flux<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>>
     streamPagesFlux(@NonNull final Url url, @NonNull final StartFrom startFrom) {
-        return Flux.concat(feedPageCrawler
-                .crawl(url, startFrom)
-                .flatMap(pageLoader::load)
-                .map(this::wrapPage))
+        return feedPageCrawler
+            .crawl(url, startFrom)
+            .flatMap(pageLoader::load)
+            .map(this::wrapPage)
             .expand(this::expandNextPageIfExists);
     }
 

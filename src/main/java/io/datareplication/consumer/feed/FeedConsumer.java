@@ -39,17 +39,22 @@ public interface FeedConsumer {
      * Stream the feed pages starting from the given {@link Url}.
      * Streaming a {@link StreamingPage} will result into receiving already consumed entities
      * with an older last modified date of the current FeedPage again.
-     * The {@link io.datareplication.model.feed.ContentId} from the {@link StartFrom.ContentId}
-     * will not respected in streamPages use {@link #streamEntities(Url, StartFrom)} instead.
+     * The {@link io.datareplication.model.feed.ContentId} from {@link StartFrom.ContentId}
+     * will not respected in streamPages, use {@link #streamEntities(Url, StartFrom)} instead.
      *
      * @param url       the {@link Url} to start streaming from
      * @param startFrom the {@link StartFrom} parameter
      * @return a {@link Flow.Publisher} of {@link StreamingPage} of {@link FeedPageHeader} and {@link FeedEntityHeader}
-     * @throws CrawlingException   @see {@link FeedPageCrawler#crawl(Url, StartFrom)}
-     * @throws HttpException       @see {@link PageLoader#load(Url)}
-     * @throws PageFormatException @see {@link PageLoader#load(Url)}
+     * @throws CrawlingException   if the last modified date of the last page is not older
+     *                             and {@link StartFrom} is not {@link StartFrom.Beginning
+     * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
+     *                             network errors/timeouts, ...)
+     * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
+     *                             missing or malformed HTTP Content-Type header since multipart parsing errors will
+     *                             only start happening when we get to {@link StreamingPage})
      */
-    @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(
+    @NonNull
+    Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(
         @NonNull Url url,
         @NonNull StartFrom startFrom);
 
@@ -58,17 +63,22 @@ public interface FeedConsumer {
      * Streaming entities will result into skipping already consumed entities
      * with an older last modified date of the current FeedPage.
      * Streaming entities will respect the {@link io.datareplication.model.feed.ContentId}
-     * from the {@link StartFrom.ContentId}.
+     * from {@link StartFrom.ContentId}.
      *
      * @param url       the {@link Url} to start streaming from
      * @param startFrom the {@link StartFrom} parameter
      * @return a {@link Flow.Publisher} of {@link Entity} of {@link FeedEntityHeader}
-     * @throws CrawlingException   @see {@link FeedPageCrawler#crawl(Url, StartFrom)}
-     * @throws HttpException       @see {@link PageLoader#load(Url)}
-     * @throws PageFormatException @see {@link PageLoader#load(Url)}
+     * @throws CrawlingException   if the last modified date of the last page is not older
+     *                             and {@link StartFrom} is not {@link StartFrom.Beginning
+     * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
+     *                             network errors/timeouts, ...)
+     * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
+     *                             missing or malformed HTTP Content-Type header since multipart parsing errors will
+     *                             only start happening when we get to {@link StreamingPage})
      */
-    @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
-                                                                                       @NonNull StartFrom startFrom);
+    @NonNull
+    Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
+                                                                              @NonNull StartFrom startFrom);
 
     /**
      * A builder for {@link FeedConsumer}.
