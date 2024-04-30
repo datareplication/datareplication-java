@@ -84,6 +84,10 @@ tasks.test {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+
+    reports {
+        xml.required = true
+    }
 }
 
 tasks.jacocoTestCoverageVerification {
@@ -98,6 +102,7 @@ tasks.jacocoTestCoverageVerification {
 }
 
 tasks.check {
+    dependsOn(tasks.jacocoTestReport)
     dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
