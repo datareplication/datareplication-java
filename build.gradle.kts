@@ -4,36 +4,13 @@ val versionSuffix: String? by project
 plugins {
     `java-library`
     `maven-publish`
+
+    pmd
 }
 
 group = "io.datareplication"
 val baseVersion = "0.1"
 version = "${baseVersion}.${buildTimestamp}${versionSuffix ?: ""}"
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
-
-publishing {
-    publications {
-        create<MavenPublication>(project.name) {
-            from(components["java"])
-        }
-    }
-
-    repositories {
-        maven {
-            name = "github"
-            url = uri("https://maven.pkg.github.com/datareplication/datareplication-java")
-            credentials(PasswordCredentials::class) {
-                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("datareplication.username") as String?
-                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("datareplication.password") as String?
-            }
-        }
-    }
-}
 
 repositories {
     mavenCentral()
@@ -74,6 +51,35 @@ dependencies {
     testAnnotationProcessor(lombok)
 }
 
+publishing {
+    publications {
+        create<MavenPublication>(project.name) {
+            from(components["java"])
+        }
+    }
+
+    repositories {
+        maven {
+            name = "github"
+            url = uri("https://maven.pkg.github.com/datareplication/datareplication-java")
+            credentials(PasswordCredentials::class) {
+                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("datareplication.username") as String?
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("datareplication.password") as String?
+            }
+        }
+    }
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 tasks.test {
     useJUnitPlatform()
+}
+
+pmd {
+    isConsoleOutput = true
+    ruleSetFiles = files("ruleset.xml")
 }

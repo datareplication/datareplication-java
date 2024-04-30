@@ -27,6 +27,7 @@
         <exclude name="MissingSerialVersionUID"/>
         <exclude name="AvoidFieldNameMatchingTypeName"/>
         <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="NonSerializableClass"/>
     </rule>
     <rule ref="category/java/performance.xml">
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
