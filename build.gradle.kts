@@ -6,6 +6,7 @@ plugins {
     `maven-publish`
 
     pmd
+    checkstyle
 }
 
 group = "io.datareplication"
@@ -81,5 +82,5 @@ tasks.test {
 
 pmd {
     isConsoleOutput = true
-    ruleSetFiles = files("ruleset.xml")
+    ruleSetFiles = files("config/pmd/ruleset.xml")
 }
