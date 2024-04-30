@@ -7,6 +7,7 @@ plugins {
 
     pmd
     checkstyle
+    jacoco
     id("com.github.spotbugs") version "6.0.12"
 }
 
@@ -79,6 +80,25 @@ java {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                minimum = "0.9".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 pmd {
