@@ -7,6 +7,7 @@ plugins {
 
     pmd
     checkstyle
+    id("com.github.spotbugs") version "6.0.12"
 }
 
 group = "io.datareplication"
@@ -83,4 +84,9 @@ tasks.test {
 pmd {
     isConsoleOutput = true
     ruleSetFiles = files("config/pmd/ruleset.xml")
+}
+
+spotbugs {
+    ignoreFailures = true
+    includeFilter = file("config/spotbugs/spotbugs.xml")
 }
