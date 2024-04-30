@@ -1,11 +1,11 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -114,7 +114,7 @@ class GenerationRotationServiceTest {
     private static FeedPageMetadataRepository.PageMetadata page(int generation) {
         return new FeedPageMetadataRepository.PageMetadata(
             PageId.of("latest-page"),
-            Timestamp.now(),
+            Instant.now(),
             Optional.empty(),
             Optional.empty(),
             1,

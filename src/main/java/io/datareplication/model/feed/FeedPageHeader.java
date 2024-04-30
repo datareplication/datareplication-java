@@ -2,12 +2,12 @@ package io.datareplication.model.feed;
 
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.ToHttpHeaders;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -20,7 +20,7 @@ public class FeedPageHeader implements ToHttpHeaders {
     /**
      * The page's timestamp. This is equal to the timestamp of the page's final entity.
      */
-    @NonNull Timestamp lastModified;
+    @NonNull Instant lastModified;
     /**
      * The stable URL of this page itself. This URL must always resolve to this page, even as new entities are added to
      * the feed.
@@ -41,7 +41,7 @@ public class FeedPageHeader implements ToHttpHeaders {
      */
     @NonNull HttpHeaders extraHeaders;
 
-    public FeedPageHeader(@NonNull final Timestamp lastModified,
+    public FeedPageHeader(@NonNull final Instant lastModified,
                           @NonNull final Link.Self self,
                           @NonNull final Optional<Link.@NonNull Prev> prev,
                           @NonNull final Optional<Link.@NonNull Next> next) {

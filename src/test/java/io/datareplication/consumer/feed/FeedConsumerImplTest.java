@@ -10,7 +10,6 @@ import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
@@ -31,10 +30,12 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 import static io.datareplication.consumer.TestStreamingPage.testStreamingPageOf;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -50,9 +51,9 @@ FeedConsumerImplTest {
     private FeedPageHeaderParser feedPageHeaderParser;
     @InjectMocks
     private FeedConsumerImpl feedConsumer;
-    private Timestamp lastModified;
-    private Timestamp lastModifiedAfter;
-    private Timestamp lastModifiedBefore;
+    private Instant lastModified;
+    private Instant lastModifiedAfter;
+    private Instant lastModifiedBefore;
     private HttpHeaders defaultEntityHeaders1;
     private HttpHeaders defaultEntityHeaders2;
     private HttpHeaders defaultEntityHeaders3;
@@ -74,9 +75,9 @@ FeedConsumerImplTest {
 
     @BeforeEach
     void setUp() {
-        lastModified = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:14 GMT");
-        lastModifiedBefore = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:13 GMT");
-        lastModifiedAfter = Timestamp.fromRfc1123String("Thu, 5 Oct 2023 03:00:15 GMT");
+        lastModified = Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:14 GMT"));
+        lastModifiedBefore = Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:13 GMT"));
+        lastModifiedAfter = Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:15 GMT"));
         defaultEntityHeaders1 = HttpHeaders.of(HttpHeader.of("entity", "first"));
         defaultEntityHeaders2 = HttpHeaders.of(HttpHeader.of("entity", "second"));
         defaultEntityHeaders3 = HttpHeaders.of(HttpHeader.of("entity", "third"));

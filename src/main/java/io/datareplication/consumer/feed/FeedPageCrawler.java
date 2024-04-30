@@ -2,7 +2,6 @@ package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.CrawlingException;
 import io.datareplication.consumer.PageFormatException;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedPageHeader;
 import io.datareplication.model.feed.Link;
@@ -11,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -81,7 +81,7 @@ class FeedPageCrawler {
         }
     }
 
-    private static boolean isFeedPageLastModifiedBefore(final FeedPageHeader pageHeader, final Timestamp startFrom) {
+    private static boolean isFeedPageLastModifiedBefore(final FeedPageHeader pageHeader, final Instant startFrom) {
         return pageHeader
             .lastModified()
             .isBefore(startFrom);

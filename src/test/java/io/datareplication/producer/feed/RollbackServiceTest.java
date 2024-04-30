@@ -1,7 +1,6 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +24,9 @@ class RollbackServiceTest {
     private final FeedPageMetadataRepository feedPageMetadataRepository = mock(FeedPageMetadataRepository.class);
 
     private static final Duration TEST_TIMEOUT = Duration.ofSeconds(1);
-    private static final Timestamp TIMESTAMP_1 = Timestamp.of(Instant.parse("2023-11-09T14:13:31.000Z"));
-    private static final Timestamp TIMESTAMP_2 = Timestamp.of(Instant.parse("2023-12-31T07:17:45.666Z"));
-    private static final Timestamp TIMESTAMP_3 = Timestamp.of(Instant.parse("2023-04-16T03:00:00.001Z"));
+    private static final Instant INSTANT_1 = Instant.parse("2023-11-09T14:13:31.000Z");
+    private static final Instant INSTANT_2 = Instant.parse("2023-12-31T07:17:45.666Z");
+    private static final Instant INSTANT_3 = Instant.parse("2023-04-16T03:00:00.001Z");
 
     private final RollbackService rollbackService = new RollbackService(
         feedEntityRepository,
@@ -92,14 +91,14 @@ class RollbackServiceTest {
         final var entity2 = somePageAssignment("2");
         final var entity3 = new FeedEntityRepository.PageAssignment(
             ContentId.of("3"),
-            TIMESTAMP_1,
-            Optional.of(TIMESTAMP_2),
+            INSTANT_1,
+            Optional.of(INSTANT_2),
             31,
             Optional.of(latestPage.pageId())
         );
         final var entity4 = new FeedEntityRepository.PageAssignment(
             ContentId.of("4"),
-            TIMESTAMP_3,
+            INSTANT_3,
             Optional.empty(),
             41,
             Optional.of(latestPage.pageId())
@@ -120,14 +119,14 @@ class RollbackServiceTest {
         verify(feedEntityRepository).savePageAssignments(List.of(
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("3"),
-                TIMESTAMP_2,
+                INSTANT_2,
                 Optional.empty(),
                 31,
                 Optional.empty()
             ),
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("4"),
-                TIMESTAMP_3,
+                INSTANT_3,
                 Optional.empty(),
                 41,
                 Optional.empty()
@@ -146,22 +145,22 @@ class RollbackServiceTest {
         final var newLatest = somePageMetadata("new-latest", 1);
         final var newPage1Entity = new FeedEntityRepository.PageAssignment(
             ContentId.of("3"),
-            TIMESTAMP_1,
-            Optional.of(TIMESTAMP_2),
+            INSTANT_1,
+            Optional.of(INSTANT_2),
             2,
             Optional.of(newPage1.pageId())
         );
         final var newPage2Entity = new FeedEntityRepository.PageAssignment(
             ContentId.of("4"),
-            TIMESTAMP_3,
+            INSTANT_3,
             Optional.empty(),
             2,
             Optional.of(newPage2.pageId())
         );
         final var newLatestPageEntity = new FeedEntityRepository.PageAssignment(
             ContentId.of("5"),
-            TIMESTAMP_3,
-            Optional.of(TIMESTAMP_1),
+            INSTANT_3,
+            Optional.of(INSTANT_1),
             2,
             Optional.of(newLatest.pageId())
         );
@@ -187,21 +186,21 @@ class RollbackServiceTest {
         verify(feedEntityRepository).savePageAssignments(List.of(
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("3"),
-                TIMESTAMP_2,
+                INSTANT_2,
                 Optional.empty(),
                 2,
                 Optional.empty()
             ),
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("4"),
-                TIMESTAMP_3,
+                INSTANT_3,
                 Optional.empty(),
                 2,
                 Optional.empty()
             ),
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("5"),
-                TIMESTAMP_1,
+                INSTANT_1,
                 Optional.empty(),
                 2,
                 Optional.empty()
@@ -215,22 +214,22 @@ class RollbackServiceTest {
         final var newLatest = somePageMetadata("new-latest", 1);
         final var entity1 = new FeedEntityRepository.PageAssignment(
             ContentId.of("1"),
-            TIMESTAMP_1,
-            Optional.of(TIMESTAMP_2),
+            INSTANT_1,
+            Optional.of(INSTANT_2),
             2,
             Optional.of(newLatest.pageId())
         );
         final var entity2 = new FeedEntityRepository.PageAssignment(
             ContentId.of("2"),
-            TIMESTAMP_3,
+            INSTANT_3,
             Optional.empty(),
             2,
             Optional.of(newLatest.pageId())
         );
         final var entity3 = new FeedEntityRepository.PageAssignment(
             ContentId.of("3"),
-            TIMESTAMP_3,
-            Optional.of(TIMESTAMP_1),
+            INSTANT_3,
+            Optional.of(INSTANT_1),
             2,
             Optional.of(newLatest.pageId())
         );
@@ -250,21 +249,21 @@ class RollbackServiceTest {
         verify(feedEntityRepository).savePageAssignments(List.of(
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("1"),
-                TIMESTAMP_2,
+                INSTANT_2,
                 Optional.empty(),
                 2,
                 Optional.empty()
             ),
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("2"),
-                TIMESTAMP_3,
+                INSTANT_3,
                 Optional.empty(),
                 2,
                 Optional.empty()
             ),
             new FeedEntityRepository.PageAssignment(
                 ContentId.of("3"),
-                TIMESTAMP_1,
+                INSTANT_1,
                 Optional.empty(),
                 2,
                 Optional.empty()
@@ -276,7 +275,7 @@ class RollbackServiceTest {
     private static FeedPageMetadataRepository.PageMetadata somePageMetadata(String id, int numberOfEntities) {
         return new FeedPageMetadataRepository.PageMetadata(
             PageId.of(id),
-            Timestamp.now(),
+            Instant.now(),
             Optional.empty(),
             Optional.empty(),
             1,
@@ -289,7 +288,7 @@ class RollbackServiceTest {
     private static FeedEntityRepository.PageAssignment somePageAssignment(String id) {
         return new FeedEntityRepository.PageAssignment(
             ContentId.of(id),
-            Timestamp.now(),
+            Instant.now(),
             Optional.empty(),
             666,
             Optional.empty()

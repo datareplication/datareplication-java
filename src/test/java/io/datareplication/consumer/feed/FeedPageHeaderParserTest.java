@@ -3,7 +3,6 @@ package io.datareplication.consumer.feed;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
@@ -13,13 +12,16 @@ import io.datareplication.model.feed.OperationType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Optional;
 
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FeedPageHeaderParserTest {
     private static final String LAST_MODIFIED = "Thu, 5 Oct 2023 03:00:14 GMT";
+    private static final Instant LAST_MODIFIED_INSTANT = Instant.from(RFC_1123_DATE_TIME.parse(LAST_MODIFIED));
     private static final String ANY_CONTENT_ID = "content-id-1234";
     private static final String OPERATION_TYPE_PUT = "http-equiv=PUT";
     private static final String LINK_PREV = "<https://example.datareplication.io/1>; rel=prev";
@@ -44,7 +46,7 @@ class FeedPageHeaderParserTest {
 
         assertThat(feedPageHeader).isEqualTo(
             new FeedPageHeader(
-                Timestamp.fromRfc1123String(LAST_MODIFIED),
+                LAST_MODIFIED_INSTANT,
                 Link.self(Url.of("https://example.datareplication.io/2")),
                 Optional.empty(),
                 Optional.empty()
@@ -69,7 +71,7 @@ class FeedPageHeaderParserTest {
 
         assertThat(feedPageHeader).isEqualTo(
             new FeedPageHeader(
-                Timestamp.fromRfc1123String(LAST_MODIFIED),
+                LAST_MODIFIED_INSTANT,
                 Link.self(Url.of("https://example.datareplication.io/2")),
                 Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
                 Optional.of(Link.next(Url.of("https://example.datareplication.io/3")))
@@ -161,7 +163,7 @@ class FeedPageHeaderParserTest {
 
         assertThat(feedEntityHeader).isEqualTo(
             new FeedEntityHeader(
-                Timestamp.fromRfc1123String(LAST_MODIFIED),
+                Instant.from(RFC_1123_DATE_TIME.parse(LAST_MODIFIED)),
                 OperationType.PUT,
                 ContentId.of(ANY_CONTENT_ID)
             )

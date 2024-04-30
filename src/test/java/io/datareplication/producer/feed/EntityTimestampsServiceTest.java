@@ -1,7 +1,6 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import org.junit.jupiter.api.Test;
 
@@ -142,7 +141,7 @@ class EntityTimestampsServiceTest {
     private static FeedEntityRepository.PageAssignment entity(String id, Instant lastModified) {
         return new FeedEntityRepository.PageAssignment(
             ContentId.of(id),
-            Timestamp.of(lastModified),
+            lastModified,
             Optional.empty(),
             1,
             Optional.empty()
@@ -156,8 +155,8 @@ class EntityTimestampsServiceTest {
     ) {
         return new FeedEntityRepository.PageAssignment(
             entity.contentId(),
-            Timestamp.of(lastModified),
-            Optional.of(Timestamp.of(originalLastModified)),
+            lastModified,
+            Optional.of(originalLastModified),
             entity.contentLength(),
             entity.pageId()
         );
@@ -166,7 +165,7 @@ class EntityTimestampsServiceTest {
     private static FeedPageMetadataRepository.PageMetadata latestPage(Instant lastModified) {
         return new FeedPageMetadataRepository.PageMetadata(
             PageId.of("latest-page"),
-            Timestamp.of(lastModified),
+            lastModified,
             Optional.empty(),
             Optional.empty(),
             1,

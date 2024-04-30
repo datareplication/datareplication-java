@@ -8,7 +8,6 @@ import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
@@ -24,6 +23,7 @@ import org.reactivestreams.FlowAdapters;
 import reactor.core.publisher.Flux;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,7 +52,7 @@ class SnapshotProducerImplTest {
     private final Url page2Url = Url.of("/" + pageId2.value());
     private final Url page3Url = Url.of("/" + pageId3.value());
     private final Url page4Url = Url.of("/" + pageId4.value());
-    private final Timestamp createdAt = Timestamp.now();
+    private final Instant createdAt = Instant.now();
     private final List<Entity<SnapshotEntityHeader>> entities =
         entities("Hello", "World", "I", "am", "a", "Snapshot");
 
@@ -85,7 +85,7 @@ class SnapshotProducerImplTest {
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+                Clock.fixed(createdAt, ZoneId.systemDefault()));
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flux.empty()));
@@ -114,7 +114,7 @@ class SnapshotProducerImplTest {
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+                Clock.fixed(createdAt, ZoneId.systemDefault()));
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flux.fromIterable(entities)));
@@ -146,7 +146,7 @@ class SnapshotProducerImplTest {
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+                Clock.fixed(createdAt, ZoneId.systemDefault()));
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
@@ -197,7 +197,7 @@ class SnapshotProducerImplTest {
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+                Clock.fixed(createdAt, ZoneId.systemDefault()));
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
@@ -247,7 +247,7 @@ class SnapshotProducerImplTest {
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+                Clock.fixed(createdAt, ZoneId.systemDefault()));
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
@@ -311,7 +311,7 @@ class SnapshotProducerImplTest {
             .build(snapshotIndexRepository,
                 snapshotPageRepository,
                 snapshotPageUrlBuilder,
-                Clock.fixed(createdAt.value(), ZoneId.systemDefault()));
+                Clock.fixed(createdAt, ZoneId.systemDefault()));
 
         snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow)).toCompletableFuture().get();
 

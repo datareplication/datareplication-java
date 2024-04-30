@@ -10,7 +10,6 @@ import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import io.datareplication.model.Body;
 import io.datareplication.model.ContentType;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.util.ResourceReader;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +43,7 @@ class SnapshotIndexTest {
         String json = ResourceReader.readFromInputStream("__files/snapshot/index.json");
         SnapshotIndex snapshotIndex = SnapshotIndex.fromJson(Body.fromUtf8(json));
         assertThat(snapshotIndex.id()).isEqualTo(SnapshotId.of("example"));
-        assertThat(snapshotIndex.createdAt()).isEqualTo(Timestamp.of(Instant.parse("2023-10-07T15:00:00Z")));
+        assertThat(snapshotIndex.createdAt()).isEqualTo(Instant.parse("2023-10-07T15:00:00Z"));
         assertThat(snapshotIndex.pages()).contains(
             Url.of("http://localhost:8443/1.content.multipart"),
             Url.of("http://localhost:8443/2.content.multipart"),
@@ -56,7 +55,7 @@ class SnapshotIndexTest {
     void toJson_happyPath() throws IOException {
         SnapshotIndex snapshotIndex = new SnapshotIndex(
             SnapshotId.of("12345678"),
-            Timestamp.of(Instant.parse("2023-09-29T20:52:17.000Z")),
+            Instant.parse("2023-09-29T20:52:17.000Z"),
             List.of(
                 Url.of("https://localhost:12345/snapshot/12345678/1"),
                 Url.of("https://localhost:12345/snapshot/12345678/2"),
@@ -204,7 +203,7 @@ class SnapshotIndexTest {
         original.add(URL_2);
         final ArrayList<Url> pages = new ArrayList<>(original);
 
-        final SnapshotIndex index = new SnapshotIndex(SnapshotId.of("1234"), Timestamp.now(), pages);
+        final SnapshotIndex index = new SnapshotIndex(SnapshotId.of("1234"), Instant.now(), pages);
 
         assertThat(index.pages()).containsExactlyElementsOf(original);
         assertThatThrownBy(() -> index.pages().add(URL_3))

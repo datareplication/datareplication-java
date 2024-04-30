@@ -2,13 +2,13 @@ package io.datareplication.producer.feed.testhelper;
 
 import io.datareplication.model.Entity;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.producer.feed.FeedEntityRepository;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
     public static class FeedEntityRecord implements Comparable<FeedEntityRecord> {
         Entity<FeedEntityHeader> entity;
         Optional<PageId> page;
-        Optional<Timestamp> originalLastModified;
+        Optional<Instant> originalLastModified;
 
         private FeedEntityRecord updated(PageAssignment pageAssignment) {
             return new FeedEntityRecord(
@@ -62,8 +62,7 @@ public final class FeedEntityInMemoryRepository implements FeedEntityRepository 
                 .entity
                 .header()
                 .lastModified()
-                .value()
-                .compareTo(other.entity.header().lastModified().value());
+                .compareTo(other.entity.header().lastModified());
             if (c1 != 0) { //NOPMD
                 return c1;
             } else {

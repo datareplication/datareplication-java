@@ -3,7 +3,6 @@ package io.datareplication.consumer.feed;
 import io.datareplication.internal.http.HttpClient;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedPageHeader;
 import io.datareplication.model.feed.Link;
@@ -42,7 +41,7 @@ class HeaderLoaderTest {
     private final Url url = Url.of("https://example.datareplication.io/1");
 
     private final FeedPageHeader expectedFeedHeader = new FeedPageHeader(
-        Timestamp.of(Instant.parse("2023-10-02T09:58:59.000Z")),
+        Instant.parse("2023-10-02T09:58:59.000Z"),
         Link.self(Url.of("https://example.datareplication.io/1")),
         Optional.empty(),
         Optional.empty(),

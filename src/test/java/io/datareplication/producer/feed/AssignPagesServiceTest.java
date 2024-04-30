@@ -1,7 +1,6 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import org.junit.jupiter.api.Test;
 
@@ -206,7 +205,7 @@ class AssignPagesServiceTest {
         final var assignPagesService = assignPagesService(Long.MAX_VALUE, 4);
         final var latestPage = new FeedPageMetadataRepository.PageMetadata(
                 PageId.of("old-latest-page"),
-                Timestamp.of(TIMESTAMP.plusSeconds(-15)),
+                TIMESTAMP.plusSeconds(-15),
                 Optional.of(PageId.of("some-other-page-entirely")),
                 Optional.empty(),
                 1,
@@ -244,7 +243,7 @@ class AssignPagesServiceTest {
         final var assignPagesService = assignPagesService(10, Long.MAX_VALUE);
         final var latestPage = new FeedPageMetadataRepository.PageMetadata(
                 PageId.of("old-latest-page"),
-                Timestamp.of(TIMESTAMP.plusSeconds(-15)),
+                TIMESTAMP.plusSeconds(-15),
                 Optional.of(PageId.of("some-other-page-entirely")),
                 Optional.empty(),
                 2,
@@ -299,7 +298,7 @@ class AssignPagesServiceTest {
         final var assignPagesService = assignPagesService(10, Long.MAX_VALUE);
         final var latestPage = new FeedPageMetadataRepository.PageMetadata(
                 PageId.of("old-latest-page"),
-                Timestamp.of(TIMESTAMP.plusSeconds(-15)),
+                TIMESTAMP.plusSeconds(-15),
                 Optional.of(PageId.of("some-other-page-entirely")),
                 Optional.empty(),
                 9,
@@ -344,7 +343,7 @@ class AssignPagesServiceTest {
     ) {
         return new FeedEntityRepository.PageAssignment(
                 ContentId.of(id),
-                Timestamp.of(lastModified),
+                lastModified,
                 Optional.empty(),
                 contentLength,
                 Optional.empty()

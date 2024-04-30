@@ -3,7 +3,6 @@ package io.datareplication.producer.feed;
 import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
@@ -72,10 +71,16 @@ class FeedProducerImplTest {
     void publish_operationType_body_shouldSaveEntityInRepository() {
         final var operationType = OperationType.PUT;
         final var body = Body.fromUtf8("test put");
-        when(feedEntityRepository.append(new Entity<>(new FeedEntityHeader(Timestamp.of(SOME_TIME),
-            operationType,
-            SOME_CONTENT_ID),
-            body)))
+        when(feedEntityRepository.append(
+                new Entity<>(
+                    new FeedEntityHeader(
+                        SOME_TIME,
+                        operationType,
+                        SOME_CONTENT_ID
+                    ),
+                    body)
+            )
+        )
             .thenReturn(Mono.<Void>empty().toFuture());
 
         final var result = feedProducer.publish(operationType, body);
@@ -88,11 +93,19 @@ class FeedProducerImplTest {
         final var operationType = OperationType.DELETE;
         final var body = Body.fromUtf8("test delete");
         final var userData = "this is the user data string, innit";
-        when(feedEntityRepository.append(new Entity<>(new FeedEntityHeader(Timestamp.of(SOME_TIME),
-            operationType,
-            SOME_CONTENT_ID),
-            body,
-            Optional.of(userData))))
+        when(
+            feedEntityRepository.append(
+                new Entity<>(
+                    new FeedEntityHeader(
+                        SOME_TIME,
+                        operationType,
+                        SOME_CONTENT_ID
+                    ),
+                    body,
+                    Optional.of(userData)
+                )
+            )
+        )
             .thenReturn(Mono.<Void>empty().toFuture());
 
         final var result = feedProducer.publish(operationType, body, userData);
@@ -102,9 +115,11 @@ class FeedProducerImplTest {
 
     @Test
     void publish_entity_shouldSaveEntityInRepository() {
-        final var entity = new Entity<>(new FeedEntityHeader(Timestamp.of(SOME_TIME),
-            OperationType.PUT,
-            SOME_CONTENT_ID),
+        final var entity = new Entity<>(
+            new FeedEntityHeader(
+                SOME_TIME,
+                OperationType.PUT,
+                SOME_CONTENT_ID),
             Body.fromUtf8("some body once told me"),
             Optional.of("the world is gonna roll me"));
         when(feedEntityRepository.append(entity))
@@ -334,7 +349,7 @@ class FeedProducerImplTest {
     private static FeedPageMetadataRepository.PageMetadata somePageMetadata(String id) {
         return new FeedPageMetadataRepository.PageMetadata(
             PageId.of(id),
-            Timestamp.now(),
+            Instant.now(),
             Optional.empty(),
             Optional.empty(),
             1,
@@ -346,7 +361,7 @@ class FeedProducerImplTest {
     private static FeedEntityRepository.PageAssignment somePageAssignment(String id) {
         return new FeedEntityRepository.PageAssignment(
             ContentId.of(id),
-            Timestamp.now(),
+            Instant.now(),
             Optional.empty(),
             666,
             Optional.empty()

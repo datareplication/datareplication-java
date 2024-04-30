@@ -13,7 +13,6 @@ import io.datareplication.model.ContentType;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
@@ -79,7 +78,7 @@ class SnapshotConsumerImplTest {
         final var snapshotIndexJson = resourceAsString("__files/snapshot/index.json");
         final var expectedSnapshotIndex = new SnapshotIndex(
             SnapshotId.of("example"),
-            Timestamp.of(Instant.parse("2023-10-07T15:00:00.000Z")),
+            Instant.parse("2023-10-07T15:00:00.000Z"),
             List.of(
                 Url.of("http://localhost:8443/1.content.multipart"),
                 Url.of("http://localhost:8443/2.content.multipart"),
@@ -157,7 +156,7 @@ class SnapshotConsumerImplTest {
         ));
         final var snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1, url2, url3));
 
         final var pages = JdkFlowAdapter
@@ -192,7 +191,7 @@ class SnapshotConsumerImplTest {
         when(pageLoader.load(url1)).thenReturn(Mono.error(expectedException));
         final var snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1));
 
         StepVerifier
@@ -235,7 +234,7 @@ class SnapshotConsumerImplTest {
         ));
         final SnapshotIndex snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1, url2));
 
         final var entities = JdkFlowAdapter
@@ -300,7 +299,7 @@ class SnapshotConsumerImplTest {
         ));
         final SnapshotIndex snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1, url2, url3, url4, url5));
 
         final var entities = JdkFlowAdapter
@@ -324,7 +323,7 @@ class SnapshotConsumerImplTest {
         when(pageLoader.load(url1)).thenReturn(Mono.error(expectedException));
         final var snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1));
 
         StepVerifier
@@ -352,7 +351,7 @@ class SnapshotConsumerImplTest {
         ));
         final var snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1));
 
         StepVerifier
@@ -386,7 +385,7 @@ class SnapshotConsumerImplTest {
         ));
         final var snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(goodUrl, url1, goodUrl, goodUrl, url2, url3, goodUrl));
 
         StepVerifier
@@ -431,7 +430,7 @@ class SnapshotConsumerImplTest {
         ));
         final SnapshotIndex snapshotIndex = new SnapshotIndex(
             SnapshotId.of("doesn't matter"),
-            Timestamp.now(),
+            Instant.now(),
             List.of(url1, url2, url3));
 
         StepVerifier

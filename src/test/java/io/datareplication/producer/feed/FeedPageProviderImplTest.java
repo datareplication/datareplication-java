@@ -6,7 +6,6 @@ import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
@@ -105,11 +104,11 @@ class FeedPageProviderImplTest {
     @Test
     void pageHeader_shouldReturnPageHeaderWithoutPrevAndNextLinks() {
         var pageId = PageId.of("page");
-        var timestamp = Timestamp.of(Instant.parse("2024-02-02T14:52:32Z"));
+        var lastModified = Instant.parse("2024-02-02T14:52:32Z");
         when(feedPageMetadataRepository.get(pageId))
                 .thenReturn(Mono.just(Optional.of(new FeedPageMetadataRepository.PageMetadata(
                         PageId.of("pageid-from-repo"),
-                        timestamp,
+                        lastModified,
                         Optional.empty(),
                         Optional.empty(),
                         666,
@@ -123,7 +122,7 @@ class FeedPageProviderImplTest {
                 .create(Mono.fromCompletionStage(result))
                 .expectNext(Optional.of(new FeedPageProvider.HeaderAndContentType(
                         new FeedPageHeader(
-                                timestamp,
+                                lastModified,
                                 Link.self(Url.of("https://datareplication.io/pageid-from-repo")),
                                 Optional.empty(),
                                 Optional.empty(),
@@ -138,11 +137,11 @@ class FeedPageProviderImplTest {
     @Test
     void pageHeader_shouldReturnPageHeaderWithPrevAndNextLinks() {
         var pageId = PageId.of("page-for-get");
-        var timestamp = Timestamp.of(Instant.parse("2024-02-02T15:07:00Z"));
+        var lastModified = Instant.parse("2024-02-02T15:07:00Z");
         when(feedPageMetadataRepository.get(pageId))
                 .thenReturn(Mono.just(Optional.of(new FeedPageMetadataRepository.PageMetadata(
                         PageId.of("pageid"),
-                        timestamp,
+                        lastModified,
                         Optional.of(PageId.of("prev-page")),
                         Optional.of(PageId.of("next-page")),
                         123,
@@ -156,7 +155,7 @@ class FeedPageProviderImplTest {
                 .create(Mono.fromCompletionStage(result))
                 .expectNext(Optional.of(new FeedPageProvider.HeaderAndContentType(
                         new FeedPageHeader(
-                                timestamp,
+                                lastModified,
                                 Link.self(Url.of("https://datareplication.io/pageid")),
                                 Optional.of(Link.prev(Url.of("https://datareplication.io/prev-page"))),
                                 Optional.of(Link.next(Url.of("https://datareplication.io/next-page"))),
@@ -189,11 +188,11 @@ class FeedPageProviderImplTest {
     void page_shouldReturnPageWithAllEntities() {
         var pageId = PageId.of("page");
         var entities = List.of(entity("1"), entity("2"), entity("3"));
-        var timestamp = Timestamp.of(Instant.parse("2024-02-02T14:52:32Z"));
+        var lastModified = Instant.parse("2024-02-02T14:52:32Z");
         when(feedPageMetadataRepository.get(pageId))
                 .thenReturn(Mono.just(Optional.of(new FeedPageMetadataRepository.PageMetadata(
                         PageId.of("pageid-from-repo"),
-                        timestamp,
+                        lastModified,
                         Optional.empty(),
                         Optional.empty(),
                         666,
@@ -208,7 +207,7 @@ class FeedPageProviderImplTest {
                 .create(Mono.fromCompletionStage(result))
                 .expectNext(Optional.of(new Page<>(
                         new FeedPageHeader(
-                                timestamp,
+                                lastModified,
                                 Link.self(Url.of("https://datareplication.io/pageid-from-repo")),
                                 Optional.empty(),
                                 Optional.empty(),
@@ -225,11 +224,11 @@ class FeedPageProviderImplTest {
     void page_shouldNotIncludeAnyExcessEntitiesInReturnedPage() {
         var pageId = PageId.of("page");
         var entities = List.of(entity("1"), entity("2"), entity("3"), entity("4"));
-        var timestamp = Timestamp.of(Instant.parse("2024-02-02T15:23:12Z"));
+        var lastModified = Instant.parse("2024-02-02T15:23:12Z");
         when(feedPageMetadataRepository.get(pageId))
                 .thenReturn(Mono.just(Optional.of(new FeedPageMetadataRepository.PageMetadata(
                         PageId.of("pageid-from-repo"),
-                        timestamp,
+                        lastModified,
                         Optional.empty(),
                         Optional.empty(),
                         666,
@@ -244,7 +243,7 @@ class FeedPageProviderImplTest {
                 .create(Mono.fromCompletionStage(result))
                 .expectNext(Optional.of(new Page<>(
                         new FeedPageHeader(
-                                timestamp,
+                                lastModified,
                                 Link.self(Url.of("https://datareplication.io/pageid-from-repo")),
                                 Optional.empty(),
                                 Optional.empty(),
@@ -260,7 +259,7 @@ class FeedPageProviderImplTest {
     private Entity<FeedEntityHeader> entity(String contentId) {
         return new Entity<>(
                 new FeedEntityHeader(
-                        Timestamp.of(Instant.now()),
+                        Instant.now(),
                         OperationType.PUT,
                         ContentId.of(contentId)
                 ),
@@ -271,7 +270,7 @@ class FeedPageProviderImplTest {
     private FeedPageMetadataRepository.PageMetadata page(String pageId, int generation) {
         return new FeedPageMetadataRepository.PageMetadata(
                 PageId.of(pageId),
-                Timestamp.of(Instant.parse("2024-01-30T16:24:00Z")),
+                Instant.parse("2024-01-30T16:24:00Z"),
                 Optional.empty(),
                 Optional.empty(),
                 15,

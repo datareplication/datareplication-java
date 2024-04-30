@@ -2,7 +2,6 @@ package io.datareplication.producer.feed;
 
 import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.OperationType;
 import lombok.AccessLevel;
@@ -44,7 +43,7 @@ class FeedProducerImpl implements FeedProducer {
     }
 
     private CompletionStage<Void> publish(OperationType operationType, Body body, Optional<Object> userData) {
-        final var header = new FeedEntityHeader(Timestamp.of(clock.instant()),
+        final var header = new FeedEntityHeader(clock.instant(),
             operationType,
             contentIdProvider.newContentId());
         final var entity = new Entity<>(header, body, userData);

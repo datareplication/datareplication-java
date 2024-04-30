@@ -4,7 +4,6 @@ import io.datareplication.consumer.PageFormatException;
 import io.datareplication.internal.http.HeaderFieldValue;
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
@@ -15,6 +14,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.function.Function;
@@ -52,7 +53,7 @@ class FeedPageHeaderParser {
                 httpHeaders,
                 (String lastModified) -> {
                     try {
-                        return Timestamp.fromRfc1123String(lastModified);
+                        return fromRfc1123String(lastModified);
                     } catch (DateTimeParseException e) {
                         throw new PageFormatException.InvalidLastModifiedHeader(lastModified, e);
                     }
@@ -116,7 +117,7 @@ class FeedPageHeaderParser {
                 httpHeaders,
                 (String lastModified) -> {
                     try {
-                        return Timestamp.fromRfc1123String(lastModified);
+                        return fromRfc1123String(lastModified);
                     } catch (DateTimeParseException e) {
                         throw new PageFormatException.InvalidLastModifiedHeaderInEntity(index, lastModified, e);
                     }
@@ -137,7 +138,7 @@ class FeedPageHeaderParser {
 
     @FunctionalInterface
     private interface TimestampParser {
-        Timestamp parse(@NonNull String input);
+        Instant parse(@NonNull String input);
     }
 
     @FunctionalInterface
@@ -162,7 +163,7 @@ class FeedPageHeaderParser {
             .map(operationTypeParser::parse);
     }
 
-    private static @NonNull Optional<@NonNull Timestamp> extractLastModified(
+    private static @NonNull Optional<@NonNull Instant> extractLastModified(
         @NonNull final HttpHeaders header,
         @NonNull final TimestampParser timestampParser
     ) {
@@ -170,5 +171,9 @@ class FeedPageHeaderParser {
             .get(LAST_MODIFIED)
             .flatMap(httpHeader -> httpHeader.values().stream().findFirst())
             .map(timestampParser::parse);
+    }
+
+    private static @NonNull Instant fromRfc1123String(@NonNull String string) {
+        return Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(string));
     }
 }

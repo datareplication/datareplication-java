@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.datareplication.consumer.Authorization;
 import io.datareplication.model.BodyTestUtil;
 import io.datareplication.model.HttpHeader;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.OperationType;
@@ -16,6 +15,7 @@ import org.reactivestreams.FlowAdapters;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -26,6 +26,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.github.tomakehurst.wiremock.http.HttpHeader.httpHeader;
 import static io.datareplication.model.feed.OperationType.DELETE;
 import static io.datareplication.model.feed.OperationType.PUT;
+import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -100,7 +101,9 @@ class FeedConsumerIntegrationTest {
             .authorization(() -> AUTH)
             .additionalHeaders(HttpHeader.of("user-agent", USER_AGENT))
             .build();
-        StartFrom startFrom = StartFrom.timestamp(Timestamp.fromRfc1123String("Mon, 27 Nov 2023 00:00:01 GMT"));
+        StartFrom startFrom = StartFrom.timestamp(
+            Instant.from(RFC_1123_DATE_TIME.parse("Mon, 27 Nov 2023 00:00:01 GMT"))
+        );
 
         final var entities = Flux
             .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
@@ -138,7 +141,7 @@ class FeedConsumerIntegrationTest {
 
         StartFrom startFrom = StartFrom.contentId(
             ContentId.of("<1-B@random-content-id>"),
-            Timestamp.fromRfc1123String("Mon, 27 Nov 2023 03:10:00 GMT")
+            Instant.from(RFC_1123_DATE_TIME.parse("Mon, 27 Nov 2023 03:10:00 GMT"))
         );
         final var entities = Flux
             .concat(FlowAdapters.toPublisher(consumer.streamEntities(validFeedUrl, startFrom)))
