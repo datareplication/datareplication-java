@@ -21,12 +21,12 @@ jobs:
     - name: Check
       run: ./gradlew check
     - name: Coverage report
-      uses: insightsengineering/coverage-action@v2
+      uses: madrapps/jacoco-report@v1.6.1
       with:
-        path: build/reports/jacoco/test/jacocoTestReport.xml
-        publish: true
-        # diff: true
-        # diff-branch: main
+        paths: build/reports/jacoco/test/jacocoTestReport.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: Coverage Report
+        update-comment: true
 
     - name: Javadoc
       run: ./gradlew javadoc
