@@ -1,4 +1,3 @@
-val buildTimestamp: String by project
 val versionSuffix: String? by project
 
 plugins {
@@ -12,8 +11,8 @@ plugins {
 }
 
 group = "io.datareplication"
-val baseVersion = "0.1"
-version = "${baseVersion}.${buildTimestamp}${versionSuffix ?: ""}"
+val baseVersion = "0.0.1"
+version = "${baseVersion}${versionSuffix ?: ""}"
 
 repositories {
     mavenCentral()
@@ -66,8 +65,8 @@ publishing {
             name = "github"
             url = uri("https://maven.pkg.github.com/datareplication/datareplication-java")
             credentials(PasswordCredentials::class) {
-                username = System.getenv("GITHUB_ACTOR") ?: project.findProperty("datareplication.username") as String?
-                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("datareplication.password") as String?
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
