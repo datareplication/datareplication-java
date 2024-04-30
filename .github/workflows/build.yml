@@ -27,6 +27,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         title: Coverage Report
         update-comment: true
+        debug-mode: true
 
     - name: Javadoc
       run: ./gradlew javadoc
