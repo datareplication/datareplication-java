@@ -4,7 +4,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build and test
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -17,9 +17,18 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'gradle'
+
     - name: Check
       run: ./gradlew check
-    - name: Build Javadoc
+    - name: Coverage report
+      uses: insightsengineering/coverage-action@v2
+      with:
+        path: build/reports:jacoco/test/jacocoTestReport.xml
+        publish: true
+        # diff: true
+        # diff-branch: main
+
+    - name: Javadoc
       run: ./gradlew javadoc
     - name: Upload Javadoc artifact
       if: ${{ github.ref == 'refs/heads/main' }}
@@ -34,9 +43,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish_javadoc:
+    name: Publish Javadoc
     if: ${{ github.ref == 'refs/heads/main' }}
     environment:
-      name: Deploy Javadoc to github-pages
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     permissions:
