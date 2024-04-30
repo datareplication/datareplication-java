@@ -27,12 +27,12 @@ import java.util.function.Supplier;
 
 /**
  * An interface for consuming a Feed provided by the {@link io.datareplication.producer.feed.FeedProducer}.
- *
- * <p>Feed pages are paginated collections of feed entities. Each page contains a list of feed entities and an optional
- * link to the next page.</p>
- *
- * <p>Feed pages are streamed in the order they were published. The consumer can skip already consumed entities by
- * providing a {@link StartFrom} entry point.</p>
+ * <p>
+ * Feed pages are paginated collections of feed entities. Each page contains a list of feed entities and an optional
+ * link to the next page.
+ * <p>
+ * Feed pages are streamed in the order they were published. The consumer can skip already consumed entities by
+ * providing a {@link StartFrom} entry point.
  */
 public interface FeedConsumer {
     /**

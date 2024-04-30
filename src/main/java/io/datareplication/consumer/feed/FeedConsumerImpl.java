@@ -49,6 +49,7 @@ class FeedConsumerImpl implements FeedConsumer {
             .map(StreamingPage::toCompleteEntities)
             .map(FlowAdapters::toPublisher)
             .flatMap(Flux::from)
+            // TODO:
             .skipUntil(entity -> skipUntil(entity.header(), startFrom))
             .filter(entity -> !containsContentId(entity.header().contentId(), startFrom));
 

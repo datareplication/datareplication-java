@@ -54,13 +54,13 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
     TestStreamingPage<PageHeader, EntityHeader> testStreamingPageOf(
         final PageHeader pageHeader,
         final String boundary,
-        final TestEntity<EntityHeader>... entityHttpHeaders) {
+        final TestEntityParts<EntityHeader>... testEntityParts) {
         var chunks = Arrays
-            .stream(entityHttpHeaders)
+            .stream(testEntityParts)
             .map(entity ->
                 List.<Chunk<EntityHeader>>of(
                     StreamingPage.Chunk.header(entity.httpHeaders, ContentType.of("text/plain")),
-                    StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap(entity.entity.getBytes(StandardCharsets.UTF_8))),
+                    StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap(entity.body.getBytes(StandardCharsets.UTF_8))),
                     StreamingPage.Chunk.bodyEnd()
                 )
             )
@@ -70,8 +70,8 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
     }
 
     @AllArgsConstructor(staticName = "of")
-    public static class TestEntity<EntityHeader> {
+    public static class TestEntityParts<EntityHeader> {
         private final EntityHeader httpHeaders;
-        private final String entity;
+        private final String body;
     }
 }

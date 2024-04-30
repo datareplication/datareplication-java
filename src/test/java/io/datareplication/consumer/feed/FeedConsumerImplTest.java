@@ -2,7 +2,7 @@ package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.StreamingPage;
-import io.datareplication.consumer.TestStreamingPage.TestEntity;
+import io.datareplication.consumer.TestStreamingPage.TestEntityParts;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.model.Body;
 import io.datareplication.model.BodyTestUtil;
@@ -132,7 +132,7 @@ FeedConsumerImplTest {
         var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders1, "Hello World!")
+            TestEntityParts.of(defaultEntityHeaders1, "Hello World!")
         );
 
         when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
@@ -158,17 +158,17 @@ FeedConsumerImplTest {
         var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders1, "first entity")
+            TestEntityParts.of(defaultEntityHeaders1, "first entity")
         );
         var page2 = testStreamingPageOf(
             defaultPagesHeaders2,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders2, "second entity")
+            TestEntityParts.of(defaultEntityHeaders2, "second entity")
         );
         var page3 = testStreamingPageOf(
             defaultPagesHeaders3,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders3, "third entity")
+            TestEntityParts.of(defaultEntityHeaders3, "third entity")
         );
         when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(url1));
         when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
@@ -225,17 +225,17 @@ FeedConsumerImplTest {
         var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders1, "first entity")
+            TestEntityParts.of(defaultEntityHeaders1, "first entity")
         );
         var page2 = testStreamingPageOf(
             defaultPagesHeaders2,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders2, "second entity")
+            TestEntityParts.of(defaultEntityHeaders2, "second entity")
         );
         var page3 = testStreamingPageOf(
             defaultPagesHeaders3,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders3, "third entity")
+            TestEntityParts.of(defaultEntityHeaders3, "third entity")
         );
         when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
         when(pageLoader.load(url2)).thenReturn(Mono.just(page2));
@@ -285,9 +285,9 @@ FeedConsumerImplTest {
         var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            TestEntity.of(defaultEntityHeaders2, "new entity"),
-            TestEntity.of(defaultEntityHeaders3, "newer entity")
+            TestEntityParts.of(defaultEntityHeaders1, "already consumed older timestamp"),
+            TestEntityParts.of(defaultEntityHeaders2, "new entity"),
+            TestEntityParts.of(defaultEntityHeaders3, "newer entity")
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
 
@@ -325,9 +325,9 @@ FeedConsumerImplTest {
         var page1 = testStreamingPageOf(
             defaultPagesHeaders1,
             "boundary-1",
-            TestEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            TestEntity.of(defaultEntityHeaders2, "already consumed ContentId"),
-            TestEntity.of(defaultEntityHeaders3, "new entity")
+            TestEntityParts.of(defaultEntityHeaders1, "already consumed older timestamp"),
+            TestEntityParts.of(defaultEntityHeaders2, "already consumed ContentId"),
+            TestEntityParts.of(defaultEntityHeaders3, "new entity")
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
 

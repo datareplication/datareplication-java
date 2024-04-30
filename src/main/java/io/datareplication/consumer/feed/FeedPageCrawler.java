@@ -36,35 +36,34 @@ class FeedPageCrawler {
         @NonNull final StartFrom startFrom
     ) {
         var currentPageHeader = headerLoader.load(url);
-        return currentPageHeader
-            .flatMap(pageHeader ->
-                Objects.requireNonNullElseGet(
-                    returnStartUrlIfMatchingToStartFrom(pageHeader, startFrom),
-                    () -> pageHeader
-                        .prev()
-                        .map(prev -> crawl(prev.value(), startFrom))
-                        .orElse(
-                            currentPageHeader.handle((header, sink) -> {
-                                    if (startFrom instanceof StartFrom.Timestamp) {
-                                        sink.error(new CrawlingException(
-                                            header.self().value(),
-                                            header.lastModified(),
-                                            ((StartFrom.Timestamp) startFrom).timestamp()
-                                        ));
-                                    } else if (startFrom instanceof StartFrom.ContentId) {
-                                        sink.error(new CrawlingException(
-                                            header.self().value(),
-                                            header.lastModified(),
-                                            ((StartFrom.ContentId) startFrom).timestamp()
-                                        ));
-                                    } else {
-                                        sink.next(header.self().value());
-                                    }
+        return currentPageHeader.flatMap(pageHeader ->
+            Objects.requireNonNullElseGet(
+                returnStartUrlIfMatchingToStartFrom(pageHeader, startFrom),
+                () -> pageHeader
+                    .prev()
+                    .map(prev -> crawl(prev.value(), startFrom))
+                    .orElse(
+                        currentPageHeader.handle((header, sink) -> {
+                                if (startFrom instanceof StartFrom.Timestamp) {
+                                    sink.error(new CrawlingException(
+                                        header.self().value(),
+                                        header.lastModified(),
+                                        ((StartFrom.Timestamp) startFrom).timestamp()
+                                    ));
+                                } else if (startFrom instanceof StartFrom.ContentId) {
+                                    sink.error(new CrawlingException(
+                                        header.self().value(),
+                                        header.lastModified(),
+                                        ((StartFrom.ContentId) startFrom).timestamp()
+                                    ));
+                                } else {
+                                    sink.next(header.self().value());
                                 }
-                            )
+                            }
                         )
-                )
-            );
+                    )
+            )
+        );
     }
 
     private static Mono<Url> returnStartUrlIfMatchingToStartFrom(
