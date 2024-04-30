@@ -286,7 +286,7 @@ FeedConsumerImplTest {
             defaultPagesHeaders1,
             "boundary-1",
             TestEntity.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            TestEntity.of(defaultEntityHeaders2, "now entity"),
+            TestEntity.of(defaultEntityHeaders2, "new entity"),
             TestEntity.of(defaultEntityHeaders3, "newer entity")
         );
         FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
@@ -310,7 +310,7 @@ FeedConsumerImplTest {
         assertThat(entities)
             .hasSize(2)
             .extracting(entity -> entity.body().toUtf8())
-            .containsExactly("now entity", "newer entity");
+            .containsExactly("new entity", "newer entity");
     }
 
     @Test

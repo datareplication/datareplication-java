@@ -51,9 +51,10 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
 
     @SafeVarargs
     public static <PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders>
-    TestStreamingPage<PageHeader, EntityHeader> testStreamingPageOf(final PageHeader pageHeader,
-                                                                    final String boundary,
-                                                                    final TestEntity<EntityHeader>... entityHttpHeaders) {
+    TestStreamingPage<PageHeader, EntityHeader> testStreamingPageOf(
+        final PageHeader pageHeader,
+        final String boundary,
+        final TestEntity<EntityHeader>... entityHttpHeaders) {
         var chunks = Arrays
             .stream(entityHttpHeaders)
             .map(entity ->

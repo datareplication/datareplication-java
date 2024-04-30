@@ -40,13 +40,13 @@ public interface FeedConsumer {
      * Streaming a {@link StreamingPage} will result into receiving already consumed entities
      * with an older last modified date of the current FeedPage again.
      * The {@link io.datareplication.model.feed.ContentId} from {@link StartFrom.ContentId}
-     * will not respected in streamPages, use {@link #streamEntities(Url, StartFrom)} instead.
+     * will not respect in streamPages, use {@link #streamEntities(Url, StartFrom)} instead.
      *
      * @param url       the {@link Url} to start streaming from
      * @param startFrom the {@link StartFrom} parameter
      * @return a {@link Flow.Publisher} of {@link StreamingPage} of {@link FeedPageHeader} and {@link FeedEntityHeader}
      * @throws CrawlingException   if the last modified date of the last page is not older
-     *                             and {@link StartFrom} is not {@link StartFrom.Beginning
+     *                             and {@link StartFrom} is not {@link StartFrom.Beginning}
      * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
      *                             network errors/timeouts, ...)
      * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
@@ -69,7 +69,7 @@ public interface FeedConsumer {
      * @param startFrom the {@link StartFrom} parameter
      * @return a {@link Flow.Publisher} of {@link Entity} of {@link FeedEntityHeader}
      * @throws CrawlingException   if the last modified date of the last page is not older
-     *                             and {@link StartFrom} is not {@link StartFrom.Beginning
+     *                             and {@link StartFrom} is not {@link StartFrom.Beginning}
      * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
      *                             network errors/timeouts, ...)
      * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
