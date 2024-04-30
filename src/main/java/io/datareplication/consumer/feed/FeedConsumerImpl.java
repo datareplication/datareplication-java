@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.reactivestreams.FlowAdapters;
+import org.reactivestreams.Publisher;
 import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -48,12 +49,22 @@ class FeedConsumerImpl implements FeedConsumer {
         var entityFlux = streamPagesFlux(url, startFrom)
             .map(StreamingPage::toCompleteEntities)
             .map(FlowAdapters::toPublisher)
-            .flatMap(Flux::from)
-            // TODO:
-            .skipUntil(entity -> skipUntil(entity.header(), startFrom))
-            .filter(entity -> !containsContentId(entity.header().contentId(), startFrom));
+            .flatMap(Flux::from);
 
-        return JdkFlowAdapter.publisherToFlowPublisher(entityFlux);
+        return JdkFlowAdapter.publisherToFlowPublisher(applyStartFrom(startFrom, entityFlux));
+    }
+
+    private @NonNull Publisher<Entity<FeedEntityHeader>> applyStartFrom(
+        @NonNull final StartFrom startFrom,
+        @NonNull final Flux<Entity<FeedEntityHeader>> entityFlux) {
+        var startFromFlux = entityFlux;
+        if (startFrom instanceof StartFrom.Timestamp || startFrom instanceof StartFrom.ContentId) {
+            startFromFlux = startFromFlux.skipUntil(entity -> skipUntil(entity.header(), startFrom));
+        }
+        if (startFrom instanceof StartFrom.ContentId) {
+            startFromFlux = startFromFlux.filter(entity -> !containsContentId(entity.header().contentId(), startFrom));
+        }
+        return startFromFlux;
     }
 
     private boolean containsContentId(final ContentId contentId, final StartFrom startFrom) {
