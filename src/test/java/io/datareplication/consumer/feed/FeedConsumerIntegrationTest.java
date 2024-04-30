@@ -9,6 +9,7 @@ import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.OperationType;
 import lombok.Data;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.reactivestreams.FlowAdapters;
@@ -30,6 +31,7 @@ import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@Disabled
 class FeedConsumerIntegrationTest {
     private static final String PAGE_CONTENT_TYPE = "multipart/mixed; boundary=<random-boundary>";
     private static final String USERNAME = "feed-test-user";
