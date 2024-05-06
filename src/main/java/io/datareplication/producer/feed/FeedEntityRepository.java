@@ -2,12 +2,12 @@ package io.datareplication.producer.feed;
 
 import io.datareplication.model.Entity;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
@@ -19,8 +19,8 @@ public interface FeedEntityRepository {
     @Value
     class PageAssignment {
         @NonNull ContentId contentId;
-        @NonNull Timestamp lastModified;
-        @NonNull Optional<@NonNull Timestamp> originalLastModified;
+        @NonNull Instant lastModified;
+        @NonNull Optional<@NonNull Instant> originalLastModified;
         long contentLength;
         @NonNull Optional<@NonNull PageId> pageId;
     }

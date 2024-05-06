@@ -2,7 +2,6 @@ package io.datareplication.model.feed;
 
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -13,7 +12,7 @@ class FeedEntityHeaderTest {
     @Test
     void shouldDefaultToEmptyExtraHeaders() {
         final FeedEntityHeader header = new FeedEntityHeader(
-            Timestamp.of(Instant.now()),
+            Instant.now(),
             OperationType.PUT,
             ContentId.of("1234"));
 
@@ -24,7 +23,7 @@ class FeedEntityHeaderTest {
     void shouldReturnHttpHeaders() {
         final HttpHeaders extraHeaders = HttpHeaders.of(HttpHeader.of("e1", "v1"));
         final FeedEntityHeader header = new FeedEntityHeader(
-            Timestamp.of(Instant.parse("2023-10-05T09:58:59.000Z")),
+            Instant.parse("2023-10-05T09:58:59.000Z"),
             OperationType.PUT,
             ContentId.of("content-id-1234"),
             extraHeaders);
@@ -39,7 +38,7 @@ class FeedEntityHeaderTest {
     @Test
     void shouldReturnHttpHeadersWithDifferentOperationType() {
         final FeedEntityHeader header = new FeedEntityHeader(
-            Timestamp.of(Instant.parse("2023-10-24T12:14:12.000Z")),
+            Instant.parse("2023-10-24T12:14:12.000Z"),
             OperationType.DELETE,
             ContentId.of(""));
 

@@ -1,9 +1,11 @@
 package io.datareplication.consumer.feed;
 
+import io.datareplication.consumer.CrawlingException;
 import io.datareplication.consumer.HttpException;
+import io.datareplication.consumer.PageFormatException;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
+import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedPageHeader;
 import io.datareplication.model.feed.Link;
 import lombok.NonNull;
@@ -33,8 +35,12 @@ class FeedPageCrawlerTest {
     @Mock
     private HeaderLoader headerLoader;
 
+    private static final Instant INSTANT_PAGE_1 = Instant.parse("2023-10-01T00:00:01.000Z");
+    private static final Instant INSTANT_PAGE_2 = Instant.parse("2023-10-01T00:00:02.000Z");
+    private static final Instant INSTANT_PAGE_3 = Instant.parse("2023-10-01T00:00:03.000Z");
+
     private final FeedPageHeader pageHeader1 = new FeedPageHeader(
-        Timestamp.of(Instant.parse("2023-10-01T09:58:59.000Z")),
+        INSTANT_PAGE_1,
         Link.self(Url.of("https://example.datareplication.io/1")),
         Optional.empty(),
         Optional.of(Link.next(Url.of("https://example.datareplication.io/2"))),
@@ -42,15 +48,24 @@ class FeedPageCrawlerTest {
     );
 
     private final FeedPageHeader pageHeader2 = new FeedPageHeader(
-        Timestamp.of(Instant.parse("2023-10-02T09:58:59.000Z")),
+        INSTANT_PAGE_2,
         Link.self(Url.of("https://example.datareplication.io/2")),
         Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
         Optional.of(Link.next(Url.of("https://example.datareplication.io/3"))),
         HttpHeaders.EMPTY
     );
 
+    private final FeedPageHeader pageHeader2NoNextLink = new FeedPageHeader(
+        INSTANT_PAGE_2,
+        Link.self(Url.of("https://example.datareplication.io/2")),
+        Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
+        Optional.empty(),
+        HttpHeaders.EMPTY
+    );
+
+
     private final FeedPageHeader pageHeader3 = new FeedPageHeader(
-        Timestamp.of(Instant.parse("2023-10-03T09:58:59.000Z")),
+        INSTANT_PAGE_3,
         Link.self(Url.of("https://example.datareplication.io/3")),
         Optional.of(Link.prev(Url.of("https://example.datareplication.io/2"))),
         Optional.empty(),
@@ -74,18 +89,18 @@ class FeedPageCrawlerTest {
     void startFromBeginningWithoutPrevLink_shouldStartWithThisPage() {
         Url url = pageHeader1.self().value();
 
-        Mono<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.beginning());
 
-        assertThat(result.toFuture()).isCompletedWithValue(pageHeader1);
+        assertThat(result.toFuture()).isCompletedWithValue(pageHeader1.self().value());
     }
 
     @Test
     void crawlToBeginning_shouldStartWithPageHeader1() {
         Url url = pageHeader3.self().value();
 
-        Mono<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.beginning());
 
-        assertThat(result.toFuture()).isCompletedWithValue(pageHeader1);
+        assertThat(result.toFuture()).isCompletedWithValue(pageHeader1.self().value());
     }
 
     @Test
@@ -94,7 +109,7 @@ class FeedPageCrawlerTest {
         HttpException.ClientError expectedException = new HttpException.ClientError(url, 404);
         when(headerLoader.load(url)).thenReturn(Mono.error(expectedException));
 
-        Mono<@NonNull FeedPageHeader> result = feedPageCrawler.crawl(url, StartFrom.beginning());
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.beginning());
 
         assertThat(result.toFuture())
             .isCompletedExceptionally()
@@ -103,5 +118,68 @@ class FeedPageCrawlerTest {
             .withCause(expectedException);
     }
 
-    // TODO: Implement other StartFrom tests
+    @Test
+    void startFromTimestamp_shouldStartWithPage2() {
+        Url url = pageHeader1.self().value();
+
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.timestamp(INSTANT_PAGE_2));
+
+        assertThat(result.toFuture()).isCompletedWithValue(pageHeader2.self().value());
+    }
+
+    @Test
+    void startFromContentId_shouldStartWithPage2() {
+        Url url = pageHeader1.self().value();
+
+        Mono<@NonNull Url> result =
+            feedPageCrawler.crawl(url, StartFrom.contentId(ContentId.of("any id"), INSTANT_PAGE_2));
+
+        assertThat(result.toFuture()).isCompletedWithValue(pageHeader2.self().value());
+    }
+
+    @Test
+    void startFromTimestamp_withNoOlderPage_shouldThrowException() {
+        Url url = pageHeader1.self().value();
+
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.timestamp(INSTANT_PAGE_1));
+
+        assertThat(result.toFuture())
+            .isCompletedExceptionally()
+            .failsWithin(10, TimeUnit.MILLISECONDS)
+            .withThrowableOfType(ExecutionException.class)
+            .withCauseInstanceOf(CrawlingException.class)
+            .withCause(new CrawlingException(pageHeader1.self().value(), INSTANT_PAGE_1, INSTANT_PAGE_1));
+    }
+
+    @Test
+    void startFromTimestamp_withNoNextLinkOnOlderPage_shouldThrowException() {
+        when(headerLoader.load(pageHeader2.self().value()))
+            .thenReturn(Mono.just(pageHeader2NoNextLink));
+
+        Url url = pageHeader3.self().value();
+
+        Mono<@NonNull Url> result = feedPageCrawler.crawl(url, StartFrom.timestamp(INSTANT_PAGE_3));
+
+        assertThat(result.toFuture())
+            .isCompletedExceptionally()
+            .failsWithin(10, TimeUnit.MILLISECONDS)
+            .withThrowableOfType(ExecutionException.class)
+            .withCauseInstanceOf(PageFormatException.MissingNextLinkHeader.class)
+            .withCause(new PageFormatException.MissingNextLinkHeader(pageHeader2NoNextLink.toHttpHeaders()));
+    }
+
+    @Test
+    void startFromContentId_withNoOlderPage_shouldThrowException() {
+        Url url = pageHeader1.self().value();
+
+        Mono<@NonNull Url> result =
+            feedPageCrawler.crawl(url, StartFrom.contentId(ContentId.of("any id"), INSTANT_PAGE_1));
+
+        assertThat(result.toFuture())
+            .isCompletedExceptionally()
+            .failsWithin(10, TimeUnit.MILLISECONDS)
+            .withThrowableOfType(ExecutionException.class)
+            .withCauseInstanceOf(CrawlingException.class)
+            .withCause(new CrawlingException(pageHeader1.self().value(), INSTANT_PAGE_1, INSTANT_PAGE_1));
+    }
 }

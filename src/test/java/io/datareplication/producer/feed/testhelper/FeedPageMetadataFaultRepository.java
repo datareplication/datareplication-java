@@ -1,11 +1,11 @@
 package io.datareplication.producer.feed.testhelper;
 
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.producer.feed.FeedPageMetadataRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FeedPageMetadataFaultRepository implements FeedPageMetadataRepository {
     private final FeedPageMetadataRepository inner;
-    private final Set<Timestamp> fail = new HashSet<>();
+    private final Set<Instant> fail = new HashSet<>();
 
-    public void failOn(Timestamp... timestamps) {
-        fail.addAll(Arrays.asList(timestamps));
+    public void failOn(Instant... instants) {
+        fail.addAll(Arrays.asList(instants));
     }
 
     public void succeed() {

@@ -1,6 +1,9 @@
 package io.datareplication.consumer.feed;
 
 import io.datareplication.consumer.Authorization;
+import io.datareplication.consumer.CrawlingException;
+import io.datareplication.consumer.HttpException;
+import io.datareplication.consumer.PageFormatException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.http.AuthSupplier;
 import io.datareplication.internal.http.HttpClient;
@@ -22,14 +25,61 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.function.Supplier;
 
+/**
+ * An interface for consuming a Feed provided by the {@link io.datareplication.producer.feed.FeedProducer}.
+ * <p>
+ * Feed pages are paginated collections of feed entities. Each page contains a list of feed entities and an optional
+ * link to the next page.
+ * <p>
+ * Feed pages are streamed in the order they were published. The consumer can skip already consumed entities by
+ * providing a {@link StartFrom} entry point.
+ */
 public interface FeedConsumer {
-    // TODO: error handling
-    @NonNull Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(
+    /**
+     * Stream the feed pages starting from the given {@link Url}.
+     * Streaming a {@link StreamingPage} will result into receiving already consumed entities
+     * with an older last modified date of the current FeedPage again.
+     * The {@link io.datareplication.model.feed.ContentId} from {@link StartFrom.ContentId}
+     * will not respect in streamPages, use {@link #streamEntities(Url, StartFrom)} instead.
+     *
+     * @param url       the {@link Url} to start streaming from
+     * @param startFrom the {@link StartFrom} parameter
+     * @return a {@link Flow.Publisher} of {@link StreamingPage} of {@link FeedPageHeader} and {@link FeedEntityHeader}
+     * @throws CrawlingException   if the last modified date of the last page is not older
+     *                             and {@link StartFrom} is not {@link StartFrom.Beginning}
+     * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
+     *                             network errors/timeouts, ...)
+     * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
+     *                             missing or malformed HTTP Content-Type header since multipart parsing errors will
+     *                             only start happening when we get to {@link StreamingPage})
+     */
+    @NonNull
+    Flow.Publisher<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> streamPages(
         @NonNull Url url,
         @NonNull StartFrom startFrom);
 
-    @NonNull Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
-                                                                                       @NonNull StartFrom startFrom);
+    /**
+     * Stream the entities of the feed starting from the given {@link Url}.
+     * Streaming entities will result into skipping already consumed entities
+     * with an older last modified date of the current FeedPage.
+     * Streaming entities will respect the {@link io.datareplication.model.feed.ContentId}
+     * from {@link StartFrom.ContentId}.
+     *
+     * @param url       the {@link Url} to start streaming from
+     * @param startFrom the {@link StartFrom} parameter
+     * @return a {@link Flow.Publisher} of {@link Entity} of {@link FeedEntityHeader}
+     * @throws CrawlingException   if the last modified date of the last page is not older
+     *                             and {@link StartFrom} is not {@link StartFrom.Beginning}
+     * @throws HttpException       in case of HTTP errors (invalid URL, HTTP error status codes,
+     *                             network errors/timeouts, ...)
+     * @throws PageFormatException if the HTTP response is ok, but the page response is malformed in some way (usually
+     *                             missing or malformed HTTP Content-Type header since multipart parsing errors will
+     *                             only start happening when we get to {@link StreamingPage})
+     */
+    @NonNull
+    Flow.Publisher<@NonNull Entity<@NonNull FeedEntityHeader>> streamEntities(@NonNull Url url,
+                                                                              @NonNull StartFrom startFrom);
+
     /**
      * A builder for {@link FeedConsumer}.
      *
@@ -97,10 +147,10 @@ public interface FeedConsumer {
                 Optional.empty(),
                 Optional.empty()
             );
-            final var pageLoader = new PageLoader(httpClient);
-            final var headerLoader = new HeaderLoader(httpClient);
-            final var feedCrawler = new FeedPageCrawler(headerLoader);
             final var feedPageHeaderParser = new FeedPageHeaderParser();
+            final var pageLoader = new PageLoader(httpClient);
+            final var headerLoader = new HeaderLoader(httpClient, feedPageHeaderParser);
+            final var feedCrawler = new FeedPageCrawler(headerLoader);
             return new FeedConsumerImpl(pageLoader, feedCrawler, feedPageHeaderParser);
         }
     }

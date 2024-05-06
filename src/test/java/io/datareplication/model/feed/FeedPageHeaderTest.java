@@ -2,7 +2,6 @@ package io.datareplication.model.feed;
 
 import io.datareplication.model.HttpHeader;
 import io.datareplication.model.HttpHeaders;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +15,7 @@ class FeedPageHeaderTest {
     @Test
     void shouldDefaultToEmptyExtraHeaders() {
         final FeedPageHeader header = new FeedPageHeader(
-            Timestamp.of(Instant.now()),
+            Instant.now(),
             Link.self(Url.of("https://example.datareplication.io/page")),
             Optional.empty(),
             Optional.empty());
@@ -28,7 +27,7 @@ class FeedPageHeaderTest {
     void shouldReturnHttpHeaders() {
         final HttpHeaders extraHeaders = HttpHeaders.of(HttpHeader.of("e1", "v1"));
         final FeedPageHeader pageHeader = new FeedPageHeader(
-            Timestamp.of(Instant.parse("2023-10-05T09:58:59.000Z")),
+            Instant.parse("2023-10-05T09:58:59.000Z"),
             Link.self(Url.of("https://example.datareplication.io/2")),
             Optional.of(Link.prev(Url.of("https://example.datareplication.io/1"))),
             Optional.of(Link.next(Url.of("https://example.datareplication.io/3"))),
@@ -46,7 +45,7 @@ class FeedPageHeaderTest {
     @Test
     void shouldReturnHttpHeadersWithoutOptionalLinks() {
         final FeedPageHeader pageHeader = new FeedPageHeader(
-            Timestamp.of(Instant.parse("2023-12-31T23:59:59.999Z")),
+            Instant.parse("2023-12-31T23:59:59.999Z"),
             Link.self(Url.of("https://example.datareplication.io/1")),
             Optional.empty(),
             Optional.empty(),

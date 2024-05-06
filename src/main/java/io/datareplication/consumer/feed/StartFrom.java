@@ -6,6 +6,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.time.Instant;
+
 public class StartFrom {
     private StartFrom() {
     }
@@ -14,7 +16,7 @@ public class StartFrom {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     public static class Timestamp extends StartFrom {
-        @NonNull io.datareplication.model.Timestamp timestamp;
+        @NonNull Instant timestamp;
     }
 
     @Value
@@ -22,7 +24,7 @@ public class StartFrom {
     @EqualsAndHashCode(callSuper = false)
     public static class ContentId extends StartFrom {
         @NonNull io.datareplication.model.feed.ContentId contentId;
-        @NonNull io.datareplication.model.Timestamp timestamp;
+        @NonNull Instant timestamp;
     }
 
     @Value
@@ -32,12 +34,12 @@ public class StartFrom {
         private static final Beginning INSTANCE = new Beginning();
     }
 
-    public static @NonNull Timestamp timestamp(@NonNull io.datareplication.model.Timestamp timestamp) {
+    public static @NonNull Timestamp timestamp(@NonNull Instant timestamp) {
         return new Timestamp(timestamp);
     }
 
     public static @NonNull ContentId contentId(@NonNull io.datareplication.model.feed.ContentId contentId,
-                                               @NonNull io.datareplication.model.Timestamp timestamp) {
+                                               @NonNull Instant timestamp) {
         return new ContentId(contentId, timestamp);
     }
 

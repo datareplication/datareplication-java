@@ -5,7 +5,6 @@ import io.datareplication.model.Body;
 import io.datareplication.model.Entity;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
@@ -46,7 +45,7 @@ public class FeedProducerIntegrationTest {
 
     private final Entity<FeedEntityHeader> entity1 = new Entity<>(
             new FeedEntityHeader(
-                    Timestamp.of(Instant.parse("2024-01-29T16:00:00Z")),
+                    Instant.parse("2024-01-29T16:00:00Z"),
                     OperationType.PUT,
                     ContentId.of("contentId1")
             ),
@@ -54,7 +53,7 @@ public class FeedProducerIntegrationTest {
     );
     private final Entity<FeedEntityHeader> entity2 = new Entity<>(
             new FeedEntityHeader(
-                    Timestamp.of(Instant.parse("2024-01-29T16:10:15Z")),
+                    Instant.parse("2024-01-29T16:10:15Z"),
                     OperationType.DELETE,
                     ContentId.of("contentId2")
             ),
@@ -62,7 +61,7 @@ public class FeedProducerIntegrationTest {
     );
     private final Entity<FeedEntityHeader> entity3 = new Entity<>(
             new FeedEntityHeader(
-                    Timestamp.of(Instant.parse("2024-01-29T16:20:25Z")),
+                    Instant.parse("2024-01-29T16:20:25Z"),
                     OperationType.PUT,
                     ContentId.of("contentId3")
             ),

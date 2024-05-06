@@ -1,7 +1,6 @@
 package io.datareplication.producer.feed;
 
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +15,7 @@ import java.util.Optional;
 @AllArgsConstructor
 final class MutablePage {
     private final PageId pageId;
-    private Timestamp lastModified;
+    private Instant lastModified;
     private final Optional<PageId> prev;
     private long contentLength;
     private int numberOfEntities;
@@ -34,7 +33,7 @@ final class MutablePage {
     static MutablePage emptyPage(PageId pageId) {
         return new MutablePage(
             pageId,
-            Timestamp.of(Instant.EPOCH),
+            Instant.EPOCH,
             Optional.empty(),
             0,
             0
@@ -44,7 +43,7 @@ final class MutablePage {
     static MutablePage emptyPage(PageId pageId, PageId prev) {
         return new MutablePage(
             pageId,
-            Timestamp.of(Instant.EPOCH),
+            Instant.EPOCH,
             Optional.of(prev),
             0,
             0

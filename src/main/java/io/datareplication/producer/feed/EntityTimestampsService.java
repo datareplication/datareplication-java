@@ -1,8 +1,7 @@
 package io.datareplication.producer.feed;
 
-import io.datareplication.model.Timestamp;
-
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,8 +26,8 @@ class EntityTimestampsService {
         List<FeedEntityRepository.PageAssignment> entities
     ) {
         class State {
-            Timestamp prev = latestPage.lastModified();
-            Timestamp prevBeforeUpdate = latestPage.lastModified();
+            Instant prev = latestPage.lastModified();
+            Instant prevBeforeUpdate = latestPage.lastModified();
         }
         final var state = new State();
 
@@ -48,8 +47,8 @@ class EntityTimestampsService {
 
     }
 
-    private Timestamp updatedTimestamp(Timestamp current, Timestamp prev, Timestamp prevBeforeUpdate) {
-        if (current.value().isAfter(prev.value())) {
+    private Instant updatedTimestamp(Instant current, Instant prev, Instant prevBeforeUpdate) {
+        if (current.isAfter(prev)) {
             // If the current timestamp is after the previous timestamp, it's already good and we keep it.
             return current;
         } else {
@@ -60,14 +59,14 @@ class EntityTimestampsService {
                 return prev;
             } else {
                 // Otherwise we set the current entity's timestamp to slightly after the previous timestamp.
-                return Timestamp.of(prev.value().plus(BUMP));
+                return prev.plus(BUMP);
             }
         }
     }
 
     private static FeedEntityRepository.PageAssignment updatedEntity(
         FeedEntityRepository.PageAssignment entity,
-        Timestamp lastModified
+        Instant lastModified
     ) {
         if (entity.lastModified().equals(lastModified)) {
             return entity;

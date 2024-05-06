@@ -2,13 +2,13 @@ package io.datareplication.model.snapshot;
 
 import io.datareplication.model.Body;
 import io.datareplication.model.ContentType;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -24,13 +24,13 @@ public class SnapshotIndex {
     /**
      * The timestamp of the dataset contained in this snapshot. This is usually the time when snapshot creation started.
      */
-    @NonNull Timestamp createdAt;
+    @NonNull Instant createdAt;
     /**
      * The URLs of the pages that make up this snapshot.
      */
     @NonNull List<@NonNull Url> pages;
 
-    public SnapshotIndex(@NonNull SnapshotId id, @NonNull Timestamp createdAt, @NonNull List<@NonNull Url> pages) {
+    public SnapshotIndex(@NonNull SnapshotId id, @NonNull Instant createdAt, @NonNull List<@NonNull Url> pages) {
         this.id = id;
         this.createdAt = createdAt;
         this.pages = List.copyOf(pages);

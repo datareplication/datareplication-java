@@ -1,13 +1,18 @@
 package io.datareplication.consumer;
 
+import io.datareplication.model.ContentType;
 import io.datareplication.model.ToHttpHeaders;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Flux;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Flow;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders>
@@ -41,5 +46,32 @@ public class TestStreamingPage<PageHeader extends ToHttpHeaders, EntityHeader ex
     @Override
     public void subscribe(final Flow.Subscriber<? super Chunk<EntityHeader>> subscriber) {
         flow.subscribe(subscriber);
+    }
+
+
+    @SafeVarargs
+    public static <PageHeader extends ToHttpHeaders, EntityHeader extends ToHttpHeaders>
+    TestStreamingPage<PageHeader, EntityHeader> testStreamingPageOf(
+        final PageHeader pageHeader,
+        final String boundary,
+        final TestEntityParts<EntityHeader>... testEntityParts) {
+        var chunks = Arrays
+            .stream(testEntityParts)
+            .map(entity ->
+                List.<Chunk<EntityHeader>>of(
+                    StreamingPage.Chunk.header(entity.httpHeaders, ContentType.of("text/plain")),
+                    StreamingPage.Chunk.bodyChunk(ByteBuffer.wrap(entity.body.getBytes(StandardCharsets.UTF_8))),
+                    StreamingPage.Chunk.bodyEnd()
+                )
+            )
+            .flatMap(List<Chunk<EntityHeader>>::stream)
+            .collect(Collectors.toList());
+        return new TestStreamingPage<>(pageHeader, boundary, chunks);
+    }
+
+    @AllArgsConstructor(staticName = "of")
+    public static class TestEntityParts<EntityHeader> {
+        private final EntityHeader httpHeaders;
+        private final String body;
     }
 }

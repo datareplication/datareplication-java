@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -129,13 +130,13 @@ public class HttpHeader {
     }
 
     /**
-     * Create a <code>Last-Modified</code> header from the given timestamp. The timestamp is formatted in the preferred
+     * Create a <code>Last-Modified</code> header from the given Instant. The Instant is formatted in the preferred
      * HTTP datetime header format. Example: <code>Wed, 04 Oct 2023 08:25:33 GMT</code>
      *
      * @param lastModified the timestamp
      * @return the <code>Last-Modified</code> HttpHeader
      */
-    public static @NonNull HttpHeader lastModified(@NonNull Timestamp lastModified) {
-        return HttpHeader.of(LAST_MODIFIED, HTTP_HEADER_FORMATTER.format(lastModified.value()));
+    public static @NonNull HttpHeader lastModified(@NonNull Instant lastModified) {
+        return HttpHeader.of(LAST_MODIFIED, HTTP_HEADER_FORMATTER.format(lastModified));
     }
 }

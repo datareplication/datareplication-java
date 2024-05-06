@@ -53,6 +53,16 @@ public class PageFormatException extends ConsumerException {
     }
 
     @EqualsAndHashCode(callSuper = false)
+    public static final class MissingNextLinkHeader extends PageFormatException {
+        private final HttpHeaders httpHeaders;
+
+        public MissingNextLinkHeader(@NonNull final HttpHeaders httpHeaders) {
+            super(String.format("LINK; rel=next header is missing from HTTP response: '%s'", httpHeaders));
+            this.httpHeaders = httpHeaders;
+        }
+    }
+
+    @EqualsAndHashCode(callSuper = false)
     public static final class UnparseableContentTypeHeader extends PageFormatException {
         private final String contentTypeHeader;
 

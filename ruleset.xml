@@ -13,10 +13,8 @@
         <exclude name="AtLeastOneConstructor"/>
         <exclude name="MethodArgumentCouldBeFinal"/>
         <exclude name="LocalVariableCouldBeFinal"/>
-        <exclude name="AbstractNaming"/>
         <exclude name="OnlyOneReturn"/>
         <exclude name="CommentDefaultAccessModifier"/>
-        <exclude name="DefaultPackage"/>
         <exclude name="GenericsNaming"/>
         <exclude name="ShortVariable"/>
         <exclude name="LongVariable"/>
@@ -27,7 +25,6 @@
     </rule>
     <rule ref="category/java/errorprone.xml">
         <exclude name="MissingSerialVersionUID"/>
-        <exclude name="DataflowAnomalyAnalysis"/>
         <exclude name="AvoidFieldNameMatchingTypeName"/>
         <exclude name="AvoidFieldNameMatchingMethodName"/>
     </rule>

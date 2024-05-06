@@ -5,7 +5,6 @@ import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Page;
 import io.datareplication.model.PageId;
-import io.datareplication.model.Timestamp;
 import io.datareplication.model.Url;
 import io.datareplication.model.snapshot.SnapshotEntityHeader;
 import io.datareplication.model.snapshot.SnapshotId;
@@ -18,6 +17,7 @@ import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Mono;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
@@ -42,7 +42,7 @@ class SnapshotProducerImpl implements SnapshotProducer {
         AtomicLong currentBytesForPage = new AtomicLong(0L);
         AtomicLong currentEntitiesForPage = new AtomicLong(0L);
         SnapshotId id = snapshotIdProvider.newSnapshotId();
-        Timestamp createdAt = Timestamp.of(clock.instant());
+        Instant createdAt = clock.instant();
 
         return JdkFlowAdapter.flowPublisherToFlux(entities)
             .bufferUntil(entity -> {
