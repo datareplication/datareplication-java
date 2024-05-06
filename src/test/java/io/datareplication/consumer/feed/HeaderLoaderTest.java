@@ -69,6 +69,4 @@ class HeaderLoaderTest {
 
         assertThat(result).isEqualTo(expectedFeedHeader);
     }
-
-    // TODO: Parsing error
 }
