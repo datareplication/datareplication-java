@@ -1,5 +1,6 @@
 package io.datareplication.consumer.feed;
 
+import io.datareplication.consumer.ContentIdNotFoundException;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.consumer.TestStreamingPage.TestEntityParts;
@@ -51,98 +52,91 @@ FeedConsumerImplTest {
     private FeedPageHeaderParser feedPageHeaderParser;
     @InjectMocks
     private FeedConsumerImpl feedConsumer;
-    private Instant lastModified;
-    private Instant lastModifiedAfter;
-    private Instant lastModifiedBefore;
-    private HttpHeaders defaultEntityHeaders1;
-    private HttpHeaders defaultEntityHeaders2;
-    private HttpHeaders defaultEntityHeaders3;
-    private HttpHeaders defaultPagesHeaders1;
-    private HttpHeaders defaultPagesHeaders2;
-    private HttpHeaders defaultPagesHeaders3;
-    private Url url1;
-    private Url url2;
-    private Url url3;
-    private ContentId contentId1;
-    private ContentId contentId2;
-    private ContentId contentId3;
-    private FeedEntityHeader feedEntityHeader1;
-    private FeedEntityHeader feedEntityHeader2;
-    private FeedEntityHeader feedEntityHeader3;
-    private FeedPageHeader feedPageHeader1;
-    private FeedPageHeader feedPageHeader2;
-    private FeedPageHeader feedPageHeader3;
+
+    private static final String BOUNDARY = "boundary";
+    private static final Instant LAST_MODIFIED =
+        Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:14 GMT"));
+    private static final Instant LAST_MODIFIED_AFTER =
+        Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:15 GMT"));
+    private static final Instant LAST_MODIFIED_BEFORE =
+        Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:13 GMT"));
+    private static final HttpHeaders ENTITY_HTTP_HEADERS_1 =
+        HttpHeaders.of(HttpHeader.of("entity", "first"));
+    private static final HttpHeaders ENTITY_HTTP_HEADERS_2 =
+        HttpHeaders.of(HttpHeader.of("entity", "second"));
+    private static final HttpHeaders ENTITY_HTTP_HEADERS_3 =
+        HttpHeaders.of(HttpHeader.of("entity", "third"));
+    private static final HttpHeaders PAGE_HTTP_HEADERS_1 =
+        HttpHeaders.of(HttpHeader.of("page", "first"));
+    private static final HttpHeaders PAGE_HTTP_HEADERS_2 =
+        HttpHeaders.of(HttpHeader.of("page", "second"));
+    private static final HttpHeaders PAGE_HTTP_HEADERS_3 =
+        HttpHeaders.of(HttpHeader.of("page", "third"));
+    private static final Url URL_1 = Url.of("url1");
+    private static final Url URL_2 = Url.of("url2");
+    private static final Url URL_3 = Url.of("url3");
+    private static final ContentId CONTENT_ID_1 = ContentId.of("contentId1");
+    private static final ContentId CONTENT_ID_2 = ContentId.of("contentId2");
+    private static final ContentId CONTENT_ID_3 = ContentId.of("contentId3");
+    private static final FeedEntityHeader FEED_ENTITY_HEADER_1 =
+        new FeedEntityHeader(LAST_MODIFIED, OperationType.PUT, CONTENT_ID_1);
+    private static final FeedEntityHeader FEED_ENTITY_HEADER_2 =
+        new FeedEntityHeader(LAST_MODIFIED, OperationType.PUT, CONTENT_ID_2);
+    private static final FeedEntityHeader FEED_ENTITY_HEADER_3 =
+        new FeedEntityHeader(LAST_MODIFIED, OperationType.PUT, CONTENT_ID_2);
 
     @BeforeEach
     void setUp() {
-        lastModified = Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:14 GMT"));
-        lastModifiedBefore = Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:13 GMT"));
-        lastModifiedAfter = Instant.from(RFC_1123_DATE_TIME.parse("Thu, 5 Oct 2023 03:00:15 GMT"));
-        defaultEntityHeaders1 = HttpHeaders.of(HttpHeader.of("entity", "first"));
-        defaultEntityHeaders2 = HttpHeaders.of(HttpHeader.of("entity", "second"));
-        defaultEntityHeaders3 = HttpHeaders.of(HttpHeader.of("entity", "third"));
-        defaultPagesHeaders1 = HttpHeaders.of(HttpHeader.of("page", "first"));
-        defaultPagesHeaders2 = HttpHeaders.of(HttpHeader.of("page", "second"));
-        defaultPagesHeaders3 = HttpHeaders.of(HttpHeader.of("page", "third"));
-        url1 = Url.of("url1");
-        url2 = Url.of("url2");
-        url3 = Url.of("url3");
-        contentId1 = ContentId.of("contentId1");
-        contentId2 = ContentId.of("contentId2");
-        contentId3 = ContentId.of("contentId3");
-        feedEntityHeader1 = new FeedEntityHeader(lastModified, OperationType.PUT, contentId1);
-        feedEntityHeader2 = new FeedEntityHeader(lastModified, OperationType.PUT, contentId2);
-        feedEntityHeader3 = new FeedEntityHeader(lastModified, OperationType.PUT, contentId2);
-        feedPageHeader1 = new FeedPageHeader(
-            lastModified,
-            Link.self(url1),
+        FeedPageHeader feedPageHeader1 = new FeedPageHeader(
+            LAST_MODIFIED,
+            Link.self(URL_1),
             Optional.empty(),
-            Optional.of(Link.next(url2))
+            Optional.of(Link.next(URL_2))
         );
-        feedPageHeader2 = new FeedPageHeader(
-            lastModified,
-            Link.self(url2),
-            Optional.of(Link.prev(url1)),
-            Optional.of(Link.next(url3))
+        FeedPageHeader feedPageHeader2 = new FeedPageHeader(
+            LAST_MODIFIED,
+            Link.self(URL_2),
+            Optional.of(Link.prev(URL_1)),
+            Optional.of(Link.next(URL_3))
         );
-        feedPageHeader3 = new FeedPageHeader(
-            lastModified,
-            Link.self(url3),
-            Optional.of(Link.prev(url2)),
+        FeedPageHeader feedPageHeader3 = new FeedPageHeader(
+            LAST_MODIFIED,
+            Link.self(URL_3),
+            Optional.of(Link.prev(URL_2)),
             Optional.empty()
         );
         lenient()
-            .when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1))
+            .when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_1))
             .thenReturn(feedPageHeader1);
         lenient()
-            .when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders2))
+            .when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_2))
             .thenReturn(feedPageHeader2);
         lenient()
-            .when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders3))
+            .when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_3))
             .thenReturn(feedPageHeader3);
     }
 
     @Test
     void streamPagesFromBeginning_shouldConsumeTheOneAndOnlyPage() {
         FeedPageHeader feedPageHeader = new FeedPageHeader(
-            lastModified,
-            Link.self(url1),
+            LAST_MODIFIED,
+            Link.self(URL_1),
             Optional.empty(),
             Optional.empty()
         );
         var page1 = testStreamingPageOf(
-            defaultPagesHeaders1,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders1, "Hello World!")
+            PAGE_HTTP_HEADERS_1,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_1, "Hello World!")
         );
 
-        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
-        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.just(url1));
-        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
+        when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_1)).thenReturn(feedPageHeader);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_1)).thenReturn(FEED_ENTITY_HEADER_1);
+        when(feedPageCrawler.crawl(URL_1, StartFrom.beginning())).thenReturn(Mono.just(URL_1));
+        when(pageLoader.load(URL_1)).thenReturn(Mono.just(page1));
 
         List<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> pages = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamPages(url1, StartFrom.beginning()))
+            .flowPublisherToFlux(feedConsumer.streamPages(URL_1, StartFrom.beginning()))
             .collectList()
             .single()
             .block();
@@ -150,37 +144,37 @@ FeedConsumerImplTest {
         assertEntities(pages)
             .hasSize(1)
             .containsExactly(
-                new Entity<>(feedEntityHeader1, Body.fromUtf8("Hello World!", ContentType.of("text/plain")))
+                new Entity<>(FEED_ENTITY_HEADER_1, Body.fromUtf8("Hello World!", ContentType.of("text/plain")))
             );
     }
 
     @Test
     void streamPagesFromBeginning_shouldFollowAndConsumeNextLinks() {
         var page1 = testStreamingPageOf(
-            defaultPagesHeaders1,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders1, "first entity")
+            PAGE_HTTP_HEADERS_1,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_1, "first entity")
         );
         var page2 = testStreamingPageOf(
-            defaultPagesHeaders2,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders2, "second entity")
+            PAGE_HTTP_HEADERS_2,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_2, "second entity")
         );
         var page3 = testStreamingPageOf(
-            defaultPagesHeaders3,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders3, "third entity")
+            PAGE_HTTP_HEADERS_3,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_3, "third entity")
         );
-        when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(url1));
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders2)).thenReturn(feedEntityHeader2);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders3)).thenReturn(feedEntityHeader3);
-        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
-        when(pageLoader.load(url2)).thenReturn(Mono.just(page2));
-        when(pageLoader.load(url3)).thenReturn(Mono.just(page3));
+        when(feedPageCrawler.crawl(URL_3, StartFrom.beginning())).thenReturn(Mono.just(URL_1));
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_1)).thenReturn(FEED_ENTITY_HEADER_1);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_2)).thenReturn(FEED_ENTITY_HEADER_2);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_3)).thenReturn(FEED_ENTITY_HEADER_3);
+        when(pageLoader.load(URL_1)).thenReturn(Mono.just(page1));
+        when(pageLoader.load(URL_2)).thenReturn(Mono.just(page2));
+        when(pageLoader.load(URL_3)).thenReturn(Mono.just(page3));
 
         List<@NonNull StreamingPage<@NonNull FeedPageHeader, @NonNull FeedEntityHeader>> pages = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamPages(url3, StartFrom.beginning()))
+            .flowPublisherToFlux(feedConsumer.streamPages(URL_3, StartFrom.beginning()))
             .collectList()
             .single()
             .block();
@@ -188,29 +182,29 @@ FeedConsumerImplTest {
         assertEntities(pages)
             .hasSize(3)
             .containsExactly(
-                new Entity<>(feedEntityHeader1, Body.fromUtf8("first entity", ContentType.of("text/plain"))),
-                new Entity<>(feedEntityHeader2, Body.fromUtf8("second entity", ContentType.of("text/plain"))),
-                new Entity<>(feedEntityHeader3, Body.fromUtf8("third entity", ContentType.of("text/plain")))
+                new Entity<>(FEED_ENTITY_HEADER_1, Body.fromUtf8("first entity", ContentType.of("text/plain"))),
+                new Entity<>(FEED_ENTITY_HEADER_2, Body.fromUtf8("second entity", ContentType.of("text/plain"))),
+                new Entity<>(FEED_ENTITY_HEADER_3, Body.fromUtf8("third entity", ContentType.of("text/plain")))
             );
     }
 
     @Test
     void streamPage_shouldContainTheSameEntitiesAsStreamEntities() {
-        when(feedPageCrawler.crawl(url3, StartFrom.beginning())).thenReturn(Mono.just(url1));
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1)).thenReturn(feedEntityHeader1);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders2)).thenReturn(feedEntityHeader2);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders3)).thenReturn(feedEntityHeader3);
+        when(feedPageCrawler.crawl(URL_3, StartFrom.beginning())).thenReturn(Mono.just(URL_1));
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_1)).thenReturn(FEED_ENTITY_HEADER_1);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_2)).thenReturn(FEED_ENTITY_HEADER_2);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_3)).thenReturn(FEED_ENTITY_HEADER_3);
 
         preparePageToStream();
         var pageEntities = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamPages(url3, StartFrom.beginning()))
+            .flowPublisherToFlux(feedConsumer.streamPages(URL_3, StartFrom.beginning()))
             .flatMap(page -> JdkFlowAdapter.flowPublisherToFlux(page.toCompleteEntities()))
             .collectList()
             .single()
             .block();
         preparePageToStream();
         var entities = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamEntities(url3, StartFrom.beginning()))
+            .flowPublisherToFlux(feedConsumer.streamEntities(URL_3, StartFrom.beginning()))
             .collectList()
             .single()
             .block();
@@ -224,32 +218,32 @@ FeedConsumerImplTest {
      */
     private void preparePageToStream() {
         var page1 = testStreamingPageOf(
-            defaultPagesHeaders1,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders1, "first entity")
+            PAGE_HTTP_HEADERS_1,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_1, "first entity")
         );
         var page2 = testStreamingPageOf(
-            defaultPagesHeaders2,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders2, "second entity")
+            PAGE_HTTP_HEADERS_2,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_2, "second entity")
         );
         var page3 = testStreamingPageOf(
-            defaultPagesHeaders3,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders3, "third entity")
+            PAGE_HTTP_HEADERS_3,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_3, "third entity")
         );
-        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
-        when(pageLoader.load(url2)).thenReturn(Mono.just(page2));
-        when(pageLoader.load(url3)).thenReturn(Mono.just(page3));
+        when(pageLoader.load(URL_1)).thenReturn(Mono.just(page1));
+        when(pageLoader.load(URL_2)).thenReturn(Mono.just(page2));
+        when(pageLoader.load(URL_3)).thenReturn(Mono.just(page3));
     }
 
     @Test
     void crawlPages_shouldThrowHttpException_fromUnderlyingHttpClient() {
-        HttpException.NetworkError expectedNetworkError = new HttpException.NetworkError(url1, new IOException());
-        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.error(expectedNetworkError));
+        HttpException.NetworkError expectedNetworkError = new HttpException.NetworkError(URL_1, new IOException());
+        when(feedPageCrawler.crawl(URL_1, StartFrom.beginning())).thenReturn(Mono.error(expectedNetworkError));
 
         final var result = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamPages(url1, StartFrom.beginning()));
+            .flowPublisherToFlux(feedConsumer.streamPages(URL_1, StartFrom.beginning()));
 
         StepVerifier
             .create(result)
@@ -260,12 +254,12 @@ FeedConsumerImplTest {
 
     @Test
     void loadPage_shouldThrowHttpException_fromUnderlyingHttpClient() {
-        HttpException.NetworkError expectedNetworkError = new HttpException.NetworkError(url1, new IOException());
-        when(feedPageCrawler.crawl(url1, StartFrom.beginning())).thenReturn(Mono.just(url1));
-        when(pageLoader.load(url1)).thenReturn(Mono.error(expectedNetworkError));
+        HttpException.NetworkError expectedNetworkError = new HttpException.NetworkError(URL_1, new IOException());
+        when(feedPageCrawler.crawl(URL_1, StartFrom.beginning())).thenReturn(Mono.just(URL_1));
+        when(pageLoader.load(URL_1)).thenReturn(Mono.error(expectedNetworkError));
 
         final var result = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamPages(url1, StartFrom.beginning()));
+            .flowPublisherToFlux(feedConsumer.streamPages(URL_1, StartFrom.beginning()));
 
         StepVerifier
             .create(result)
@@ -276,34 +270,34 @@ FeedConsumerImplTest {
 
     @Test
     void streamEntitiesFromTimestamp_shouldOnlyConsumeNewerEntities() {
-        StartFrom startFrom = StartFrom.timestamp(lastModified);
+        StartFrom startFrom = StartFrom.timestamp(LAST_MODIFIED);
         FeedPageHeader feedPageHeader1 = new FeedPageHeader(
-            lastModified,
-            Link.self(url1),
+            LAST_MODIFIED,
+            Link.self(URL_1),
             Optional.empty(),
             Optional.empty()
         );
         var page1 = testStreamingPageOf(
-            defaultPagesHeaders1,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            TestEntityParts.of(defaultEntityHeaders2, "new entity"),
-            TestEntityParts.of(defaultEntityHeaders3, "newer entity")
+            PAGE_HTTP_HEADERS_1,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_1, "already consumed older timestamp"),
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_2, "new entity"),
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_3, "newer entity")
         );
-        FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
+        FeedEntityHeader feedEntityHeader = new FeedEntityHeader(LAST_MODIFIED_AFTER, OperationType.PUT, CONTENT_ID_3);
 
-        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader1);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1))
-            .thenReturn(new FeedEntityHeader(lastModifiedBefore, OperationType.PUT, contentId1));
-        when(feedPageHeaderParser.feedEntityHeader(1, defaultEntityHeaders2))
-            .thenReturn(new FeedEntityHeader(lastModified, OperationType.PUT, contentId2));
-        when(feedPageHeaderParser.feedEntityHeader(2, defaultEntityHeaders3))
+        when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_1)).thenReturn(feedPageHeader1);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_1))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED_BEFORE, OperationType.PUT, CONTENT_ID_1));
+        when(feedPageHeaderParser.feedEntityHeader(1, ENTITY_HTTP_HEADERS_2))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED, OperationType.PUT, CONTENT_ID_2));
+        when(feedPageHeaderParser.feedEntityHeader(2, ENTITY_HTTP_HEADERS_3))
             .thenReturn(feedEntityHeader);
-        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(url1));
-        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
+        when(feedPageCrawler.crawl(URL_1, startFrom)).thenReturn(Mono.just(URL_1));
+        when(pageLoader.load(URL_1)).thenReturn(Mono.just(page1));
 
         List<@NonNull Entity<@NonNull FeedEntityHeader>> entities = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamEntities(url1, startFrom))
+            .flowPublisherToFlux(feedConsumer.streamEntities(URL_1, startFrom))
             .collectList()
             .single()
             .block();
@@ -316,34 +310,32 @@ FeedConsumerImplTest {
 
     @Test
     void streamEntitiesFromContentId_shouldOnlyConsumeNewerEntities() {
-        StartFrom startFrom = StartFrom.contentId(contentId2, lastModified);
+        StartFrom startFrom = StartFrom.contentId(CONTENT_ID_2, LAST_MODIFIED);
         FeedPageHeader feedPageHeader1 = new FeedPageHeader(
-            lastModified,
-            Link.self(url1),
+            LAST_MODIFIED,
+            Link.self(URL_1),
             Optional.empty(),
             Optional.empty()
         );
         var page1 = testStreamingPageOf(
-            defaultPagesHeaders1,
-            "boundary-1",
-            TestEntityParts.of(defaultEntityHeaders1, "already consumed older timestamp"),
-            TestEntityParts.of(defaultEntityHeaders2, "already consumed ContentId"),
-            TestEntityParts.of(defaultEntityHeaders3, "new entity")
+            PAGE_HTTP_HEADERS_1,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_1, "already consumed older timestamp"),
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_2, "already consumed ContentId"),
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_3, "new entity")
         );
-        FeedEntityHeader feedEntityHeader = new FeedEntityHeader(lastModifiedAfter, OperationType.PUT, contentId3);
-
-        when(feedPageHeaderParser.feedPageHeader(defaultPagesHeaders1)).thenReturn(feedPageHeader1);
-        when(feedPageHeaderParser.feedEntityHeader(0, defaultEntityHeaders1))
-            .thenReturn(new FeedEntityHeader(lastModifiedBefore, OperationType.PUT, contentId1));
-        when(feedPageHeaderParser.feedEntityHeader(1, defaultEntityHeaders2))
-            .thenReturn(new FeedEntityHeader(lastModified, OperationType.PUT, contentId2));
-        when(feedPageHeaderParser.feedEntityHeader(2, defaultEntityHeaders3))
-            .thenReturn(feedEntityHeader);
-        when(feedPageCrawler.crawl(url1, startFrom)).thenReturn(Mono.just(url1));
-        when(pageLoader.load(url1)).thenReturn(Mono.just(page1));
+        when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_1)).thenReturn(feedPageHeader1);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_1))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED_BEFORE, OperationType.PUT, CONTENT_ID_1));
+        when(feedPageHeaderParser.feedEntityHeader(1, ENTITY_HTTP_HEADERS_2))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED, OperationType.PUT, CONTENT_ID_2));
+        when(feedPageHeaderParser.feedEntityHeader(2, ENTITY_HTTP_HEADERS_3))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED_AFTER, OperationType.PUT, CONTENT_ID_3));
+        when(feedPageCrawler.crawl(URL_1, startFrom)).thenReturn(Mono.just(URL_1));
+        when(pageLoader.load(URL_1)).thenReturn(Mono.just(page1));
 
         List<@NonNull Entity<@NonNull FeedEntityHeader>> entities = JdkFlowAdapter
-            .flowPublisherToFlux(feedConsumer.streamEntities(url1, startFrom))
+            .flowPublisherToFlux(feedConsumer.streamEntities(URL_1, startFrom))
             .collectList()
             .single()
             .block();
@@ -352,6 +344,46 @@ FeedConsumerImplTest {
             .hasSize(1)
             .extracting(entity -> entity.body().toUtf8())
             .containsExactly("new entity");
+    }
+
+    @Test
+    void streamEntitiesFromContentId_shouldThrowExceptionWhenThereIsNoMatchingStartingPage() {
+        var startFrom = StartFrom.contentId(ContentId.of("Unknown"), LAST_MODIFIED);
+        ContentIdNotFoundException contentIdNotFoundException = new ContentIdNotFoundException(
+            startFrom, URL_1, LAST_MODIFIED_AFTER
+        );
+
+        FeedPageHeader feedPageHeader1 = new FeedPageHeader(
+            LAST_MODIFIED,
+            Link.self(URL_1),
+            Optional.empty(),
+            Optional.empty()
+        );
+        var page1 = testStreamingPageOf(
+            PAGE_HTTP_HEADERS_1,
+            BOUNDARY,
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_1, "before"),
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_2, "matches last modified"),
+            TestEntityParts.of(ENTITY_HTTP_HEADERS_3, "after last modified -> should result into exception")
+        );
+        when(feedPageHeaderParser.feedPageHeader(PAGE_HTTP_HEADERS_1)).thenReturn(feedPageHeader1);
+        when(feedPageHeaderParser.feedEntityHeader(0, ENTITY_HTTP_HEADERS_1))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED_BEFORE, OperationType.PUT, CONTENT_ID_1));
+        when(feedPageHeaderParser.feedEntityHeader(1, ENTITY_HTTP_HEADERS_2))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED, OperationType.PUT, CONTENT_ID_2));
+        when(feedPageHeaderParser.feedEntityHeader(2, ENTITY_HTTP_HEADERS_3))
+            .thenReturn(new FeedEntityHeader(LAST_MODIFIED_AFTER, OperationType.PUT, CONTENT_ID_3));
+        when(feedPageCrawler.crawl(URL_1, startFrom)).thenReturn(Mono.just(URL_1));
+        when(pageLoader.load(URL_1)).thenReturn(Mono.just(page1));
+
+        final var result = JdkFlowAdapter
+            .flowPublisherToFlux(feedConsumer.streamEntities(URL_1, startFrom));
+
+        StepVerifier
+            .create(result)
+            .expectNextCount(0)
+            .expectErrorMatches(contentIdNotFoundException::equals)
+            .verify();
     }
 
     private static ListAssert<@NonNull Entity<@NonNull FeedEntityHeader>>

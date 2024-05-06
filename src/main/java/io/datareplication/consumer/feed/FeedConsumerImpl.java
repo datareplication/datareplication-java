@@ -1,12 +1,12 @@
 package io.datareplication.consumer.feed;
 
+import io.datareplication.consumer.ContentIdNotFoundException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.internal.page.WrappedStreamingPage;
 import io.datareplication.model.Entity;
 import io.datareplication.model.HttpHeaders;
 import io.datareplication.model.Url;
-import io.datareplication.model.feed.ContentId;
 import io.datareplication.model.feed.FeedEntityHeader;
 import io.datareplication.model.feed.FeedPageHeader;
 import lombok.AccessLevel;
@@ -51,35 +51,38 @@ class FeedConsumerImpl implements FeedConsumer {
             .map(FlowAdapters::toPublisher)
             .flatMap(Flux::from);
 
-        return JdkFlowAdapter.publisherToFlowPublisher(applyStartFrom(startFrom, entityFlux));
+        return JdkFlowAdapter.publisherToFlowPublisher(applyStartFrom(url, startFrom, entityFlux));
     }
 
     private @NonNull Publisher<Entity<FeedEntityHeader>> applyStartFrom(
+        @NonNull final Url url,
         @NonNull final StartFrom startFrom,
         @NonNull final Flux<Entity<FeedEntityHeader>> entityFlux) {
         var startFromFlux = entityFlux;
         if (startFrom instanceof StartFrom.Timestamp || startFrom instanceof StartFrom.ContentId) {
-            startFromFlux = startFromFlux.skipUntil(entity -> skipUntil(entity.header(), startFrom));
+            startFromFlux = startFromFlux.skipUntil(entity ->
+                skipUntilTimestampIsReached(entity.header(), startFrom)
+            );
         }
         if (startFrom instanceof StartFrom.ContentId) {
-            startFromFlux = startFromFlux.filter(entity -> !containsContentId(entity.header().contentId(), startFrom));
+            StartFrom.ContentId startFrom1 = (StartFrom.ContentId) startFrom;
+            startFromFlux = startFromFlux
+                .skipUntil(entity -> {
+                    if (entity.header().lastModified().isAfter(startFrom1.timestamp())) {
+                        throw new ContentIdNotFoundException(startFrom1, url, entity.header().lastModified());
+                    }
+                    return startFrom1.contentId().equals(entity.header().contentId());
+                })
+                .skip(1);
         }
         return startFromFlux;
     }
 
-    private boolean containsContentId(final ContentId contentId, final StartFrom startFrom) {
-        if (startFrom instanceof StartFrom.ContentId) {
-            return ((StartFrom.ContentId) startFrom).contentId().equals(contentId);
-        } else {
-            return false;
-        }
-    }
-
-    private boolean skipUntil(final FeedEntityHeader header, final StartFrom startFrom) {
+    private boolean skipUntilTimestampIsReached(final FeedEntityHeader header, final StartFrom startFrom) {
         if (startFrom instanceof StartFrom.Timestamp) {
             return !header.lastModified().isBefore(((StartFrom.Timestamp) startFrom).timestamp());
         } else if (startFrom instanceof StartFrom.ContentId) {
-            return ((StartFrom.ContentId) startFrom).contentId().equals(header.contentId());
+            return !header.lastModified().isBefore(((StartFrom.ContentId) startFrom).timestamp());
         } else {
             return true;
         }
