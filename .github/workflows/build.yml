@@ -48,7 +48,7 @@ jobs:
       - name: Javadoc
         run: ./gradlew javadoc
       - name: Upload Javadoc artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: build/docs/javadoc
       - name: Publish snapshot to GitHub Packages
