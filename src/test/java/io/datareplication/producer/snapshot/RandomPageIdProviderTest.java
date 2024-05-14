@@ -5,14 +5,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UUIDPageIdProviderTest {
+class RandomPageIdProviderTest {
 
     @Test
     @DisplayName("Should create a random UUID")
     void shouldCreateARandomUuid() {
-        UUIDPageIdProvider uuidPageIdProvider = new UUIDPageIdProvider();
+        RandomPageIdProvider randomPageIdProvider = new RandomPageIdProvider();
 
-        assertThat(uuidPageIdProvider.newPageId().value()).hasSize(36);
-        assertThat(uuidPageIdProvider.newPageId()).isNotEqualTo(uuidPageIdProvider.newPageId());
+        assertThat(randomPageIdProvider.newPageId().value()).hasSize(36);
+        assertThat(randomPageIdProvider.newPageId()).isNotEqualTo(randomPageIdProvider.newPageId());
     }
 }

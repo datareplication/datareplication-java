@@ -102,8 +102,8 @@ public interface SnapshotProducer {
                 snapshotPageUrlBuilder,
                 snapshotIndexRepository,
                 snapshotPageRepository,
-                new UUIDPageIdProvider(),
-                new UUIDSnapshotIdProvider(),
+                new RandomPageIdProvider(),
+                new RandomSnapshotIdProvider(),
                 maxBytesPerPage,
                 maxEntitiesPerPage,
                 clock

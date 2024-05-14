@@ -63,9 +63,9 @@ class SnapshotProducerImplTest {
     @Mock
     private SnapshotPageUrlBuilder snapshotPageUrlBuilder;
     @Mock
-    private PageIdProvider pageIdProvider;
+    private RandomPageIdProvider pageIdProvider;
     @Mock
-    private SnapshotIdProvider snapshotIdProvider;
+    private RandomSnapshotIdProvider snapshotIdProvider;
 
     private SnapshotProducer newSnapshotProducer(Long maxBytesPerPage, Long maxEntitiesPerPage) {
         return new SnapshotProducerImpl(
