@@ -2,6 +2,6 @@ package io.datareplication.producer.snapshot;
 
 import io.datareplication.model.snapshot.SnapshotId;
 
-public interface SnapshotIdProvider {
+interface SnapshotIdProvider {
     SnapshotId newSnapshotId();
 }

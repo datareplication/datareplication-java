@@ -46,8 +46,6 @@ public interface SnapshotProducer {
         private final SnapshotPageRepository snapshotPageRepository;
         private final SnapshotPageUrlBuilder snapshotPageUrlBuilder;
         private Clock clock = Clock.systemUTC();
-        private PageIdProvider pageIdProvider = new UUIDPageIdProvider();
-        private SnapshotIdProvider snapshotIdProvider = new UUIDSnapshotIdProvider();
         private long maxBytesPerPage = 1000L * 1000L;
         private long maxEntitiesPerPage = Long.MAX_VALUE;
 
@@ -63,28 +61,6 @@ public interface SnapshotProducer {
         }
 
         /**
-         * Use the given {@link PageIdProvider} for PageID generation.
-         *
-         * @param pageIdProvider the pageIdProvider which generates IDs for Pages.
-         * @return this builder
-         */
-        public @NonNull Builder pageIdProvider(@NonNull final PageIdProvider pageIdProvider) {
-            this.pageIdProvider = pageIdProvider;
-            return this;
-        }
-
-        /**
-         * Use the given {@link PageIdProvider} for SnapshotID generation.
-         *
-         * @param snapshotIdProvider the snapshotIdProvider which generates IDs for Snapshots.
-         * @return this builder
-         */
-        public @NonNull Builder snapshotIdProvider(@NonNull final SnapshotIdProvider snapshotIdProvider) {
-            this.snapshotIdProvider = snapshotIdProvider;
-            return this;
-        }
-
-        /**
          * Set the maximum bytes per page. When a page is composed, a new page will be created if the current page
          * gets too big. Defaults to 1 MB.
          *
@@ -93,7 +69,7 @@ public interface SnapshotProducer {
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
         public @NonNull Builder maxBytesPerPage(final long maxBytesPerPage) {
-            if (maxBytesPerPage < 1) {
+            if (maxBytesPerPage <= 0) {
                 throw new IllegalArgumentException("maxBytesPerPage must be >= 1");
             }
             this.maxBytesPerPage = maxBytesPerPage;
@@ -109,7 +85,7 @@ public interface SnapshotProducer {
          * @throws IllegalArgumentException if the argument is &lt; 1
          */
         public @NonNull Builder maxEntitiesPerPage(final long maxEntitiesPerPage) {
-            if (maxEntitiesPerPage < 1) {
+            if (maxEntitiesPerPage <= 0) {
                 throw new IllegalArgumentException("maxEntitiesPerPage must be >= 1");
             }
             this.maxEntitiesPerPage = maxEntitiesPerPage;
@@ -126,8 +102,8 @@ public interface SnapshotProducer {
                 snapshotPageUrlBuilder,
                 snapshotIndexRepository,
                 snapshotPageRepository,
-                pageIdProvider,
-                snapshotIdProvider,
+                new UUIDPageIdProvider(),
+                new UUIDSnapshotIdProvider(),
                 maxBytesPerPage,
                 maxEntitiesPerPage,
                 clock

@@ -12,25 +12,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class SnapshotProducerTest {
-
     @Mock
     SnapshotPageRepository snapshotPageRepository;
     @Mock
     SnapshotIndexRepository snapshotIndexRepository;
     @Mock
     SnapshotPageUrlBuilder snapshotPageUrlBuilder;
-    @Mock
-    PageIdProvider pageIdProvider;
-    @Mock
-    SnapshotIdProvider snapshotIdProvider;
 
     @Test
     @DisplayName("Should build a SnapshotProducer")
     void shouldBuildASnapshotProducer() {
         SnapshotProducer snapshotProducer = SnapshotProducer
             .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
-            .pageIdProvider(pageIdProvider)
-            .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(5)
             .maxEntitiesPerPage(2)
             .build();
@@ -46,8 +39,6 @@ class SnapshotProducerTest {
         IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
             SnapshotProducer
                 .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
-                .pageIdProvider(pageIdProvider)
-                .snapshotIdProvider(snapshotIdProvider)
                 .maxBytesPerPage(pointlessValueForMaxBytesPerPage)
                 .build()
         );
@@ -62,8 +53,6 @@ class SnapshotProducerTest {
         IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
             SnapshotProducer
                 .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
-                .pageIdProvider(pageIdProvider)
-                .snapshotIdProvider(snapshotIdProvider)
                 .maxEntitiesPerPage(pointlessValueForMaxEntitiesPerPage)
                 .build()
         );
