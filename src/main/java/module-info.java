@@ -1,3 +1,5 @@
+// TODO: docs
+/** The datareplication Java reference implementation */
 module io.datareplication {
     requires java.net.http;
     requires org.reactivestreams;
