@@ -1,6 +1,5 @@
 package io.datareplication.consumer.feed;
 
-import io.datareplication.consumer.CrawlingException;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.model.HttpHeaders;
@@ -147,8 +146,8 @@ class FeedPageCrawlerTest {
             .isCompletedExceptionally()
             .failsWithin(10, TimeUnit.MILLISECONDS)
             .withThrowableOfType(ExecutionException.class)
-            .withCauseInstanceOf(CrawlingException.class)
-            .withCause(new CrawlingException(pageHeader1.self().value(), INSTANT_PAGE_1, INSTANT_PAGE_1));
+            .withCauseInstanceOf(FeedException.FeedNotOldEnough.class)
+            .withCause(new FeedException.FeedNotOldEnough(pageHeader1.self().value(), INSTANT_PAGE_1, INSTANT_PAGE_1));
     }
 
     @Test
@@ -179,7 +178,7 @@ class FeedPageCrawlerTest {
             .isCompletedExceptionally()
             .failsWithin(10, TimeUnit.MILLISECONDS)
             .withThrowableOfType(ExecutionException.class)
-            .withCauseInstanceOf(CrawlingException.class)
-            .withCause(new CrawlingException(pageHeader1.self().value(), INSTANT_PAGE_1, INSTANT_PAGE_1));
+            .withCauseInstanceOf(FeedException.FeedNotOldEnough.class)
+            .withCause(new FeedException.FeedNotOldEnough(pageHeader1.self().value(), INSTANT_PAGE_1, INSTANT_PAGE_1));
     }
 }
