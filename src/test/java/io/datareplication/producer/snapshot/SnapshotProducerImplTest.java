@@ -78,14 +78,12 @@ class SnapshotProducerImplTest {
     @DisplayName("should produce a snapshot without entities")
     void shouldProduceEmptySnapshot() throws ExecutionException, InterruptedException {
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
+            .clock(Clock.fixed(createdAt, ZoneId.systemDefault()))
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(MAX_BYTES_PER_PAGE)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt, ZoneId.systemDefault()));
+            .build();
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flux.empty()));
@@ -107,14 +105,12 @@ class SnapshotProducerImplTest {
         when(snapshotPageRepository.save(eq(id), eq(pageId1), any()))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
+            .clock(Clock.fixed(createdAt, ZoneId.systemDefault()))
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(MAX_BYTES_PER_PAGE)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt, ZoneId.systemDefault()));
+            .build();
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(Flux.fromIterable(entities)));
@@ -139,14 +135,12 @@ class SnapshotProducerImplTest {
         when(snapshotPageRepository.save(eq(id), any(), any()))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
+            .clock(Clock.fixed(createdAt, ZoneId.systemDefault()))
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(MAX_BYTES_PER_PAGE)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt, ZoneId.systemDefault()));
+            .build();
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
@@ -190,14 +184,12 @@ class SnapshotProducerImplTest {
         when(snapshotPageRepository.save(eq(id), any(), any()))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
+            .clock(Clock.fixed(createdAt, ZoneId.systemDefault()))
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxEntitiesPerPage(2L)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt, ZoneId.systemDefault()));
+            .build();
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
@@ -239,15 +231,13 @@ class SnapshotProducerImplTest {
         when(snapshotPageRepository.save(eq(id), any(), any()))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
+            .clock(Clock.fixed(createdAt, ZoneId.systemDefault()))
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(10)
             .maxEntitiesPerPage(3L)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt, ZoneId.systemDefault()));
+            .build();
 
         CompletionStage<SnapshotIndex> produce =
             snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow));
@@ -304,14 +294,12 @@ class SnapshotProducerImplTest {
         when(snapshotPageRepository.save(eq(id), any(), any()))
             .thenReturn(CompletableFuture.supplyAsync(() -> null));
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
+            .clock(Clock.fixed(createdAt, ZoneId.systemDefault()))
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(MAX_BYTES_PER_PAGE)
-            .build(snapshotIndexRepository,
-                snapshotPageRepository,
-                snapshotPageUrlBuilder,
-                Clock.fixed(createdAt, ZoneId.systemDefault()));
+            .build();
 
         snapshotProducer.produce(FlowAdapters.toFlowPublisher(entityFlow)).toCompletableFuture().get();
 

@@ -35,7 +35,6 @@ public interface FeedProducer {
         private int assignPagesLimitPerRun = Integer.MAX_VALUE;
         private long maxBytesPerPage = 1000 * 1000;
         private long maxEntitiesPerPage = Long.MAX_VALUE;
-        // TODO: more settings
 
         /**
          * Use the given {@link Clock} when generating timestamps for new entities.

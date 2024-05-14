@@ -28,12 +28,12 @@ class SnapshotProducerTest {
     @DisplayName("Should build a SnapshotProducer")
     void shouldBuildASnapshotProducer() {
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
             .pageIdProvider(pageIdProvider)
             .snapshotIdProvider(snapshotIdProvider)
             .maxBytesPerPage(5)
             .maxEntitiesPerPage(2)
-            .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
+            .build();
 
         assertThat(snapshotProducer).isInstanceOf(SnapshotProducerImpl.class);
     }
@@ -45,14 +45,11 @@ class SnapshotProducerTest {
 
         IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
             SnapshotProducer
-                .builder()
+                .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
                 .pageIdProvider(pageIdProvider)
                 .snapshotIdProvider(snapshotIdProvider)
                 .maxBytesPerPage(pointlessValueForMaxBytesPerPage)
-                .build(snapshotIndexRepository,
-                    snapshotPageRepository,
-                    snapshotPageUrlBuilder
-                )
+                .build()
         );
         assertEquals("maxBytesPerPage must be >= 1", thrownException.getMessage());
     }
@@ -64,14 +61,11 @@ class SnapshotProducerTest {
 
         IllegalArgumentException thrownException = assertThrows(IllegalArgumentException.class, () ->
             SnapshotProducer
-                .builder()
+                .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
                 .pageIdProvider(pageIdProvider)
                 .snapshotIdProvider(snapshotIdProvider)
                 .maxEntitiesPerPage(pointlessValueForMaxEntitiesPerPage)
-                .build(snapshotIndexRepository,
-                    snapshotPageRepository,
-                    snapshotPageUrlBuilder
-                )
+                .build()
         );
         assertEquals("maxEntitiesPerPage must be >= 1", thrownException.getMessage());
     }
