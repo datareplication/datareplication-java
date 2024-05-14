@@ -77,6 +77,10 @@ java {
     withSourcesJar()
 }
 
+tasks.javadoc {
+    exclude("io/datareplication/internal")
+}
+
 tasks.test {
     useJUnitPlatform()
 }
