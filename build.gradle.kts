@@ -93,6 +93,10 @@ tasks.jacocoTestReport {
     }
 }
 
+checkstyle {
+    sourceSets = project.sourceSets
+}
+
 tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
