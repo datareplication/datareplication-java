@@ -22,7 +22,7 @@ val lombok = "org.projectlombok:lombok:1.18.32"
 
 dependencies {
     implementation(platform("org.slf4j:slf4j-bom:2.0.13"))
-    implementation(platform("io.projectreactor:reactor-bom:2023.0.5"))
+    implementation(platform("io.projectreactor:reactor-bom:2023.0.6"))
 
     implementation("org.slf4j:slf4j-api")
     implementation("io.projectreactor:reactor-core")
