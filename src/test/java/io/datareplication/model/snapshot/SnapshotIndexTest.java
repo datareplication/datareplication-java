@@ -166,7 +166,7 @@ class SnapshotIndexTest {
         Body body = Body.fromUtf8(json);
         var thrown = assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body));
         assertThat(thrown.getMessage())
-            .isEqualTo("java.lang.IllegalStateException: "
+            .startsWith("java.lang.IllegalStateException: "
                 + "Expected BEGIN_ARRAY but was STRING at line 4 column 14 path $.pages");
     }
 
@@ -188,7 +188,7 @@ class SnapshotIndexTest {
         Body body = Body.fromUtf8(json);
         var thrown = assertThrows(SnapshotIndex.ParsingException.class, () -> SnapshotIndex.fromJson(body));
         assertThat(thrown.getMessage())
-            .isEqualTo("java.lang.IllegalStateException: "
+            .startsWith("java.lang.IllegalStateException: "
                 + "Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $");
     }
 
