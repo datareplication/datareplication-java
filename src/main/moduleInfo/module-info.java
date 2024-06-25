@@ -17,4 +17,6 @@ module io.datareplication {
     exports io.datareplication.model.snapshot;
     exports io.datareplication.producer.feed;
     exports io.datareplication.producer.snapshot;
+
+    opens io.datareplication.model.snapshot to com.google.gson;
 }
