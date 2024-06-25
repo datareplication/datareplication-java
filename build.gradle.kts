@@ -77,6 +77,10 @@ java {
     withSourcesJar()
 }
 
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
 tasks.test {
     useJUnitPlatform()
 }
@@ -87,6 +91,10 @@ tasks.jacocoTestReport {
     reports {
         xml.required = true
     }
+}
+
+checkstyle {
+    sourceSets = project.sourceSets
 }
 
 tasks.jacocoTestCoverageVerification {

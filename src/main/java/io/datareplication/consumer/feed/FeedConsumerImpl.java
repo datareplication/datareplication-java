@@ -1,6 +1,5 @@
 package io.datareplication.consumer.feed;
 
-import io.datareplication.consumer.ContentIdNotFoundException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.internal.page.PageLoader;
 import io.datareplication.internal.page.WrappedStreamingPage;
@@ -69,7 +68,7 @@ class FeedConsumerImpl implements FeedConsumer {
             startFromFlux = startFromFlux
                 .skipUntil(entity -> {
                     if (entity.header().lastModified().isAfter(startFrom1.timestamp())) {
-                        throw new ContentIdNotFoundException(startFrom1, url, entity.header().lastModified());
+                        throw new FeedException.ContentIdNotFound(startFrom1, url, entity.header().lastModified());
                     }
                     return startFrom1.contentId().equals(entity.header().contentId());
                 })

@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 // TODO: docs
-public class HttpException extends ConsumerException {
+public abstract class HttpException extends ConsumerException {
     private HttpException(final String message) {
         super(message);
     }

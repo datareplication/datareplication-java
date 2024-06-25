@@ -7,12 +7,12 @@ import lombok.NonNull;
 import java.util.List;
 
 // TODO: docs
-public class ConsumerException extends RuntimeException {
-    ConsumerException(String message) {
+public abstract class ConsumerException extends RuntimeException {
+    protected ConsumerException(String message) {
         super(message);
     }
 
-    ConsumerException(String message, Throwable cause) {
+    protected ConsumerException(String message, Throwable cause) {
         super(message, cause);
     }
 

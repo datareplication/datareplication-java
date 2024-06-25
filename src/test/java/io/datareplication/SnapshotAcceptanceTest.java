@@ -68,10 +68,10 @@ public class SnapshotAcceptanceTest {
             }
         };
         SnapshotProducer snapshotProducer = SnapshotProducer
-            .builder()
+            .builder(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder)
             .maxEntitiesPerPage(2)
             .maxBytesPerPage(5)
-            .build(snapshotIndexRepository, snapshotPageRepository, snapshotPageUrlBuilder);
+            .build();
         SnapshotIndex producedSnapshotIndex = snapshotProducer
             .produce(FlowAdapters.toFlowPublisher(entityFlow))
             .toCompletableFuture()

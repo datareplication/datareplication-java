@@ -1,6 +1,5 @@
 package io.datareplication.consumer.feed;
 
-import io.datareplication.consumer.ContentIdNotFoundException;
 import io.datareplication.consumer.HttpException;
 import io.datareplication.consumer.StreamingPage;
 import io.datareplication.consumer.TestStreamingPage.TestEntityParts;
@@ -349,9 +348,7 @@ FeedConsumerImplTest {
     @Test
     void streamEntitiesFromContentId_shouldThrowExceptionWhenThereIsNoMatchingStartingPage() {
         var startFrom = StartFrom.contentId(ContentId.of("Unknown"), LAST_MODIFIED);
-        ContentIdNotFoundException contentIdNotFoundException = new ContentIdNotFoundException(
-            startFrom, URL_1, LAST_MODIFIED_AFTER
-        );
+        var expectedException = new FeedException.ContentIdNotFound(startFrom, URL_1, LAST_MODIFIED_AFTER);
 
         FeedPageHeader feedPageHeader1 = new FeedPageHeader(
             LAST_MODIFIED,
@@ -382,7 +379,7 @@ FeedConsumerImplTest {
         StepVerifier
             .create(result)
             .expectNextCount(0)
-            .expectErrorMatches(contentIdNotFoundException::equals)
+            .expectErrorMatches(expectedException::equals)
             .verify();
     }
 

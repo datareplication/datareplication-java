@@ -1,6 +1,5 @@
 package io.datareplication.consumer.feed;
 
-import io.datareplication.consumer.CrawlingException;
 import io.datareplication.consumer.PageFormatException;
 import io.datareplication.model.Url;
 import io.datareplication.model.feed.FeedPageHeader;
@@ -27,8 +26,8 @@ class FeedPageCrawler {
      * @param url       the {@link Url} to start crawling from
      * @param startFrom the {@link StartFrom} parameter
      * @return the {@link Url} to start streaming from
-     * @throws CrawlingException if the last modified date of the last page is not older
-     *                           and {@link StartFrom} is not {@link StartFrom.Beginning
+     * @throws FeedException.FeedNotOldEnough if the last modified date of the last page is not older
+     *                                        and {@link StartFrom} is not {@link StartFrom.Beginning
      */
     @NonNull
     Mono<@NonNull Url> crawl(
@@ -45,13 +44,13 @@ class FeedPageCrawler {
                     .orElse(
                         currentPageHeader.handle((header, sink) -> {
                                 if (startFrom instanceof StartFrom.Timestamp) {
-                                    sink.error(new CrawlingException(
+                                    sink.error(new FeedException.FeedNotOldEnough(
                                         header.self().value(),
                                         header.lastModified(),
                                         ((StartFrom.Timestamp) startFrom).timestamp()
                                     ));
                                 } else if (startFrom instanceof StartFrom.ContentId) {
-                                    sink.error(new CrawlingException(
+                                    sink.error(new FeedException.FeedNotOldEnough(
                                         header.self().value(),
                                         header.lastModified(),
                                         ((StartFrom.ContentId) startFrom).timestamp()

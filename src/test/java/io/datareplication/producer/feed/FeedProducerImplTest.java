@@ -43,7 +43,8 @@ class FeedProducerImplTest {
     private static final Duration TEST_TIMEOUT = Duration.ofSeconds(1);
     private static final int ASSIGN_PAGES_LIMIT = 10;
 
-    private final FeedProducer feedProducer = new FeedProducerImpl(feedEntityRepository,
+    private final FeedProducer feedProducer = new FeedProducerImpl(
+        feedEntityRepository,
         feedPageMetadataRepository,
         feedProducerJournalRepository,
         clock,
@@ -52,7 +53,8 @@ class FeedProducerImplTest {
         generationRotationService,
         entityTimestampsService,
         assignPagesService,
-        ASSIGN_PAGES_LIMIT);
+        ASSIGN_PAGES_LIMIT
+    );
 
     @BeforeEach
     void setUp() {

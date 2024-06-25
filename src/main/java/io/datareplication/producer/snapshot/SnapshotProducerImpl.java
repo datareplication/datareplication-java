@@ -29,8 +29,8 @@ class SnapshotProducerImpl implements SnapshotProducer {
     private final SnapshotPageUrlBuilder snapshotPageUrlBuilder;
     private final SnapshotIndexRepository snapshotIndexRepository;
     private final SnapshotPageRepository snapshotPageRepository;
-    private final PageIdProvider pageIdProvider;
-    private final SnapshotIdProvider snapshotIdProvider;
+    private final RandomPageIdProvider pageIdProvider;
+    private final RandomSnapshotIdProvider snapshotIdProvider;
     private final long maxBytesPerPage;
     private final long maxEntitiesPerPage;
     private final Clock clock;
