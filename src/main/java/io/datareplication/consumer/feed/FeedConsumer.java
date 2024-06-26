@@ -29,24 +29,27 @@ import java.util.function.Supplier;
  * <p>
  * Feed pages are paginated collections of feed entities. Each page contains a list of feed entities and an optional
  * link to the next page. Feed pages are consumed by starting from the provided feed URL (which will generally point to
- * the newest page in the feed) and walking backwards until the desired starting point determined by the {@link StartFrom}
- * parameters is reached. Then the feed pages are streamed from oldest to newest until the head of the feed is reached.
+ * the newest page in the feed) and walking backwards until the desired starting point determined by the
+ * {@link StartFrom} parameters is reached. Then the feed pages are streamed from oldest to newest until
+ * the head of the feed is reached.
  * <p>
  * This interface exposes two different ways to consume feed data:
  * <ul>
- *     <li>{@link #streamEntities(Url, StartFrom)} hides the page breaks and provides a stream of fully downloaded entities
- *         in chronological order as they appear in the feed. This is usually what you want since order matters when consuming
- *         a feed. This method also provides entity-level filtering when using either {@link StartFrom.Timestamp} or
- *         {@link StartFrom.ContentId}.</li>
- *     <li>{@link #streamPages(Url, StartFrom)} instead returns a stream of {@link StreamingPage} objects. This provides more
- *         control over how the pages are consumed: for example, it allows streaming individual entity bodies (in contrast
- *         to always downloading the entire body of an entity before it is emitted) and downloading and processing multiple
- *         feed pages in parallel. Note that this is usually <em>not</em> what you want because the order of pages and entities
+ *     <li>{@link #streamEntities(Url, StartFrom)} hides the page breaks and provides a stream of
+ *         fully downloaded entities in chronological order as they appear in the feed. This is usually
+ *         what you want since order matters when consuming a feed. This method also provides entity-level
+ *         filtering when using either {@link StartFrom.Timestamp} or {@link StartFrom.ContentId}.</li>
+ *     <li>{@link #streamPages(Url, StartFrom)} instead returns a stream of {@link StreamingPage} objects.
+ *         This provides more control over how the pages are consumed: for example, it allows streaming
+ *         individual entity bodies (in contrast to always downloading the entire body of an entity
+ *         before it is emitted) and downloading and processing multiple feed pages in parallel.
+ *         Note that this is usually <em>not</em> what you want because the order of pages and entities
  *         matters for a feed.
  *         <p>
- *         Note that this method never returns partial pages. This means that where {@link #streamEntities(Url, StartFrom)}
- *         might discard entities from the first page because their timestamps are older than requested, this method will
- *         return the full first page including those entities.
+ *         Note that this method never returns partial pages. This means that where
+ *         {@link #streamEntities(Url, StartFrom)} might discard entities from the first page because
+ *         their timestamps are older than requested, this method will return the full first page
+ *         including those entities.
  *     </li>
  * </ul>
  *
