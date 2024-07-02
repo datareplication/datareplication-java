@@ -11,13 +11,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Internal mutable page header that gets incrementally updated as a page is filled with entities.
+ */
 @Getter
 @AllArgsConstructor
 final class MutablePage {
+    /** The page's ID; immutable. */
     private final PageId pageId;
+    /** The page's Last-Modified; <em>mutable</em>. */
     private Instant lastModified;
+    /** The page's prev link; immutable. */
     private final Optional<PageId> prev;
+    /** The byte length of the page's content (not technically the Content-Length); <em>mutable</em>. */
     private long contentLength;
+    /** The number of entities on the page; <em>mutable</em>. */
     private int numberOfEntities;
 
     static MutablePage fromLoadedPage(FeedPageMetadataRepository.PageMetadata page) {
@@ -93,6 +101,14 @@ class AssignPagesService {
         Optional<FeedPageMetadataRepository.PageMetadata> previousLatestPage;
     }
 
+    /**
+     * Calculate new feed pages for some unassigned entities. No side effects, returns all changes to save to the
+     * repositories.
+     *
+     * @param maybeLatestPage the current latest page so we can extend/replace it
+     * @param unassignedEntities a list of entities that need to be assigned to pages, in order
+     * @return all changes to save
+     */
     Optional<AssignPagesResult> assignPages(
         Optional<FeedPageMetadataRepository.PageMetadata> maybeLatestPage,
         List<FeedEntityRepository.PageAssignment> unassignedEntities
