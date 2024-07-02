@@ -7,7 +7,7 @@ import java.util.UUID;
 /**
  * The default implementation for a {@link RandomPageIdProvider}.
  * Uses <code>UUID.randomUUID()</code> to create a unique pageId.
- * Will be used when nothing else is specified in the {@link SnapshotProducer}
+ * Will be used when nothing else is specified in the {@link SnapshotProducerImpl}
  */
 class RandomPageIdProvider {
     /**
