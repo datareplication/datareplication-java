@@ -16,10 +16,6 @@ public interface SnapshotIndexRepository {
      * configured {@link SnapshotPageRepository}. Once the index is saved, the snapshot is done and can be served to
      * consumers.
      *
-     * <h2>Consistency Requirements</h2>
-     * When the returned {@link CompletionStage} succeeds, the index must be persisted successfully. If saving the
-     * index fails, the returned CompletionStage must also fail.
-     *
      * @param snapshotIndex the snapshot index to store
      * @return CompletionStage
      */

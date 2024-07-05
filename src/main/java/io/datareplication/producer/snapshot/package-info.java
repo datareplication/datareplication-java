@@ -21,13 +21,5 @@
  * and an index and hands them to the repository. The repository interfaces only define write access
  * because the producer never needs to read the pages. This allows the repository implementation a lot of flexibility
  * because it only to consider the needs of its own HTTP server when deciding how to save pages.
- *
- * <h3>Consistency Requirements</h3>
- * Repositories must make sure that when the {@link java.util.concurrent.CompletionStage} returned by a
- * repository method succeeds, the data has been successfully saved. Conversely, if saving fails the
- * CompletionStage should also fail.
- * <p>
- * The HTTP server should ensure to only make snapshots available that had their index fully saved, but this is the
- * responsibility of the server implementation and does not impact the producer's use of these repositories.
  */
 package io.datareplication.producer.snapshot;
