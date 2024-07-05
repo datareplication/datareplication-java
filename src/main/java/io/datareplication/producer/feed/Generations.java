@@ -45,6 +45,8 @@ final class Generations {
     static Optional<FeedPageMetadataRepository.PageMetadata> selectLatestPage(
         List<FeedPageMetadataRepository.PageMetadata> candidates
     ) {
+        // TODO: filter any candidate that actually does have a next link (see FeedPageMetadataRepository and my
+        //  fretting about index consistency)
         final var generationComparator = Comparator.comparingInt(FeedPageMetadataRepository.PageMetadata::generation);
         return candidates.stream().min(generationComparator);
     }

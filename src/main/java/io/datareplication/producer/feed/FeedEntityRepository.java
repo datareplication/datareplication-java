@@ -107,6 +107,11 @@ public interface FeedEntityRepository {
      * @param pageId the page ID to load
      * @return CompletionStage of all entities assigned to the given page
      */
+    // TODO: notes on index consistency: this method needs to query via index and can be called concurrently with
+    //  updates that change whether an entity should be part of that index; but either preemptive or delayed
+    //  index updates are probably totally fine because this only affects entities appended to pages which are
+    //  discarded before serving, because of the filtering based on the page header
+    //  so as long as basic transactional consistency is maintained for the index, nothing needs to be considered here
     @NonNull
     CompletionStage<@NonNull List<@NonNull Entity<@NonNull FeedEntityHeader>>> get(@NonNull PageId pageId);
 
@@ -120,6 +125,8 @@ public interface FeedEntityRepository {
      * @param limit the maximum number of records to load
      * @return CompletionStage of all entities not assigned to a page
      */
+    // TODO: notes on index consistency: this method isn't called concurrently with writes because it's only used
+    //  in assignPages, so the order of index updates doesn't matter either
     @NonNull
     CompletionStage<@NonNull List<@NonNull PageAssignment>> getUnassigned(int limit);
 
@@ -131,6 +138,8 @@ public interface FeedEntityRepository {
      * @param pageId the page ID to load
      * @return CompletionStage of all entities assigned to the given page
      */
+    // TODO: notes on index consistency: this method isn't called concurrently with writes because it's only used
+    //  in assignPages, so the order of index updates doesn't matter either
     @NonNull
     CompletionStage<@NonNull List<@NonNull PageAssignment>> getPageAssignments(@NonNull PageId pageId);
 
