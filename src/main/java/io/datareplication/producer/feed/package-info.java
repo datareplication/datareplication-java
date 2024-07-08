@@ -27,8 +27,8 @@
  * if saving fails the CompletionStage must also fail.
  * <p>
  * When the CompletionStage for a write operation has succeeded, <em>all data written by the write operation must be
- * visible to all future read operations across all producer instances</em>. Most non-distributed databases work this way
- * by default, but an eventually consistent data store is <strong>not</strong> sufficient on its own and might need
+ * visible to all future read operations across all producer instances</em>. Most non-distributed databases work this
+ * way by default, but an eventually consistent data store is <strong>not</strong> sufficient on its own and might need
  * some extra handling by e.g. waiting for the write to be acknowledged across all instances.
  * <p>
  * In general, write operations on repositories are required to be <em>atomic at the level of individual records</em>.
