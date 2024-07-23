@@ -126,9 +126,10 @@ class SnapshotIndexTest {
     }
 
     private SchemaValidatorsConfig getSchemaValidatorsConfigWithoutLocalization() {
-        SchemaValidatorsConfig config = new SchemaValidatorsConfig();
-        config.setLocale(Locale.ROOT);
-        return config;
+        return SchemaValidatorsConfig
+            .builder()
+            .locale(Locale.ROOT)
+            .build();
     }
 
     protected JsonNode getJsonNodeFromStringContent(String content) throws IOException {

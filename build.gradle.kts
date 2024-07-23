@@ -122,7 +122,6 @@ tasks.test {
         exceptionFormat = TestExceptionFormat.FULL
         showCauses = true
         showStackTraces = true
-
         showStandardStreams = false
     }
 }
