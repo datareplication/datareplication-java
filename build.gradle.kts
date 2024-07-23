@@ -55,6 +55,12 @@ dependencies {
     testAnnotationProcessor(lombok)
 }
 
+sourceSets {
+    getByName("main") {
+        java.srcDir("src/main/moduleInfo")
+    }
+}
+
 publishing {
     publications {
         create<MavenPublication>(project.name) {
@@ -81,6 +87,31 @@ java {
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+}
+
+tasks {
+    val delombok by registering(JavaExec::class) {
+        classpath = project.configurations.getByName("compileClasspath")
+        mainClass = "lombok.launch.Main"
+        args("delombok")
+
+        val outputDir by extra { layout.buildDirectory.dir("delombok").get().asFile }
+        outputs.dir(outputDir)
+        args("-d", outputDir)
+        doFirst {
+            outputDir.delete()
+        }
+
+        val srcDir = sourceSets["main"].java.srcDirs.first()
+        inputs.dir(srcDir)
+        args(srcDir)
+    }
+    javadoc {
+        dependsOn(delombok)
+        val outputDir: File by delombok.get().extra
+        source = fileTree(outputDir)
+        exclude("io/datareplication/internal")
+    }
 }
 
 tasks.test {

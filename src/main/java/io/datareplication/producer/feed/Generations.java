@@ -38,6 +38,8 @@ final class Generations {
 
     /**
      * Pick the correct latest page from a list of candidates (pages with no next link) based on the generation.
+     * <p>
+     * If any of the candidate pages do have a next link, they're discarded and not considered at all.
      *
      * @param candidates candidate pages
      * @return the "correct" latest page
@@ -46,6 +48,9 @@ final class Generations {
         List<FeedPageMetadataRepository.PageMetadata> candidates
     ) {
         final var generationComparator = Comparator.comparingInt(FeedPageMetadataRepository.PageMetadata::generation);
-        return candidates.stream().min(generationComparator);
+        return candidates
+            .stream()
+            .filter(page -> page.next().isEmpty())
+            .min(generationComparator);
     }
 }

@@ -27,18 +27,14 @@ public class Entity<Header extends ToHttpHeaders> implements ToHttpHeaders {
      */
     @NonNull Body body;
     /**
-     * <p>
      * An optional piece of user-specified metadata. The library implementation never touches or interprets it. It
      * exists exclusively to allow library users to carry additional information with an entity as it passes through the
      * library. This means that it is up to the library user how to handle this field at boundaries (e.g. when storing
      * entities in a database): it's not necessary to store and load this field if you don't ever use it.
-     * </p>
-     *
      * <p>
      * This field is an internal aspect of the library intended for producers: it is not part of the data format and
      * won't be included in a consumable snapshot or feed. When consuming entities from a feed or snapshot, this field
      * will always be empty.
-     * </p>
      */
     @NonNull Optional<@NonNull Object> userData;
 

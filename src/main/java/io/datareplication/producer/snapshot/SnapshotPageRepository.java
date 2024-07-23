@@ -9,8 +9,27 @@ import lombok.NonNull;
 
 import java.util.concurrent.CompletionStage;
 
+/**
+ * Repository to store snapshot pages produced by {@link SnapshotProducer}.
+ */
 public interface SnapshotPageRepository {
-    @NonNull CompletionStage<Void> save(@NonNull SnapshotId snapshotId,
-                                        @NonNull PageId pageId,
-                                        @NonNull Page<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader> page);
+    /**
+     * Save the given snapshot page in the repository.
+     * <p>
+     * The combination of snapshot ID and page ID uniquely identifies the page. Page IDs are not necessarily unique
+     * across different snapshots.
+     * <p>
+     * What parts of the page are stored, and in what format, is up to the implementor. The snapshot producer
+     * implementation doesn't define a way to retrieve a page from the repository, so implementations are free to
+     * store or not store aspects of the page as needed for how they serve pages over HTTP.
+     *
+     * @param snapshotId the ID of the snapshot this page is part of
+     * @param pageId     the ID of this page
+     * @param page       the page data
+     * @return CompletionStage
+     */
+    @NonNull
+    CompletionStage<Void> save(@NonNull SnapshotId snapshotId,
+                               @NonNull PageId pageId,
+                               @NonNull Page<@NonNull SnapshotPageHeader, @NonNull SnapshotEntityHeader> page);
 }
