@@ -86,7 +86,7 @@ tasks.withType<JavaCompile> {
 tasks.test {
     useJUnitPlatform()
     testLogging {
-        events("passed", "skipped", "failed")
+        events("skipped", "failed")
         showExceptions = true
         exceptionFormat = TestExceptionFormat.FULL
         showCauses = true
