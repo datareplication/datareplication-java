@@ -47,7 +47,7 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.assertj:assertj-core:3.26.0")
     testImplementation("com.networknt:json-schema-validator:1.4.3")
-    testImplementation("org.wiremock:wiremock:3.8.0")
+    testImplementation("org.wiremock:wiremock:3.9.0")
 
     testCompileOnly(lombok)
     testAnnotationProcessor(lombok)
