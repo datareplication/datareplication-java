@@ -49,7 +49,7 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("com.networknt:json-schema-validator:1.5.0")
-    testImplementation("org.wiremock:wiremock:3.9.0")
+    testImplementation("org.wiremock:wiremock:3.9.1")
 
     testCompileOnly(lombok)
     testAnnotationProcessor(lombok)
