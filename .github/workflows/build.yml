@@ -22,7 +22,7 @@ jobs:
     - name: Check
       run: ./gradlew check javadoc
     - name: Coverage report
-      uses: madrapps/jacoco-report@v1.6.1
+      uses: madrapps/jacoco-report@v1.7.0
       with:
         paths: build/reports/jacoco/test/jacocoTestReport.xml
         token: ${{ secrets.GITHUB_TOKEN }}
