@@ -28,7 +28,7 @@ dependencies {
 
     implementation("org.slf4j:slf4j-api")
     implementation("io.projectreactor:reactor-core")
-    implementation("commons-io:commons-io:2.16.1")
+    implementation("commons-io:commons-io:2.17.0")
     implementation("com.github.mizosoft.methanol:methanol:1.7.0")
     implementation("com.google.code.gson:gson:2.11.0")
 
