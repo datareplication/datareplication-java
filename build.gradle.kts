@@ -9,7 +9,7 @@ plugins {
     pmd
     checkstyle
     jacoco
-    id("com.github.spotbugs") version "6.0.24"
+    id("com.github.spotbugs") version "6.0.25"
 }
 
 group = "io.datareplication"
