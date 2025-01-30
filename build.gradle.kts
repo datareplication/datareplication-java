@@ -38,7 +38,7 @@ dependencies {
 
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.11.3"))
-    testImplementation(platform("org.mockito:mockito-bom:5.14.2"))
+    testImplementation(platform("org.mockito:mockito-bom:5.15.2"))
 
     testImplementation("org.slf4j:slf4j-simple")
     testImplementation("org.junit.jupiter:junit-jupiter-engine")
