@@ -29,7 +29,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api")
     implementation("io.projectreactor:reactor-core")
     implementation("commons-io:commons-io:2.18.0")
-    implementation("com.github.mizosoft.methanol:methanol:1.7.0")
+    implementation("com.github.mizosoft.methanol:methanol:1.8.1")
     implementation("com.google.code.gson:gson:2.12.1")
 
     compileOnly(lombok)
