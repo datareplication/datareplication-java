@@ -48,7 +48,7 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.assertj:assertj-core:3.27.3")
-    testImplementation("com.networknt:json-schema-validator:1.5.5")
+    testImplementation("com.networknt:json-schema-validator:1.5.6")
     testImplementation("org.wiremock:wiremock:3.12.0")
 
     testCompileOnly(lombok)
