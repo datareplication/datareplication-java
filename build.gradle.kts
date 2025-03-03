@@ -5,7 +5,7 @@ val versionSuffix: String? by project
 plugins {
     `java-library`
     `maven-publish`
-
+    id("org.jreleaser") version "1.17.0"
     pmd
     checkstyle
     jacoco
@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "io.datareplication"
-val baseVersion = "0.0.1"
+val baseVersion = "1.0.0"
 version = "${baseVersion}${versionSuffix ?: ""}"
 
 repositories {
@@ -65,10 +65,37 @@ publishing {
     publications {
         create<MavenPublication>(project.name) {
             from(components["java"])
+
+            pom {
+                name.set("datareplication-java")
+                description.set("Datareplication implementation in Java")
+                url.set("https://datareplication.io")
+                inceptionYear.set("2025")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://github.com/datareplication/datareplication-java/blob/main/LICENSE")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("datareplication")
+                        name.set("The datareplication developers")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/datareplication/datareplication-java")
+                    developerConnection.set("scm:git:git://github.com/datareplication/datareplication-java")
+                    url.set("https://github.com/datareplication/datareplication-java")
+                }
+            }
         }
     }
 
     repositories {
+        maven {
+            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
+        }
         maven {
             name = "github"
             url = uri("https://maven.pkg.github.com/datareplication/datareplication-java")
