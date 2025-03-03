@@ -1,0 +1,58 @@
+project:
+  name: datareplication-java
+  description: Data Synchronization over HTTP
+  longDescription: |
+    Our data format and reference implementation enable asynchronous replication of data across multiple independent systems. 
+    Built on HTTP and open web standards, it offers high compatibility and easy integration. 
+    The system supports both near real-time and snapshot replication, catering to diverse data synchronization needs. 
+    With this solution, data can be efficiently and reliably exchanged between different platforms, 
+    unlocking numerous possibilities for distributed and decentralized IT infrastructures.
+  links:
+    homepage: https://datareplication.io/
+    documentation: https://datareplication.io/spec/
+    license: https://github.com/datareplication/datareplication-java/blob/main/LICENSE
+  authors:
+    - The datareplication developers
+  license: MIT
+  tags:
+    - datareplication
+    - java
+
+  java:
+    groupId: io.datareplication
+    version: 11
+  stereotype: NONE
+
+release:
+  github:
+    overwrite: true
+    draft: true
+    sign: true
+    releaseName: '{{tagName}}'
+    skipTag: true
+    milestone:
+      close: false
+    changelog:
+      formatted: always
+      preset: "conventional-commits"
+      format: '- {{commitShortHash}} {{commitTitle}}'
+
+checksum:
+  individual: true
+
+signing:
+  active: ALWAYS
+  armored: true
+
+deploy:
+  maven:
+    nexus2:
+      maven-central:
+        active: ALWAYS
+        url: https://oss.sonatype.org/service/local
+        snapshotUrl: https://oss.sonatype.org/content/repositories/snapshots/
+        closeRepository: true
+        # TODO: Set to true once the project is ready for release
+        releaseRepository: false
+        stagingRepositories:
+          - build/staging-deploy
