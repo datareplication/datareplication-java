@@ -84,8 +84,8 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/datareplication/datareplication-java")
-                    developerConnection.set("scm:git:git://github.com/datareplication/datareplication-java")
+                    connection.set("scm:git:https://github.com/datareplication/datareplication-java.git")
+                    developerConnection.set("scm:git:https://github.com/datareplication/datareplication-java.git")
                     url.set("https://github.com/datareplication/datareplication-java")
                 }
             }
