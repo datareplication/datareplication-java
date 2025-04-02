@@ -215,9 +215,7 @@ jreleaser {
             mavenCentral.create("sonatype") {
                 active.set(Active.ALWAYS)
                 url.set("https://central.sonatype.com/api/v1/publisher")
-                subprojects.filter { it.plugins.hasPlugin("java") }.forEach { subproject ->
-                    stagingRepositories.add("${subproject.layout.buildDirectory.get()}/staging-deploy")
-                }
+                stagingRepositories.add("${layout.buildDirectory.get()}/staging-deploy")
                 applyMavenCentralRules.set(true)
                 retryDelay.set(20)
                 maxRetries.set(90)
