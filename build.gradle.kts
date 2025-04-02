@@ -274,7 +274,7 @@ publishing {
                 }
                 scm {
                     connection.set("scm:git:$ghUrl.git")
-                    developerConnection.set("scm:git:ssh://github.com/$ghUser/$ghRepo.git")
+                    developerConnection.set("scm:git@github.com/$ghUser/$ghRepo.git")
                     url.set(ghUrl)
                 }
             }
