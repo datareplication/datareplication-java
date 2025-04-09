@@ -7,7 +7,7 @@ Learn more on the [Datareplication homepage](https://www.datareplication.io)
 
 ## License
 
-Licensed under MIT (see LICENSE file)
+Licensed under [MIT](LICENSE)
 
 ## Publishing
 
