@@ -1,6 +1,8 @@
 # Datareplication
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.datareplication/datareplication)](https://central.sonatype.com/artifact/io.datareplication/datareplication)
+[![javadoc](https://javadoc.io/badge2/io.datareplication/datareplication/javadoc.svg)](https://datareplication.io/datareplication-java/)
+[![javadoc](https://img.shields.io/badge/spec-datareplication.io-purple)](https://datareplication.io/spec/)
 ![Build Status](https://github.com/datareplication/datareplication-java/actions/workflows/build.yml/badge.svg)
-![Maven Central Version](https://img.shields.io/maven-central/v/io.datareplication/datareplication)
 
 ## Documentation
 Learn more on the [Datareplication homepage](https://www.datareplication.io)
