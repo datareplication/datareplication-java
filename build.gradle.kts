@@ -1,11 +1,12 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jreleaser.model.Active
 
 val versionSuffix: String? by project
 
 plugins {
     `java-library`
     `maven-publish`
-
+    id("org.jreleaser") version "1.17.0"
     pmd
     checkstyle
     jacoco
@@ -13,8 +14,18 @@ plugins {
 }
 
 group = "io.datareplication"
-val baseVersion = "0.0.1"
+
+// after updating this, make sure to push a new git tag
+val baseVersion = "1.0.0-rc2"
 version = "${baseVersion}${versionSuffix ?: ""}"
+// match semver `x.y.z-something`
+val isPrereleasePattern = """\d+\.\d+\.\d+-.+"""
+
+val ghUser = "datareplication"
+val ghRepo = "datareplication-java"
+val ghUrl = "https://github.com/$ghUser/$ghRepo"
+
+val topDesc = "Data Synchronization over HTTP"
 
 repositories {
     mavenCentral()
@@ -58,25 +69,6 @@ dependencies {
 sourceSets {
     getByName("main") {
         java.srcDir("src/main/moduleInfo")
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>(project.name) {
-            from(components["java"])
-        }
-    }
-
-    repositories {
-        maven {
-            name = "github"
-            url = uri("https://maven.pkg.github.com/datareplication/datareplication-java")
-            credentials(PasswordCredentials::class) {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
     }
 }
 
@@ -162,4 +154,115 @@ pmd {
 spotbugs {
     ignoreFailures = true
     includeFilter = file("config/spotbugs/spotbugs.xml")
+}
+
+tasks.withType<Jar> {
+    archiveBaseName.set(project.name)
+    archiveVersion.set(project.version.toString())
+}
+
+jreleaser {
+    dryrun.set(System.getenv("CI").isNullOrBlank())
+
+    project {
+        name.set(ghRepo)
+        description.set(topDesc)
+        version.set(rootProject.version.toString())
+        authors.set(listOf("The Datareplication developers"))
+        license.set("MIT")
+        inceptionYear.set("2025")
+        links {
+            homepage = "https://datareplication.io"
+            documentation = "https://datareplication.io"
+            bugTracker = "$ghUrl/issues"
+            vcsBrowser = ghUrl
+        }
+    }
+
+    release {
+        github {
+            if (version.toString().endsWith("-SNAPSHOT")) {
+                skipRelease.set(true)
+            }
+            repoOwner.set(ghUser)
+            name.set(ghRepo)
+
+            // skip tag because we're running release on tag creation
+            skipTag.set(true)
+            prerelease {
+                pattern.set(isPrereleasePattern)
+            }
+        }
+    }
+
+    signing {
+        active.set(Active.ALWAYS)
+        armored.set(true)
+        verify.set(true)
+    }
+
+    deploy {
+        maven {
+            mavenCentral.create("sonatype") {
+                active.set(Active.RELEASE)
+                url.set("https://central.sonatype.com/api/v1/publisher")
+                stagingRepositories.add("${layout.buildDirectory.get()}/staging-deploy")
+                applyMavenCentralRules.set(true)
+                retryDelay.set(20)
+                maxRetries.set(90)
+            }
+
+            nexus2.create("snapshots") {
+                active.set(Active.SNAPSHOT)
+                url.set("https://ossrh-staging-api.central.sonatype.com/service/local/")
+                snapshotUrl.set("https://central.sonatype.com/repository/maven-snapshots/")
+                stagingRepositories.add("${layout.buildDirectory.get()}/staging-deploy")
+                applyMavenCentralRules.set(true)
+                snapshotSupported.set(true)
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = group.toString()
+            artifactId = project.name
+            version = version.toString()
+
+            from(components["java"])
+
+            pom {
+                name.set(project.name)
+                description.set(topDesc)
+                url.set(rootProject.jreleaser.project.links.homepage)
+
+                inceptionYear.set(rootProject.jreleaser.project.inceptionYear.get())
+                licenses {
+                    license {
+                        name.set(rootProject.jreleaser.project.license.get())
+                        url.set("https://opensource.org/licenses/${rootProject.jreleaser.project.license.get()}")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set(rootProject.jreleaser.release.github.repoOwner.get())
+                        name.set(rootProject.jreleaser.project.authors.get().joinToString())
+                    }
+                }
+                scm {
+                    connection.set("scm:git:$ghUrl.git")
+                    developerConnection.set("scm:git@github.com/$ghUser/$ghRepo.git")
+                    url.set(ghUrl)
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
+        }
+    }
 }
