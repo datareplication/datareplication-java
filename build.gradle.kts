@@ -161,20 +161,6 @@ tasks.withType<Jar> {
     archiveVersion.set(project.version.toString())
 }
 
-tasks.named("jreleaserFullRelease") {
-    doFirst {
-        val outputDir = layout.buildDirectory.dir("jreleaser").get().asFile
-        if (!outputDir.exists()) {
-            outputDir.mkdirs()
-        }
-    }
-}
-
-val outputDir = layout.buildDirectory.dir("jreleaser").get().asFile
-if (!outputDir.exists()) {
-    outputDir.mkdirs()
-}
-
 jreleaser {
     dryrun.set(System.getenv("CI").isNullOrBlank())
 
