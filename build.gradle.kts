@@ -16,7 +16,7 @@ plugins {
 group = "io.datareplication"
 
 // after updating this, make sure to push a new git tag
-val baseVersion = "1.0.0"
+val baseVersion = "1.0.0-rc1"
 version = "${baseVersion}${versionSuffix ?: ""}"
 // match semver `x.y.z-something`
 val isPrereleasePattern = """\d+\.\d+\.\d+-.+"""
@@ -162,7 +162,7 @@ tasks.withType<Jar> {
 }
 
 jreleaser {
-    //dryrun.set(System.getenv("CI").isNullOrBlank())
+    dryrun.set(System.getenv("CI").isNullOrBlank())
 
     project {
         name.set(ghRepo)
@@ -182,11 +182,10 @@ jreleaser {
     release {
         github {
             if (version.toString().endsWith("-SNAPSHOT")) {
-                enabled = false
+                skipRelease.set(true)
             }
             repoOwner.set(ghUser)
             name.set(ghRepo)
-            branch.set("main")
 
             // skip tag because we're running release on tag creation
             skipTag.set(true)
