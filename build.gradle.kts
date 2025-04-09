@@ -162,7 +162,7 @@ tasks.withType<Jar> {
 }
 
 jreleaser {
-    dryrun.set(System.getenv("CI").isNullOrBlank())
+    //dryrun.set(System.getenv("CI").isNullOrBlank())
 
     project {
         name.set(ghRepo)
@@ -172,12 +172,18 @@ jreleaser {
         license.set("MIT")
         inceptionYear.set("2025")
         links {
-            homepage = ghUrl
+            homepage = "https://datareplication.io"
+            documentation = "https://datareplication.io"
+            bugTracker = "$ghUrl/issues"
+            vcsBrowser = ghUrl
         }
     }
 
     release {
         github {
+            if (version.toString().endsWith("-SNAPSHOT")) {
+                enabled = false
+            }
             repoOwner.set(ghUser)
             name.set(ghRepo)
             branch.set("main")
@@ -199,31 +205,21 @@ jreleaser {
     deploy {
         maven {
             mavenCentral.create("sonatype") {
-                active.set(Active.ALWAYS)
+                active.set(Active.RELEASE)
                 url.set("https://central.sonatype.com/api/v1/publisher")
                 stagingRepositories.add("${layout.buildDirectory.get()}/staging-deploy")
                 applyMavenCentralRules.set(true)
                 retryDelay.set(20)
                 maxRetries.set(90)
             }
-        }
-    }
 
-    distributions {
-        create(name) {
-            project {
-                description.set(topDesc)
-            }
-            artifact {
-                path.set(tasks.named<Jar>("jar").get().archiveFile.get().asFile)
-            }
-            artifact {
-                path.set(tasks.named<Jar>("sourcesJar").get().archiveFile.get().asFile)
-                platform.set("java-sources")
-            }
-            artifact {
-                path.set(tasks.named<Jar>("javadocJar").get().archiveFile.get().asFile)
-                platform.set("java-docs")
+            nexus2.create("snapshots") {
+                active.set(Active.SNAPSHOT)
+                url.set("https://ossrh-staging-api.central.sonatype.com/service/local/")
+                snapshotUrl.set("https://central.sonatype.com/repository/maven-snapshots/")
+                stagingRepositories.add("${layout.buildDirectory.get()}/staging-deploy")
+                applyMavenCentralRules.set(true)
+                snapshotSupported.set(true)
             }
         }
     }
