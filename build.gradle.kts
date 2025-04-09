@@ -192,6 +192,7 @@ jreleaser {
         github {
             if (version.toString().endsWith("-SNAPSHOT")) {
                 skipRelease.set(true)
+                skipTag.set(true)
             }
             repoOwner.set(ghUser)
             name.set(ghRepo)
