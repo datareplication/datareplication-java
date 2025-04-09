@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jreleaser.model.Active
 
 val versionSuffix: String? by project
+val expectedVersion: String? by project
 
 plugins {
     `java-library`
@@ -15,8 +16,7 @@ plugins {
 
 group = "io.datareplication"
 
-// after updating this, make sure to push a new git tag
-val baseVersion = "1.0.0-rc2"
+val baseVersion = "1.0.0-rc3"
 version = "${baseVersion}${versionSuffix ?: ""}"
 // match semver `x.y.z-something`
 val isPrereleasePattern = """\d+\.\d+\.\d+-.+"""
@@ -79,6 +79,15 @@ java {
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
+}
+
+tasks.register("checkVersion") {
+    doLast {
+        val version = project.version.toString()
+        if (version != expectedVersion) {
+            throw GradleException("Version $version does not match $expectedVersion.")
+        }
+    }
 }
 
 tasks {
@@ -187,8 +196,6 @@ jreleaser {
             repoOwner.set(ghUser)
             name.set(ghRepo)
 
-            // skip tag because we're running release on tag creation
-            skipTag.set(true)
             prerelease {
                 pattern.set(isPrereleasePattern)
             }

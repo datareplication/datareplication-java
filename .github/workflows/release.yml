@@ -1,9 +1,11 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version to release is compared to the version in the build.gradle.kts'
+        required: true
 
 jobs:
   release:
@@ -24,6 +26,8 @@ jobs:
           cache: 'gradle'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+      - name: Check version to match
+        run: ./gradlew checkVersion -PexpectedVersion=${{ github.event.inputs.version }}
       - name: Build JavaDoc
         run: ./gradlew javadoc
       - name: Release with jReleaser
