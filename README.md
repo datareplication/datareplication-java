@@ -1,5 +1,6 @@
 # Datareplication
-![Build Status]([https://github.com/datareplication/datareplication-java/actions/workflows/maven-publish.yml/badge.svg](https://github.com/datareplication/datareplication-java/actions/workflows/build.yml/badge.svg))
+![Build Status](https://github.com/datareplication/datareplication-java/actions/workflows/build.yml/badge.svg)
+![Maven Central Version](https://img.shields.io/maven-central/v/io.datareplication/datareplication)
 
 ## Documentation
 Learn more on the [Datareplication homepage](https://www.datareplication.io)
