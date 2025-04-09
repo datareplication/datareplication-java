@@ -7,12 +7,15 @@ on:
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
+      - name: Check that the current commit is in main branch
+        run: git fetch origin main && git merge-base --is-ancestor $GITHUB_SHA origin/main
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -21,8 +24,8 @@ jobs:
           cache: 'gradle'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: Build with Gradle
-        run: ./gradlew build javadoc
+      - name: Build JavaDoc
+        run: ./gradlew javadoc
       - name: Release with jReleaser
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,7 +34,7 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
           JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
-        run: ./gradlew --stacktrace assemble publish jreleaserFullRelease
+        run: ./gradlew publish jreleaserFullRelease --stacktrace
       - name: Upload Javadoc artifact
         uses: actions/upload-pages-artifact@v3
         with:

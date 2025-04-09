@@ -16,7 +16,7 @@ plugins {
 group = "io.datareplication"
 
 // after updating this, make sure to push a new git tag
-val baseVersion = "1.0.0-rc1"
+val baseVersion = "1.0.0-rc2"
 version = "${baseVersion}${versionSuffix ?: ""}"
 // match semver `x.y.z-something`
 val isPrereleasePattern = """\d+\.\d+\.\d+-.+"""
