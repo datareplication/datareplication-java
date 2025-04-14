@@ -41,7 +41,7 @@ dependencies {
     implementation("io.projectreactor:reactor-core")
     implementation("commons-io:commons-io:2.18.0")
     implementation("com.github.mizosoft.methanol:methanol:1.8.2")
-    implementation("com.google.code.gson:gson:2.12.1")
+    implementation("com.google.code.gson:gson:2.13.0")
 
     compileOnly(lombok)
     annotationProcessor(lombok)
