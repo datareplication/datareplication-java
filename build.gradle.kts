@@ -16,7 +16,7 @@ plugins {
 
 group = "io.datareplication"
 
-val baseVersion = "1.0.1"
+val baseVersion = "1.0.2"
 version = "${baseVersion}${versionSuffix ?: ""}"
 // match semver `x.y.z-something`
 val isPrereleasePattern = """\d+\.\d+\.\d+-.+"""
