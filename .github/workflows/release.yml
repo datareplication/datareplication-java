@@ -40,7 +40,7 @@ jobs:
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
         run: ./gradlew publish jreleaserFullRelease --stacktrace
       - name: Upload Javadoc artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
          path: build/docs/javadoc
   publishDocs:
