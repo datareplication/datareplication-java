@@ -15,7 +15,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Check that the current commit is in main branch
         run: git fetch origin main && git merge-base --is-ancestor $GITHUB_SHA origin/main
       - name: Setup Java
