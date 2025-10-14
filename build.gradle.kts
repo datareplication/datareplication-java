@@ -31,7 +31,7 @@ repositories {
     mavenCentral()
 }
 
-val lombok = "org.projectlombok:lombok:1.18.38"
+val lombok = "org.projectlombok:lombok:1.18.42"
 
 dependencies {
     implementation(platform("org.slf4j:slf4j-bom:2.0.17"))
