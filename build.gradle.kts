@@ -40,7 +40,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api")
     implementation("io.projectreactor:reactor-core")
     implementation("commons-io:commons-io:2.20.0")
-    implementation("com.github.mizosoft.methanol:methanol:1.8.2")
+    implementation("com.github.mizosoft.methanol:methanol:1.8.4")
     implementation("com.google.code.gson:gson:2.13.1")
 
     compileOnly(lombok)
