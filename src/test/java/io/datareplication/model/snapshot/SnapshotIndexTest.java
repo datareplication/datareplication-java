@@ -2,12 +2,12 @@ package io.datareplication.model.snapshot;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaLocation;
-import com.networknt.schema.SchemaValidatorsConfig;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SchemaRegistryConfig;
+import com.networknt.schema.SpecificationVersion;
+import com.networknt.schema.resource.IriResourceLoader;
 import io.datareplication.model.Body;
 import io.datareplication.model.ContentType;
 import io.datareplication.model.Url;
@@ -20,7 +20,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,7 +30,7 @@ class SnapshotIndexTest {
     public static final String SCHEMA_URL_FOR_SNAPSHOT_INDEX =
         "https://www.datareplication.io/spec/snapshot/index.schema.json";
     private final ObjectMapper mapper = new ObjectMapper();
-    private JsonSchema schema;
+    private Schema schema;
 
     @BeforeEach
     void setUp() {
@@ -85,7 +84,7 @@ class SnapshotIndexTest {
             + "      \"https://example.datareplication.io/12345678/page/3\"\n"
             + "    ]\n"
             + "  }");
-        Set<ValidationMessage> errors = schema.validate(node);
+        var errors = schema.validate(node);
         assertThat(errors).isEmpty();
     }
 
@@ -119,17 +118,17 @@ class SnapshotIndexTest {
         assertThat(errors).isNotEmpty();
     }
 
-    protected JsonSchema fetchJsonSchemaFromUrl() {
-        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
-        SchemaValidatorsConfig config = getSchemaValidatorsConfigWithoutLocalization();
-        return factory.getSchema(SchemaLocation.of(SCHEMA_URL_FOR_SNAPSHOT_INDEX), config);
-    }
-
-    private SchemaValidatorsConfig getSchemaValidatorsConfigWithoutLocalization() {
-        return SchemaValidatorsConfig
-            .builder()
-            .locale(Locale.ROOT)
-            .build();
+    protected Schema fetchJsonSchemaFromUrl() {
+        var registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_2020_12, builder ->
+            builder
+                .schemaRegistryConfig(
+                    SchemaRegistryConfig.builder()
+                        .locale(Locale.ROOT)
+                        .build()
+                )
+                .resourceLoaders(loaders -> loaders.add(new IriResourceLoader()))
+        );
+        return registry.getSchema(SchemaLocation.of(SCHEMA_URL_FOR_SNAPSHOT_INDEX));
     }
 
     protected JsonNode getJsonNodeFromStringContent(String content) throws IOException {
