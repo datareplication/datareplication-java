@@ -48,7 +48,7 @@ dependencies {
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    testImplementation(platform("org.junit:junit-bom:6.0.1"))
     testImplementation(platform("org.mockito:mockito-bom:5.20.0"))
 
     testImplementation("org.slf4j:slf4j-simple")
