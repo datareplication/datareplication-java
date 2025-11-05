@@ -7,7 +7,7 @@ val expectedVersion: String? by project
 plugins {
     `java-library`
     `maven-publish`
-    id("org.jreleaser") version "1.20.0"
+    id("org.jreleaser") version "1.21.0"
     pmd
     checkstyle
     jacoco
