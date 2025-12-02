@@ -11,7 +11,7 @@ plugins {
     pmd
     checkstyle
     jacoco
-    id("com.github.spotbugs") version "6.4.6"
+    id("com.github.spotbugs") version "6.4.7"
 }
 
 group = "io.datareplication"
